@@ -1,24 +1,34 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MagMoment AR</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MagMoment AR</title>
 
-    <!-- MindAR (stable UMD build) -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
+  <!-- Load MindAR UMD (global namespace) -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
 
-    <!-- Three.js (compatible with MindAR 1.1.5) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
+  <!-- Load compatible Three.js version -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
 
-    <style>
-      body, html { margin: 0; padding: 0; overflow: hidden; background: #000; }
-      #container { width: 100vw; height: 100vh; }
-    </style>
-  </head>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    #container {
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
 
-  <body>
-    <div id="container"></div>
-    <script src="./script.js"></script>
-  </body>
+<body>
+  <div id="container"></div>
+
+  <!-- Scripts SHOULD be loaded after library scripts -->
+  <script src="./script.js"></script>
+</body>
 </html>
