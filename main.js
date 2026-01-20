@@ -37,7 +37,7 @@ function loop() {
   const now = Date.now();
 
   if (r) {
-    // ✅ FRAME IS CURRENTLY VISIBLE
+    // ✅ FIRST & ONLY PLACE VIDEO CAN START
     hasEverDetected = true;
     frameLocked = true;
     lastSeenTime = now;
@@ -52,22 +52,23 @@ function loop() {
     hasEverDetected &&
     now - lastSeenTime < LOCK_TIMEOUT
   ) {
-    // 🟡 GRACE PERIOD
+    // grace period
     player.play();
     gl.draw(toCorners(pose.last));
     ui.found();
 
   } else {
-    // ❌ NO FRAME — HARD STOP
+    // ❌ ABSOLUTE STOP
     frameLocked = false;
 
-    player.pause();        // 🔑 stop video
-    gl.clear();            // 🔑 remove texture
+    player.pause();   // 🔑 stops native playback
+    gl.clear();       // 🔑 clears canvas
     ui.lost();
   }
 
   requestAnimationFrame(loop);
 }
+
 
 ui.waitForTap(() => {
   arStarted = true;
