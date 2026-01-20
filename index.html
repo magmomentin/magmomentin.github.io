@@ -1,41 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MindAR Video Marker Demo</title>
+<html>
+<head>
+  <title>MagMoment AR Frame</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"></script>
 
-    <!-- ✅ 1️⃣ Load A-Frame (compatible version) -->
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <style>
+    body, html { margin: 0; overflow: hidden; }
+    #ar-container { width: 100vw; height: 100vh; }
+  </style>
+</head>
 
-    <!-- ✅ 2️⃣ Load MindAR (for A-Frame) -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
+<body>
+  <div id="ar-container"></div>
 
-    <!-- ✅ 3️⃣ Load your script LAST -->
-    <script src="./script.js"></script>
+  <script type="module">
 
-    <style>
-      body {
-        margin: 0;
-        overflow: hidden;
-        background-color: black;
-      }
-    </style>
-  </head>
+    import { MindARThree } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js";
 
-  <body>
-    <!-- 🧠 MindAR scene -->
-    <a-scene
-      mindar-image="imageTargetSrc: ./assets/targets.mind"
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: true"
-      embedded
-    >
-      <!-- ⏱️ Preload assets (wait up to 20 s for video + targets) -->
-      <a-assets timeout="20000">
-        <video
-          id="promo"
-          src="./assets/video.mp4"
-          preload="auto"
-          muted
-          playsinli
+    const mindarThree = new MindARThree({
+      container: document.querySelector("#ar-container"),
+      imageTargetSrc: "./assets/targets.mind",
+    });
+
+    const { renderer, scene, camera } = mindarThree;
+
+    // --- VIDEO SETUP ---
+    const video = document.createElement("video");
+    video.src = "./assets/video.mp4";
+    video.loop = true;
+    video.crossOrigin = "anonymous";
+    video.preload = "auto";
+    video.load();
+
+    const texture = new THREE.VideoTexture(video);
+    const geometry = new THREE.PlaneGeometry(1, 0.56); // Match your video aspect ratio
+    const material = new THREE.MeshBasicMaterial({ map: texture });
+    const plane = new THREE.Mesh(geometry, material);
+    plane.rotation.x = -Math.PI / 2;
+
+    const anchor = mindarThree.addAnchor(0); // first target in targets.mind
+    anchor.group.add(plane);
+
+    mindarThree.start().then(() => {
+      video.play();
+      renderer.setAnimationLoop(() => {
+        renderer.render(scene, camera);
+      });
+    });
+
+  </script>
+</body>
+</html>
