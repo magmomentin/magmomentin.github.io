@@ -2,19 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Hybrid AR Engine (Tuned)</title>
-  <link rel="stylesheet" href="style.css">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no"
+  />
+  <title>Hybrid AR Engine</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- 1️⃣ MindAR must load FIRST (global script) -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image.prod.js"></script>
 </head>
+
 <body>
 
+  <!-- Camera feed -->
   <video id="camera" autoplay playsinline muted></video>
 
+  <!-- AR video overlay -->
   <video id="arVideo" muted playsinline loop preload="auto">
-    <source src="assets/demo.mp4" type="video/mp4">
+    <source src="assets/demo.mp4" type="video/mp4" />
   </video>
 
+  <!-- 2️⃣ Your scripts load AFTER MindAR -->
   <script src="engine.js"></script>
   <script src="tracker.js"></script>
 
