@@ -1,25 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MagMoment AR Experience</title>
+  <title>MagMoment AR</title>
 
-  <!-- MindAR + ThreeJS -->
   <script src="https://unpkg.com/mind-ar/dist/mindar-image-three.prod.js"></script>
   <script src="https://unpkg.com/three/build/three.min.js"></script>
 
   <style>
-    body, html { margin: 0; padding: 0; overflow: hidden; background: #000; }
+    body, html { margin: 0; padding: 0; overflow: hidden; background: black; }
     #container { width: 100vw; height: 100vh; }
   </style>
 </head>
-
 <body>
   <div id="container"></div>
-
-  <!-- Your AR script -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
-
