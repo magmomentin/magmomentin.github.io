@@ -1,21 +1,27 @@
-export class UIManager{
-constructor(){
-this.hint=document.getElementById("hint");
-}
-waitForTap(cb) {
-  this.hint.innerText = "Tap to start AR";
-  this.hint.style.pointerEvents = "auto";
+export class UIManager {
+  constructor() {
+    this.hint = document.getElementById("hint");
+  }
 
-  const fn = () => {
-    this.hint.removeEventListener("click", fn);
-    this.hint.style.pointerEvents = "none"; // 🔑 disable after tap
-    this.hint.innerText = "";               // optional: hide text
-    cb();
-  };
+  waitForTap(cb) {
+    this.hint.innerText = "Tap to start AR";
+    this.hint.style.pointerEvents = "auto";
 
-  this.hint.addEventListener("click", fn);
-}
+    const onTap = () => {
+      this.hint.removeEventListener("click", onTap);
+      this.hint.style.pointerEvents = "none";
+      this.hint.innerText = "";
+      cb();
+    };
 
-found(){this.hint.innerText="Hold steady";}
-lost(){this.hint.innerText="Point camera at the frame";}
+    this.hint.addEventListener("click", onTap);
+  }
+
+  found() {
+    this.hint.innerText = "Hold steady";
+  }
+
+  lost() {
+    this.hint.innerText = "Point camera at the frame";
+  }
 }
