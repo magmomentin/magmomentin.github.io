@@ -28,7 +28,13 @@ const toCorners=b=>[
 ];
 
 function loop(){
-const r=detector.detect(cam);
+  if (!arStarted) {
+    requestAnimationFrame(loop);
+    return;
+  }
+
+  const r = detector.detect(cam);
+  const now = Date.now();
 if (r) {
   const b = pose.smoothBox(r);
 
