@@ -26,14 +26,20 @@ const toCorners=b=>[
 
 function loop(){
 const r=detector.detect(cam);
-if(r){
-const b=pose.smoothBox(r);
-player.play();
-gl.draw(toCorners(b));
-ui.found();
-}else{
-player.pause();
-ui.lost();
+if (r) {
+  const b = pose.smoothBox(r);
+
+  // 🔴 VISUAL DEBUG: screen flash
+  document.body.style.background = "green";
+
+  player.play();
+  gl.draw(toCorners(b));
+  ui.found();
+} else {
+  document.body.style.background = "black";
+
+  player.pause();
+  ui.lost();
 }
 requestAnimationFrame(loop);
 }
