@@ -1,48 +1,16 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>MagMoment AR Frame</title>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>MagMoment AR</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 
-    <!-- Correct A-Frame version -->
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+<body>
+  <div id="hint">Point camera at the frame</div>
+  <video id="camera" autoplay playsinline muted></video>
+  <canvas id="overlay"></canvas>
 
-    <!-- Correct MindAR version -->
-    <script src="https://unpkg.com/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
-
-    <style>
-      body, html { margin: 0; overflow: hidden; }
-    </style>
-  </head>
-
-  <body>
-
-    <a-scene
-      mindar-image="imageTargetSrc: ./assets/targets.mind"
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false"
-      embedded
-      color-space="sRGB"
-      renderer="colorManagement: true">
-
-      <a-assets>
-        <video id="video" src="./assets/video.mp4" muted playsinline webkit-playsinline loop></video>
-      </a-assets>
-
-      <a-plane
-        src="#video"
-        width="1"
-        height="0.56"
-        position="0 0 0"
-        rotation="-90 0 0"
-        mindar-image-target="targetIndex: 0">
-      </a-plane>
-
-    </a-scene>
-
-    <script>
-      const video = document.querySelector("#video");
-      video.play();
-    </script>
-
-  </body>
+  <script type="module" src="main.js"></script>
+</body>
 </html>
