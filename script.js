@@ -1,29 +1,18 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const scene = document.querySelector("a-scene");
-  const video = document.querySelector("#magVideo");
+AFRAME.registerComponent("play-on-target", {
+  init: function () {
+    const videoEl = document.querySelector("#promo");
+    const target = this.el;
 
-  scene.addEventListener("arReady", () => {
-    document.getElementById("loading").style.display = "none";
-    console.log("MindAR ready");
-  });
-
-  scene.addEventListener("arError", () => {
-    console.error("MindAR failed to start");
-  });
-
-  scene.addEventListener("renderstart", () => {
-    const mindarSystem = scene.systems["mindar-image-system"];
-    if (!mindarSystem) {
-      console.error("MindAR system not found!");
-      return;
-    }
-
-    mindarSystem.addEventListener("targetFound", () => {
-      video.play();
+    target.addEventListener("targetFound", () => {
+      videoEl.play();
+      target.setAttribute("visible", "true");
+      console.log("🎯 Target found — playing video");
     });
 
-    mindarSystem.addEventListener("targetLost", () => {
-      video.pause();
+    target.addEventListener("targetLost", () => {
+      videoEl.pause();
+      target.setAttribute("visible", "false");
+      console.log("🚫 Target lost — pausing video");
     });
-  });
+  },
 });
