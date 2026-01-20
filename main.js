@@ -6,6 +6,9 @@ import{VideoPlayer}from"./media/videoPlayer.js";
 import{UIManager}from"./ui/uiManager.js";
 import{GLRenderer}from"./renderer/glRenderer.js";
 
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
 const ui=new UIManager();
 const auth=await resolveToken();
 
