@@ -2,56 +2,40 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MindAR Video Marker Demo</title>
 
-    <!-- A-Frame first -->
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <!-- ✅ 1️⃣ Load A-Frame (compatible version) -->
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
 
-    <!-- MindAR for A-Frame second -->
+    <!-- ✅ 2️⃣ Load MindAR (for A-Frame) -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
 
-    <!-- Your own JS last -->
+    <!-- ✅ 3️⃣ Load your script LAST -->
     <script src="./script.js"></script>
 
     <style>
-      body { margin: 0; overflow: hidden; }
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: black;
+      }
     </style>
   </head>
 
   <body>
+    <!-- 🧠 MindAR scene -->
     <a-scene
       mindar-image="imageTargetSrc: ./assets/targets.mind"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: true"
       embedded
     >
-
-      <!-- 🕐 Preload assets with longer timeout -->
-      <a-assets timeout="15000">
+      <!-- ⏱️ Preload assets (wait up to 20 s for video + targets) -->
+      <a-assets timeout="20000">
         <video
           id="promo"
           src="./assets/video.mp4"
           preload="auto"
           muted
-          playsinline
-          crossorigin="anonymous"
-        ></video>
-      </a-assets>
-
-      <!-- Camera -->
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-      <!-- Entity that shows the video on your tracked image -->
-      <a-entity mindar-image-target="targetIndex: 0" play-on-target>
-        <a-video
-          src="#promo"
-          width="1"
-          height="0.56"
-          position="0 0 0"
-          rotation="0 0 0"
-          visible="false"
-        ></a-video>
-      </a-entity>
-    </a-scene>
-  </body>
-</html>
+          playsinli
