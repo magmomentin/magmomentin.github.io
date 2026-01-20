@@ -1,1 +1,1 @@
-
+export const FRAMES=[{id:"default",aspect:0.75}];
