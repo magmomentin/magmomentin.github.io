@@ -3,7 +3,6 @@ html, body {
   padding: 0;
   overflow: hidden;
   background: black;
-  font-family: system-ui, sans-serif;
 }
 
 #camera {
@@ -12,24 +11,12 @@ html, body {
   width: 100vw;
   height: 100vh;
   object-fit: cover;
-  z-index: 1;
 }
 
 #arVideo {
   position: fixed;
   display: none;
-  object-fit: cover;
-  z-index: 2;
-  border-radius: 8px;
-}
-
-#hint {
-  position: fixed;
-  bottom: 20px;
-  width: 100%;
-  text-align: center;
-  color: white;
-  font-size: 14px;
-  opacity: 0.8;
-  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  transform-origin: center center;
 }

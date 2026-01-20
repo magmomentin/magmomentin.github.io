@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Stage-2 AR Video Frame</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Hybrid AR Engine</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image.prod.js"></script>
 </head>
 <body>
 
@@ -14,8 +17,8 @@
     <source src="assets/demo.mp4" type="video/mp4">
   </video>
 
-  <div id="hint">Tap inside the frame</div>
+  <script src="engine.js"></script>
+  <script src="tracker.js"></script>
 
-  <script src="app.js"></script>
 </body>
 </html>
