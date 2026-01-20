@@ -1,7 +1,33 @@
-const video = document.getElementById("arVideo");
-const engine = window.AR_ENGINE;
+import { MindARImage } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image.prod.js";
 
-const mindar = new window.MINDAR.IMAGE.MindARController({
+const video = document.getElementById("arVideo");
+
+const STATE = {
+  ACTIVE: "active",
+  LOCKED: "locked",
+  LOST: "lost"
+};
+
+let currentState = STATE.LOST;
+let lastSeen = 0;
+
+function updateState(detected, confidence) {
+  const now = performance.now();
+
+  if (detected && confidence >= 0.85) {
+    currentState = STATE.ACTIVE;
+    lastSeen = now;
+  } else if (detected && confidence >= 0.55) {
+    currentState = STATE.LOCKED;
+    lastSeen = now;
+  } else if (now - lastSeen > 600) {
+    currentState = STATE.LOST;
+  }
+
+  return currentState;
+}
+
+const mindar = new MindARImage.MindARController({
   container: document.body,
   imageTargetSrc: "assets/target.mind"
 });
@@ -13,29 +39,24 @@ async function startAR() {
     const detected = data.hasTarget;
     const confidence = data.confidence || 0;
 
-    const state = engine.updateState(detected, confidence);
+    const state = updateState(detected, confidence);
 
-    render(state, data);
+    if (state === STATE.ACTIVE) {
+      video.style.display = "block";
+      video.style.opacity = "1";
+      video.style.transform = data.cssTransform || "none";
+      video.play();
+    }
+
+    if (state === STATE.LOCKED) {
+      video.style.display = "block";
+      video.style.opacity = "1";
+    }
+
+    if (state === STATE.LOST) {
+      video.style.opacity = "0";
+    }
   });
-}
-
-function render(state, data) {
-
-  if (state === engine.STATE.ACTIVE) {
-    video.style.display = "block";
-    video.style.opacity = "1";
-    video.style.transform = data.cssTransform || "none";
-    video.play();
-  }
-
-  if (state === engine.STATE.LOCKED) {
-    video.style.display = "block";
-    video.style.opacity = "1";
-  }
-
-  if (state === engine.STATE.LOST) {
-    video.style.opacity = "0";
-  }
 }
 
 startAR();

@@ -1,13 +1,14 @@
 
-# Hybrid AR Engine – Tuned (Stage-2 + Stage-3)
+# Hybrid AR Engine – FIXED (ES Modules)
 
-This version includes:
-- Tuned confidence thresholds
-- Smooth fade-in / fade-out timings
-- Reduced jitter and flicker
+This version fixes the MindAR loading error by using ES modules correctly.
 
-## Tuned Parameters
-- ACTIVE: confidence >= 0.85
-- LOCKED: confidence >= 0.55
-- LOST: confidence < 0.55 for 600ms
-- Fade duration: 450ms
+## Key points
+- mindar-image.prod.js is an ES module
+- tracker.js is loaded as type="module"
+- No reliance on window.MINDAR
+
+## How to run
+1. Host on HTTPS
+2. Replace assets/target.mind and assets/demo.mp4
+3. Open on mobile browser
