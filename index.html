@@ -1,32 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MagMoment AR</title>
 
-  <!-- MindAR + ThreeJS CDN -->
+  <!-- MindAR UMD version (NO CORS ISSUES) -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+
+  <!-- ThreeJS -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
 
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #000;
-    }
-    #container {
-      width: 100vw;
-      height: 100vh;
-    }
+    body, html { margin: 0; overflow: hidden; background: #000; }
+    #container { width: 100vw; height: 100vh; }
   </style>
 </head>
 
 <body>
   <div id="container"></div>
 
-  <!-- Load script.js -->
-  <script type="module" src="./script.js"></script>
+  <!-- Load JS normally (NOT module) -->
+  <script src="./script.js"></script>
 </body>
 </html>
