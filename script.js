@@ -1,25 +1,23 @@
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("MINDAR object in window:", window.MINDAR);
+document.addEventListener("DOMContentLoaded", () => {
+  const video = document.querySelector("#magVideo");
 
-  const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-    container: document.querySelector("#container"),
-    imageTargetSrc: "./targets.mind"
+  document
+    .querySelector("a-scene")
+    .addEventListener("arReady", () => {
+      console.log("MindAR ready");
+    });
+
+  document
+    .querySelector("a-scene")
+    .addEventListener("arError", () => {
+      alert("AR failed to start");
+    });
+
+  AFRAME.scenes[0].addEventListener("targetFound", () => {
+    video.play();
   });
 
-  const { renderer, scene, camera } = mindarThree;
-
-  const anchor = mindarThree.addAnchor(0);
-
-  const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 0.5, 0.5),
-    new THREE.MeshNormalMaterial()
-  );
-  anchor.group.add(cube);
-
-  await mindarThree.start();
-
-  renderer.setAnimationLoop(() => {
-    cube.rotation.y += 0.02;
-    renderer.render(scene, camera);
+  AFRAME.scenes[0].addEventListener("targetLost", () => {
+    video.pause();
   });
 });
