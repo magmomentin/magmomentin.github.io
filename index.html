@@ -2,13 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>MindAR Fix Example</title>
+    <title>MindAR Video Marker Demo</title>
 
-    <!-- Load in the correct order -->
+    <!-- A-Frame first -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+
+    <!-- MindAR for A-Frame second -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
+
+    <!-- Your own JS last -->
     <script src="./script.js"></script>
+
+    <style>
+      body { margin: 0; overflow: hidden; }
+    </style>
   </head>
+
   <body>
     <a-scene
       mindar-image="imageTargetSrc: ./assets/targets.mind"
@@ -16,7 +25,9 @@
       device-orientation-permission-ui="enabled: true"
       embedded
     >
-      <a-assets timeout="10000">
+
+      <!-- 🕐 Preload assets with longer timeout -->
+      <a-assets timeout="15000">
         <video
           id="promo"
           src="./assets/video.mp4"
@@ -27,10 +38,19 @@
         ></video>
       </a-assets>
 
+      <!-- Camera -->
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
+      <!-- Entity that shows the video on your tracked image -->
       <a-entity mindar-image-target="targetIndex: 0" play-on-target>
-        <a-video src="#promo" width="1" height="0.56" visible="false"></a-video>
+        <a-video
+          src="#promo"
+          width="1"
+          height="0.56"
+          position="0 0 0"
+          rotation="0 0 0"
+          visible="false"
+        ></a-video>
       </a-entity>
     </a-scene>
   </body>
