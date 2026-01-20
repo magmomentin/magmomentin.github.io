@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>MagMoment AR Frame 2</title>
+  <title>MagMoment AR Frame SA</title>
 
   <style>
-    body, html { margin: 0; overflow: hidden; }
+    body, html { margin: 0; overflow: hidden; background: black; }
     #ar-container { width: 100vw; height: 100vh; }
   </style>
 </head>
@@ -12,11 +12,11 @@
 <body>
   <div id="ar-container"></div>
 
-  <!-- THREE + MindAR ES MODULE VERSION -->
   <script type="module">
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.module.js";
-    import { MindARThree } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js";
+    import { MindARThree } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.esm.js";
 
+    // Initialize AR
     const mindarThree = new MindARThree({
       container: document.querySelector("#ar-container"),
       imageTargetSrc: "./assets/targets.mind",
@@ -24,18 +24,16 @@
 
     const { renderer, scene, camera } = mindarThree;
 
-    // --- VIDEO SETUP ---
+    // Video setup
     const video = document.createElement("video");
     video.src = "./assets/video.mp4";
     video.loop = true;
-    video.crossOrigin = "anonymous";
-    video.playsInline = true;
-    video.muted = true;  // autoplay on iOS requires muted
-    video.preload = "auto";
-    await video.load;
+    video.muted = true;        // required for autoplay
+    video.playsInline = true;  // required for iOS
+    await video.play().catch(() => {});
 
     const texture = new THREE.VideoTexture(video);
-    const geometry = new THREE.PlaneGeometry(1, 0.56); // Adjust to your video
+    const geometry = new THREE.PlaneGeometry(1, 0.56); // adjust to your video aspect
     const material = new THREE.MeshBasicMaterial({ map: texture });
     const plane = new THREE.Mesh(geometry, material);
 
@@ -44,9 +42,7 @@
     const anchor = mindarThree.addAnchor(0);
     anchor.group.add(plane);
 
-    // START AR
     await mindarThree.start();
-    video.play();
 
     renderer.setAnimationLoop(() => {
       renderer.render(scene, camera);
