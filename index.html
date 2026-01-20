@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MagMoment AR</title>
 
-    <!-- A-Frame library -->
+    <!-- AFRAME -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
 
-    <!-- MindAR JS (UMD build, works with A-Frame) -->
+    <!-- MINDAR (correct UMD build) -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.min.js"></script>
 
-    <!-- Local CSS & JS -->
     <link rel="stylesheet" href="./style.css" />
     <script src="./script.js" defer></script>
   </head>
+
   <body>
     <div id="loading">Loading AR...</div>
 
@@ -29,12 +29,12 @@
           id="magVideo"
           src="./assets/video.mp4"
           preload="auto"
-          loop="true"
+          loop
           crossorigin="anonymous"
         ></video>
       </a-assets>
 
-      <a-camera position="0 0 0"></a-camera>
+      <a-camera></a-camera>
 
       <a-video
         src="#magVideo"
