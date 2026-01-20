@@ -38,8 +38,14 @@ ui.lost();
 requestAnimationFrame(loop);
 }
 
-ui.waitForTap(()=>{
-player=new VideoPlayer(auth.videoUrl);
-gl=new GLRenderer(canvas,player.video);
-requestAnimationFrame(loop);
+ui.waitForTap(() => {
+  player = new VideoPlayer(auth.videoUrl);
+
+  // 🔑 CRITICAL FIX: attach video to DOM (hidden)
+  document.body.appendChild(player.video);
+  player.video.style.display = "none";
+
+  gl = new GLRenderer(canvas, player.video);
+  requestAnimationFrame(loop);
 });
+
