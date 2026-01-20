@@ -7,10 +7,10 @@ body, html {
 
 #loading {
   position: absolute;
-  top: 15px;
-  left: 15px;
+  top: 10px;
+  left: 10px;
   color: white;
   font-size: 18px;
-  z-index: 999;
   font-family: sans-serif;
+  z-index: 999;
 }
