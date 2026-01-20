@@ -7,57 +7,47 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   const { renderer, scene, camera } = mindarThree;
-
-  // anchor for target index 0
   const anchor = mindarThree.addAnchor(0);
 
-  // --- Floating Text ---
-  const textCanvas = document.createElement("canvas");
-  textCanvas.width = 1024;
-  textCanvas.height = 256;
-  const ctx = textCanvas.getContext("2d");
+  // --- Load video ---
+  const video = document.createElement("video");
+  video.src = "./assets/video.mp4";
+  video.loop = true;
+  video.muted = true;
+  video.playsInline = true;
+  video.autoplay = true;
+  const videoTexture = new THREE.VideoTexture(video);
 
-  ctx.fillStyle = "white";
-  ctx.font = "80px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("Crafting Magnetic Memories", 512, 150);
-
-  const textTexture = new THREE.CanvasTexture(textCanvas);
-  const textMaterial = new THREE.MeshBasicMaterial({
-    map: textTexture,
-    transparent: true
-  });
-
-  const textPlane = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.5, 0.4),
-    textMaterial
+  // --- Video plane (screen) ---
+  const videoPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.5, 0.9),
+    new THREE.MeshBasicMaterial({ map: videoTexture })
   );
-  textPlane.position.set(0, 0.8, 0);
-  anchor.group.add(textPlane);
+  videoPlane.position.z = 0.05;
 
-  // --- Sparkle Sprite ---
-  const sparkleTex = new THREE.TextureLoader().load("./assets/sparkle.png");
-  const sparkleMaterial = new THREE.SpriteMaterial({
-    map: sparkleTex,
-    transparent: true,
-    opacity: 0.9
-  });
+  // --- Simple 3D frame ---
+  const frame = new THREE.Mesh(
+    new THREE.BoxGeometry(1.6, 1.0, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.4 })
+  );
 
-  const sparkle = new THREE.Sprite(sparkleMaterial);
-  sparkle.scale.set(0.5, 0.5, 1);
-  sparkle.position.set(0, 0.2, 0);
-  anchor.group.add(sparkle);
+  // Group video + frame
+  const group = new THREE.Group();
+  group.add(frame);
+  group.add(videoPlane);
 
-  // Animation loop
-  let t = 0;
+  anchor.group.add(group);
+
+  // Lights for 3D effect
+  const light = new THREE.PointLight(0xffffff, 1);
+  light.position.set(0, 1, 2);
+  anchor.group.add(light);
+
+  video.play();
+
+  // Animation 
   renderer.setAnimationLoop(() => {
-    t += 0.02;
-
-    sparkle.position.y = 0.2 + Math.sin(t) * 0.1;
-    sparkle.material.opacity = 0.6 + Math.sin(t * 2) * 0.3;
-
-    textPlane.position.y = 0.8 + Math.sin(t * 0.5) * 0.04;
-
+    group.rotation.y += 0.003;
     renderer.render(scene, camera);
   });
 
