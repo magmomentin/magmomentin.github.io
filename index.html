@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>MagMoment AR Frame</title>
+  <title>MagMoment AR Frame 2</title>
 
   <style>
     body, html { margin: 0; overflow: hidden; }
@@ -26,4 +26,32 @@
 
     // --- VIDEO SETUP ---
     const video = document.createElement("video");
-    video.src = "./a
+    video.src = "./assets/video.mp4";
+    video.loop = true;
+    video.crossOrigin = "anonymous";
+    video.playsInline = true;
+    video.muted = true;  // autoplay on iOS requires muted
+    video.preload = "auto";
+    await video.load;
+
+    const texture = new THREE.VideoTexture(video);
+    const geometry = new THREE.PlaneGeometry(1, 0.56); // Adjust to your video
+    const material = new THREE.MeshBasicMaterial({ map: texture });
+    const plane = new THREE.Mesh(geometry, material);
+
+    plane.rotation.x = -Math.PI / 2;
+
+    const anchor = mindarThree.addAnchor(0);
+    anchor.group.add(plane);
+
+    // START AR
+    await mindarThree.start();
+    video.play();
+
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+  </script>
+
+</body>
+</html>
