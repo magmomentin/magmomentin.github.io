@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const scene = document.querySelector("a-scene");
   const video = document.querySelector("#magVideo");
 
-  // MindAR events
+  // MindAR events - update
   scene.addEventListener("arReady", () => {
     console.log("MindAR ready");
   });
