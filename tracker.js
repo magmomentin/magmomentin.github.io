@@ -1,4 +1,4 @@
-import { MindARImage } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image.prod.js";
+import * as MINDAR from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image.prod.js";
 
 const video = document.getElementById("arVideo");
 
@@ -17,17 +17,20 @@ function updateState(detected, confidence) {
   if (detected && confidence >= 0.85) {
     currentState = STATE.ACTIVE;
     lastSeen = now;
-  } else if (detected && confidence >= 0.55) {
+  } 
+  else if (detected && confidence >= 0.55) {
     currentState = STATE.LOCKED;
     lastSeen = now;
-  } else if (now - lastSeen > 600) {
+  } 
+  else if (now - lastSeen > 600) {
     currentState = STATE.LOST;
   }
 
   return currentState;
 }
 
-const mindar = new MindARImage.MindARController({
+// ✅ CORRECT MindAR controller creation
+const mindar = new MINDAR.MindARImage.MindARController({
   container: document.body,
   imageTargetSrc: "assets/target.mind"
 });
