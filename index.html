@@ -2,8 +2,6 @@
 <html>
 <head>
   <title>MagMoment AR Frame</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"></script>
 
   <style>
     body, html { margin: 0; overflow: hidden; }
@@ -14,8 +12,9 @@
 <body>
   <div id="ar-container"></div>
 
+  <!-- THREE + MindAR ES MODULE VERSION -->
   <script type="module">
-
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.module.js";
     import { MindARThree } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js";
 
     const mindarThree = new MindARThree({
@@ -27,28 +26,4 @@
 
     // --- VIDEO SETUP ---
     const video = document.createElement("video");
-    video.src = "./assets/video.mp4";
-    video.loop = true;
-    video.crossOrigin = "anonymous";
-    video.preload = "auto";
-    video.load();
-
-    const texture = new THREE.VideoTexture(video);
-    const geometry = new THREE.PlaneGeometry(1, 0.56); // Match your video aspect ratio
-    const material = new THREE.MeshBasicMaterial({ map: texture });
-    const plane = new THREE.Mesh(geometry, material);
-    plane.rotation.x = -Math.PI / 2;
-
-    const anchor = mindarThree.addAnchor(0); // first target in targets.mind
-    anchor.group.add(plane);
-
-    mindarThree.start().then(() => {
-      video.play();
-      renderer.setAnimationLoop(() => {
-        renderer.render(scene, camera);
-      });
-    });
-
-  </script>
-</body>
-</html>
+    video.src = "./a
