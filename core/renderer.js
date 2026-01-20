@@ -39,7 +39,8 @@ export class Renderer {
   }
 
   draw(b) {
-    if (this.video.readyState < 2) return;
+    if (this.video.readyState < this.video.HAVE_CURRENT_DATA) return;
+
 
     const gl = this.gl;
     gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
