@@ -1,23 +1,29 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const scene = document.querySelector("a-scene");
   const video = document.querySelector("#magVideo");
 
-  document
-    .querySelector("a-scene")
-    .addEventListener("arReady", () => {
-      console.log("MindAR ready");
-    });
-
-  document
-    .querySelector("a-scene")
-    .addEventListener("arError", () => {
-      alert("AR failed to start");
-    });
-
-  AFRAME.scenes[0].addEventListener("targetFound", () => {
-    video.play();
+  // MindAR events
+  scene.addEventListener("arReady", () => {
+    console.log("MindAR ready");
   });
 
-  AFRAME.scenes[0].addEventListener("targetLost", () => {
-    video.pause();
+  scene.addEventListener("arError", () => {
+    alert("AR failed to start");
+  });
+
+  // Wait until A-Frame actually finishes loading
+  scene.addEventListener("loaded", () => {
+    const mindarSystem = scene.systems["mindar-image-system"];
+
+    // MindAR emits these events through its system
+    mindarSystem.on("targetFound", () => {
+      console.log("Target found — playing video");
+      video.play();
+    });
+
+    mindarSystem.on("targetLost", () => {
+      console.log("Target lost — pausing video");
+      video.pause();
+    });
   });
 });
