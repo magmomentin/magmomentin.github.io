@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", async () => {
-
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.querySelector("#container"),
     imageTargetSrc: "./targets.mind",
@@ -9,15 +8,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const anchor = mindarThree.addAnchor(0);
 
-  // example cube to test (replace with your video later)
-  const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-  const material = new THREE.MeshNormalMaterial();
-  const cube = new THREE.Mesh(geometry, material);
+  // --- Add simple cube to confirm it's working ---
+  const cube = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.5, 0.5),
+    new THREE.MeshNormalMaterial()
+  );
   anchor.group.add(cube);
 
   await mindarThree.start();
+
   renderer.setAnimationLoop(() => {
-    cube.rotation.y += 0.02;
+    cube.rotation.y += 0.03;
+    cube.rotation.x += 0.02;
     renderer.render(scene, camera);
   });
 });
