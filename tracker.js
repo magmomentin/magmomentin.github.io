@@ -1,20 +1,19 @@
-import { MindARImage } from "https://unpkg.com/mind-ar@1.2.4/dist/mindar-image.esm.js";
-
 const video = document.getElementById("arVideo");
 
-const mindar = new MindARImage({
+const mindar = new window.MINDAR.IMAGE.MindARController({
   container: document.body,
   imageTargetSrc: "assets/target.mind"
 });
 
-await mindar.start();
+(async () => {
+  await mindar.start();
 
-mindar.addEventListener("targetFound", () => {
-  video.style.display = "block";
-  video.style.opacity = "1";
-  video.play();
-});
+  mindar.on("targetFound", () => {
+    video.style.display = "block";
+    video.play();
+  });
 
-mindar.addEventListener("targetLost", () => {
-  video.style.opacity = "0";
-});
+  mindar.on("targetLost", () => {
+    video.style.display = "none";
+  });
+})();
