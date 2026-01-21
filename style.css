@@ -5,6 +5,7 @@ html, body {
   background: black;
 }
 
+/* Camera background */
 #camera {
   position: fixed;
   inset: 0;
@@ -13,10 +14,22 @@ html, body {
   object-fit: cover;
 }
 
+/* AR video overlay */
 #arVideo {
   position: fixed;
-  display: none;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: contain;
+
   opacity: 0;
-  transition: opacity 0.45s ease;
-  transform-origin: center center;
+  visibility: hidden;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+/* Visible only when playing */
+#arVideo.playing {
+  opacity: 1;
+  visibility: visible;
 }
