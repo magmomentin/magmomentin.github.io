@@ -2,14 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MagMoment AR</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no"
+  />
+  <title>MagMoment Camera Test</title>
 
-  <!-- ✅ LAST STABLE GLOBAL BUILD -->
+  <!-- LAST STABLE GLOBAL BUILD -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: black;
+      color: white;
+      font-family: sans-serif;
+    }
+
+    #tap {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: black;
+      z-index: 10;
+    }
+  </style>
 </head>
 <body>
 
+  <!-- REQUIRED USER GESTURE FOR MOBILE -->
+  <div id="tap">Tap to start camera</div>
+
+  <!-- Hidden video for AR texture (not used yet) -->
   <video
     id="arVideo"
     muted
