@@ -46,8 +46,8 @@ start.addEventListener("click", async () => {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     };
-    resize();
-    window.addEventListener("resize", resize);
+    //resize();
+   // window.addEventListener("resize", resize);
 
     // Anchor
     const anchor = mindar.addAnchor(0);
