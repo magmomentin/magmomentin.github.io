@@ -1,42 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MagMoment AR</title>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>MagMoment AR</title>
 
-  <!-- Load THREE.JS FIRST -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <!-- A-Frame + MindAR -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
 
-  <!-- Load MindAR AFTER THREE -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #000;
-    }
-  </style>
-</head>
+  <body>
+    <!-- Hidden video element -->
+    <video id="video" src="./assets/video.mp4"
+      preload="auto"
+      autoplay
+      muted
+      playsinline
+      loop
+      crossorigin="anonymous"
+      style="display:none">
+    </video>
 
-<body>
+    <a-scene
+      mindar-image="imageTargetSrc: ./assets/targets.mind;"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+      embedded
+      color-space="sRGB"
+      renderer="colorManagement: true;"
+    >
+      <a-assets>
+        <img id="frame" src="./assets/frame.jpg" />
+        <video id="videoAsset" src="./assets/video.mp4" preload="auto" muted loop></video>
+      </a-assets>
 
-  <script type="module">
-    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-      container: document.body,
-      imageTargetSrc: "./targets.mind",
-    });
+      <!-- Anchor for tracker -->
+      <a-entity mindar-image-target="targetIndex: 0">
 
-    const { renderer, scene, camera } = mindarThree;
+        <!-- AR Video -->
+        <a-video
+          src="#videoAsset"
+          width="1"
+          height="1.5"
+          position="0 0 0">
+        </a-video>
 
-    await mindarThree.start();
+      </a-entity>
 
-    renderer.setAnimationLoop(() => {
-      renderer.render(scene, camera);
-    });
-  </script>
-
-</body>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    </a-scene>
+  </body>
 </html>
