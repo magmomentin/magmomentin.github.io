@@ -8,7 +8,10 @@
   />
   <title>MagMoment Camera Test</title>
 
-  <!-- LAST STABLE GLOBAL BUILD -->
+  <!-- 1️⃣ Three.js (REQUIRED) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
+
+  <!-- 2️⃣ MindAR (Three-based, stable global build) -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 
   <style>
@@ -35,10 +38,10 @@
 </head>
 <body>
 
-  <!-- REQUIRED USER GESTURE FOR MOBILE -->
+  <!-- REQUIRED USER GESTURE -->
   <div id="tap">Tap to start camera</div>
 
-  <!-- Hidden video for AR texture (not used yet) -->
+  <!-- Hidden video (used later as texture) -->
   <video
     id="arVideo"
     muted
@@ -51,6 +54,7 @@
     <source src="assets/demo.mp4" type="video/mp4">
   </video>
 
+  <!-- AR logic -->
   <script src="tracker.js"></script>
 </body>
 </html>
