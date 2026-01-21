@@ -1,57 +1,20 @@
+import { MindARImage } from "https://unpkg.com/mind-ar@1.2.4/dist/mindar-image.esm.js";
+
 const video = document.getElementById("arVideo");
 
-const STATE = {
-  ACTIVE: "active",
-  LOCKED: "locked",
-  LOST: "lost"
-};
-
-let currentState = STATE.LOST;
-let lastSeen = 0;
-
-function updateState(detected, confidence) {
-  const now = performance.now();
-
-  if (detected && confidence > 0.85) {
-    currentState = STATE.ACTIVE;
-    lastSeen = now;
-  } else if (detected && confidence > 0.55) {
-    currentState = STATE.LOCKED;
-    lastSeen = now;
-  } else if (now - lastSeen > 600) {
-    currentState = STATE.LOST;
-  }
-
-  return currentState;
-}
-
-const mindar = new window.MINDAR.IMAGE.MindARController({
+const mindar = new MindARImage({
   container: document.body,
   imageTargetSrc: "assets/target.mind"
 });
 
-(async () => {
-  await mindar.start();
+await mindar.start();
 
-  mindar.on("update", (data) => {
-    const detected = data.hasTarget;
-    const confidence = data.confidence || 0;
+mindar.addEventListener("targetFound", () => {
+  video.style.display = "block";
+  video.style.opacity = "1";
+  video.play();
+});
 
-    const state = updateState(detected, confidence);
-
-    if (state === STATE.ACTIVE) {
-      video.style.display = "block";
-      video.style.opacity = "1";
-      video.style.transform = data.cssTransform || "none";
-      video.play();
-    }
-
-    if (state === STATE.LOCKED) {
-      video.style.opacity = "1";
-    }
-
-    if (state === STATE.LOST) {
-      video.style.opacity = "0";
-    }
-  });
-})();
+mindar.addEventListener("targetLost", () => {
+  video.style.opacity = "0";
+});
