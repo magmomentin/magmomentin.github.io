@@ -5,15 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MagMoment AR</title>
 
-  <!-- ✅ GLOBAL, NON-ESM BUILD -->
+  <!-- Stable GLOBAL build -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image-three.prod.js"></script>
 
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <video id="camera" autoplay playsinline muted></video>
-
+  <!-- Hidden video (used as texture) -->
   <video
     id="arVideo"
     muted
@@ -21,6 +20,7 @@
     autoplay
     loop
     preload="auto"
+    style="display:none"
   >
     <source src="assets/demo.mp4" type="video/mp4">
   </video>
