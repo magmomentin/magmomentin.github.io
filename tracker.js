@@ -17,21 +17,16 @@ let targetVisible = false;
 start.addEventListener("click", async () => {
   try {
     start.style.display = "none";
-    status.textContent = "STATUS: Requesting camera";
+    status.textContent = "STATUS: Starting AR";
 
-    // Explicit user gesture → camera permission
-    const s = await navigator.mediaDevices.getUserMedia({ video: true });
-    s.getTracks().forEach(t => t.stop());
-
-    // Unlock video
+    // 🔑 Unlock video playback (do NOT touch camera)
     await video.play();
 
     // Prepare fallback video
     fbVideo.src = video.currentSrc || video.src;
-    fbVideo.play().catch(()=>{});
+    fbVideo.play().catch(() => {});
 
-    status.textContent = "STATUS: Starting AR";
-
+    // Init MindAR INSIDE user gesture
     const mindar = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
       imageTargetSrc: "assets/target.mind"
@@ -53,9 +48,9 @@ start.addEventListener("click", async () => {
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
 
-    // Cover logic (no black bars)
+    // Cover logic
     const applyCover = () => {
-      const vAspect = video.videoWidth / video.videoHeight || (9/16);
+      const vAspect = video.videoWidth / video.videoHeight || (9 / 16);
       if (vAspect > FRAME_ASPECT) {
         const s = FRAME_ASPECT / vAspect;
         texture.repeat.set(s, 1);
@@ -86,14 +81,16 @@ start.addEventListener("click", async () => {
       status.textContent = "STATUS: TARGET FOUND";
       targetVisible = true;
     };
+
     anchor.onTargetLost = () => {
       status.textContent = "STATUS: TARGET LOST";
       targetVisible = false;
     };
 
+    // 🔑 Start MindAR (camera opens here)
     await mindar.start();
 
-    // Show camera only when ready
+    // Reveal camera canvas AFTER stream is live
     const canvas = document.querySelector("canvas");
     if (canvas) canvas.classList.add("active");
 
