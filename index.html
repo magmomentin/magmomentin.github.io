@@ -2,26 +2,31 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>MagMoment AR Frame</title>
+    <title>MagMoment AR</title>
 
-    <!-- AFRAME -->
+    <!-- AFRAME MUST LOAD FIRST -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
 
-    <!-- MindAR -->
+    <!-- MindAR FOR AFRAME (Correct Build) -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
-      body, html { margin: 0; overflow: hidden; }
+      body, html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
     </style>
   </head>
+
   <body>
     <a-scene
-      mindar-image="imageTargetSrc: ./assets/target.mind;"
+      mindar-image="imageTargetSrc: ./assets/targets.mind"
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
+      embedded
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
-      embedded
     >
 
       <a-assets>
@@ -29,15 +34,14 @@
           id="myvideo"
           src="./assets/demo.mp4"
           preload="auto"
-          crossorigin="anonymous"
           playsinline
           webkit-playsinline
+          crossorigin="anonymous"
         ></video>
 
         <img id="frame" src="./assets/frame.png">
       </a-assets>
 
-      <!-- TARGET -->
       <a-entity mindar-image-target="targetIndex: 0">
 
         <!-- Frame Image -->
@@ -48,9 +52,8 @@
           position="0 0 0"
         ></a-image>
 
-        <!-- Video Layer -->
+        <!-- Video inside Frame -->
         <a-video
-          id="vid"
           src="#myvideo"
           width="0.88"
           height="0.55"
@@ -58,25 +61,27 @@
           autoplay="true"
           loop="true"
           playsinline="true"
-        ></a-video>
+        >
+        </a-video>
 
       </a-entity>
 
       <a-camera></a-camera>
+
     </a-scene>
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
+        const video = document.getElementById("myvideo");
         const scene = document.querySelector("a-scene");
-        const video = document.querySelector("#myvideo");
 
         scene.addEventListener("arReady", () => {
           console.log("AR Ready");
           video.play();
         });
 
-        scene.addEventListener("arError", (err) => {
-          console.error("AR Error:", err);
+        scene.addEventListener("arError", err => {
+          console.error("AR ERROR:", err);
         });
       });
     </script>
