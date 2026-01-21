@@ -1,89 +1,26 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>MagMoment AR</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Hybrid AR Engine (Fixed)</title>
+  <link rel="stylesheet" href="style.css">
 
-    <!-- AFRAME MUST LOAD FIRST -->
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <!-- Load MindAR as ES module -->
+  <script type="module">
+    import "https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image.prod.js";
+  </script>
+</head>
+<body>
 
-    <!-- MindAR FOR AFRAME (Correct Build) -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
+  <video id="camera" autoplay playsinline muted></video>
 
-    <style>
-      body, html {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-      }
-    </style>
-  </head>
+  <video id="arVideo" muted playsinline loop preload="auto">
+    <source src="assets/demo.mp4" type="video/mp4">
+  </video>
 
-  <body>
-    <a-scene
-      mindar-image="imageTargetSrc: ./assets/targets.mind"
-      color-space="sRGB"
-      renderer="colorManagement: true, physicallyCorrectLights"
-      embedded
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false"
-    >
+  <!-- Load tracker as module -->
+  <script type="module" src="tracker.js"></script>
 
-      <a-assets>
-        <video
-          id="myvideo"
-          src="./assets/demo.mp4"
-          preload="auto"
-          playsinline
-          webkit-playsinline
-          crossorigin="anonymous"
-        ></video>
-
-        <img id="frame" src="./assets/frame.png">
-      </a-assets>
-
-      <a-entity mindar-image-target="targetIndex: 0">
-
-        <!-- Frame Image -->
-        <a-image
-          src="#frame"
-          width="1"
-          height="0.75"
-          position="0 0 0"
-        ></a-image>
-
-        <!-- Video inside Frame -->
-        <a-video
-          src="#myvideo"
-          width="0.88"
-          height="0.55"
-          position="0 -0.02 0.01"
-          autoplay="true"
-          loop="true"
-          playsinline="true"
-        >
-        </a-video>
-
-      </a-entity>
-
-      <a-camera></a-camera>
-
-    </a-scene>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const video = document.getElementById("myvideo");
-        const scene = document.querySelector("a-scene");
-
-        scene.addEventListener("arReady", () => {
-          console.log("AR Ready");
-          video.play();
-        });
-
-        scene.addEventListener("arError", err => {
-          console.error("AR ERROR:", err);
-        });
-      });
-    </script>
-  </body>
+</body>
 </html>

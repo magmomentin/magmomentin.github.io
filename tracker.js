@@ -1,124 +1,62 @@
-const start   = document.getElementById("start");
-const status  = document.getElementById("status");
-const video   = document.getElementById("video");
+import { MindARImage } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image.prod.js";
 
-const fbWrap  = document.getElementById("fallback");
-const fbVideo = document.getElementById("fallbackVideo");
+const video = document.getElementById("arVideo");
 
-/* CONFIG */
-const FRAME_ASPECT = 2 / 3;
-const FRAME_HEIGHT = 1.0;
-const FADE_SPEED   = 0.08;
-const FAIL_TIMEOUT = 1800;
+const STATE = {
+  ACTIVE: "active",
+  LOCKED: "locked",
+  LOST: "lost"
+};
 
-let stage3OK = false;
-let targetVisible = false;
+let currentState = STATE.LOST;
+let lastSeen = 0;
 
-start.addEventListener("click", async () => {
-  try {
-    start.style.display = "none";
-    status.textContent = "STATUS: Starting AR";
+function updateState(detected, confidence) {
+  const now = performance.now();
 
-    /* Unlock video only (DO NOT touch camera) */
-    await video.play();
-
-    /* Prepare fallback video */
-    fbVideo.src = video.currentSrc || video.src;
-    fbVideo.play().catch(() => {});
-
-    /* Init MindAR inside user gesture */
-    const mindar = new window.MINDAR.IMAGE.MindARThree({
-      container: document.body,
-      imageTargetSrc: "assets/target.mind"
-    });
-
-    const { renderer, scene, camera } = mindar;
-
-    const resize = () => {
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const anchor = mindar.addAnchor(0);
-
-    const texture = new THREE.VideoTexture(video);
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-
-    const applyCover = () => {
-      const vAspect = video.videoWidth / video.videoHeight || (9 / 16);
-      if (vAspect > FRAME_ASPECT) {
-        const s = FRAME_ASPECT / vAspect;
-        texture.repeat.set(s, 1);
-        texture.offset.set((1 - s) / 2, 0);
-      } else {
-        const s = vAspect / FRAME_ASPECT;
-        texture.repeat.set(1, s);
-        texture.offset.set(0, (1 - s) / 2);
-      }
-    };
-    if (video.readyState >= 2) applyCover();
-    else video.onloadedmetadata = applyCover;
-
-    const plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(FRAME_HEIGHT * FRAME_ASPECT, FRAME_HEIGHT),
-      new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        opacity: 0,
-        side: THREE.DoubleSide,
-        depthTest: false
-      })
-    );
-    plane.position.z = 0.01;
-    anchor.group.add(plane);
-
-    anchor.onTargetFound = () => {
-      status.textContent = "STATUS: TARGET FOUND";
-      targetVisible = true;
-    };
-
-    anchor.onTargetLost = () => {
-      status.textContent = "STATUS: TARGET LOST";
-      targetVisible = false;
-    };
-
-    /* START MindAR — camera opens here */
-    await mindar.start();
-
-    status.textContent = "STATUS: Scanning";
-
-    /* Stage-3 health check */
-    const t0 = video.currentTime;
-    setTimeout(() => {
-      if (video.currentTime > t0 + 0.05) {
-        stage3OK = true;
-        status.textContent = "STATUS: Stage-3 active";
-      } else {
-        fbWrap.style.display = "flex";
-        status.textContent = "STATUS: Fallback mode";
-      }
-    }, FAIL_TIMEOUT);
-
-    renderer.setAnimationLoop(() => {
-      texture.needsUpdate = true;
-
-      if (stage3OK) {
-        plane.material.opacity +=
-          ((targetVisible ? 1 : 0) - plane.material.opacity) * FADE_SPEED;
-      } else {
-        fbVideo.style.opacity = targetVisible ? 1 : 0;
-      }
-
-      renderer.render(scene, camera);
-    });
-
-  } catch (err) {
-    console.error(err);
-    status.textContent = "STATUS: Permission denied";
-    start.style.display = "flex";
+  if (detected && confidence >= 0.85) {
+    currentState = STATE.ACTIVE;
+    lastSeen = now;
+  } else if (detected && confidence >= 0.55) {
+    currentState = STATE.LOCKED;
+    lastSeen = now;
+  } else if (now - lastSeen > 600) {
+    currentState = STATE.LOST;
   }
-}, { once: true });
+
+  return currentState;
+}
+
+const mindar = new MindARImage.MindARController({
+  container: document.body,
+  imageTargetSrc: "assets/target.mind"
+});
+
+async function startAR() {
+  await mindar.start();
+
+  mindar.on("update", (data) => {
+    const detected = data.hasTarget;
+    const confidence = data.confidence || 0;
+
+    const state = updateState(detected, confidence);
+
+    if (state === STATE.ACTIVE) {
+      video.style.display = "block";
+      video.style.opacity = "1";
+      video.style.transform = data.cssTransform || "none";
+      video.play();
+    }
+
+    if (state === STATE.LOCKED) {
+      video.style.display = "block";
+      video.style.opacity = "1";
+    }
+
+    if (state === STATE.LOST) {
+      video.style.opacity = "0";
+    }
+  });
+}
+
+startAR();
