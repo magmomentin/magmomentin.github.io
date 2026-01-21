@@ -1,61 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, user-scalable=no"
-  />
-  <title>MagMoment Camera Test</title>
+const tap = document.getElementById("tap");
 
-  <!-- 1️⃣ Three.js (REQUIRED) -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
+tap.addEventListener("click", async () => {
+  tap.innerText = "Starting camera…";
 
-  <!-- 2️⃣ MindAR (Three-based, stable global build) -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
+  try {
+    // 🔒 Force mobile camera permission
+    await navigator.mediaDevices.getUserMedia({ video: true });
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: black;
-      color: white;
-      font-family: sans-serif;
-    }
+    tap.innerText = "Camera granted. Starting AR…";
 
-    
-    #tap {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      background: black;
-      z-index: 10;
-    }
-  </style>
-</head>
-<body>
+    // Init MindAR AFTER permission
+    const mindar = new window.MINDAR.IMAGE.MindARThree({
+      container: document.body,
+      imageTargetSrc: "assets/target.mind"
+    });
 
-  <!-- REQUIRED USER GESTURE -->
-  <div id="tap">Tap to start camera</div>
+    const { renderer, scene, camera } = mindar;
 
-  <!-- Hidden video (used later as texture) -->
-  <video
-    id="arVideo"
-    muted
-    playsinline
-    autoplay
-    loop
-    preload="auto"
-    style="display:none"
-  >
-    <source src="assets/demo.mp4" type="video/mp4">
-  </video>
+    await mindar.start();
 
-  <!-- AR logic -->
-  <script src="tracker.js"></script>
-</body>
-</html>
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+
+    tap.remove(); // success
+  } catch (err) {
+    console.error(err);
+    tap.innerText = "Camera permission denied";
+  }
+}, { once: true });
