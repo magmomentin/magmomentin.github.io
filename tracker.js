@@ -17,19 +17,17 @@ function updateState(detected, confidence) {
   if (detected && confidence >= 0.85) {
     currentState = STATE.ACTIVE;
     lastSeen = now;
-  } 
-  else if (detected && confidence >= 0.55) {
+  } else if (detected && confidence >= 0.55) {
     currentState = STATE.LOCKED;
     lastSeen = now;
-  } 
-  else if (now - lastSeen > 600) {
+  } else if (now - lastSeen > 600) {
     currentState = STATE.LOST;
   }
 
   return currentState;
 }
 
-// ✅ CORRECT MindAR controller creation
+// ✅ THIS is the correct constructor path
 const mindar = new MINDAR.MindARImage.MindARController({
   container: document.body,
   imageTargetSrc: "assets/target.mind"
