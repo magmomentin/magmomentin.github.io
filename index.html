@@ -1,103 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>MagMoment AR</title>
+  <title>MindAR Baseline</title>
 
-  <!-- Core libs -->
+  <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
+
+  <!-- MindAR (camera-safe build) -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 
   <style>
     html, body {
       margin: 0;
-      padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
       background: black;
-      font-family: system-ui, sans-serif;
-    }
-
-    /* IMPORTANT: do NOT hide or fade the canvas */
-    canvas {
-      position: fixed !important;
-      inset: 0;
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: cover;
     }
 
     #start {
       position: fixed;
       inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 18px;
-      background: black;
       z-index: 10;
-      cursor: pointer;
-    }
-
-    #status {
-      position: fixed;
-      top: 12px;
-      left: 12px;
-      padding: 6px 10px;
-      background: rgba(0,0,0,0.65);
-      color: #00ff88;
-      font-size: 13px;
-      border-radius: 4px;
-      z-index: 5;
-    }
-
-    /* Stage-2 fallback overlay */
-    #fallback {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 4;
-    }
-
-    #fallback video {
-      width: 40vw;
-      aspect-ratio: 2 / 3;
-      max-width: 70vw;
-      max-height: 70vh;
-      object-fit: cover;
-      opacity: 0;
-      transition: opacity 0.35s ease;
-    }
-
-    /* Keep video alive for mobile */
-    #video {
-      position: fixed;
-      width: 1px;
-      height: 1px;
-      opacity: 0.01;
-      pointer-events: none;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
 
-  <div id="start">Tap to start AR</div>
-  <div id="status">STATUS: Ready</div>
+  <button id="start">Start AR</button>
 
-  <video id="video" muted playsinline loop preload="auto">
+  <video
+    id="video"
+    muted
+    playsinline
+    loop
+    style="display:none"
+  >
     <source src="assets/demo.mp4" type="video/mp4">
   </video>
 
-  <div id="fallback">
-    <video id="fallbackVideo" muted playsinline loop></video>
-  </div>
-
-  <script src="tracker.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
