@@ -6,12 +6,12 @@
     name="viewport"
     content="width=device-width, initial-scale=1.0, user-scalable=no"
   />
-  <title>MagMoment AR – Debug</title>
+  <title>MagMoment AR</title>
 
-  <!-- Three.js -->
+  <!-- Three.js (required first) -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
 
-  <!-- MindAR (stable global) -->
+  <!-- MindAR (last stable global build) -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 
   <style>
@@ -20,36 +20,47 @@
       padding: 0;
       overflow: hidden;
       background: black;
-      color: white;
       font-family: sans-serif;
     }
 
-    #tap {
+    #start {
       position: fixed;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 18px;
+      color: white;
       background: black;
       z-index: 10;
+      cursor: pointer;
     }
 
-    #status {
+    /* IMPORTANT: video must stay alive (not display:none) */
+    #video {
       position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.7);
-      padding: 6px 10px;
-      font-size: 14px;
-      z-index: 5;
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
 
-  <div id="tap">Tap to start AR</div>
-  <div id="status">STATUS: Waiting</div>
+  <!-- Required user gesture -->
+  <div id="start">Tap / Click to start AR</div>
+
+  <!-- Video kept alive for mobile -->
+  <video
+    id="video"
+    muted
+    playsinline
+    loop
+    preload="auto"
+  >
+    <source src="assets/demo.mp4" type="video/mp4">
+  </video>
 
   <script src="tracker.js"></script>
 </body>
