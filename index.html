@@ -5,18 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>MagMoment AR</title>
 
-  <!-- Core libs -->
+  <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: black;
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden; background: black;
       font-family: system-ui, sans-serif;
     }
 
@@ -29,37 +27,47 @@
     }
 
     #start {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 18px;
-      background: black;
-      z-index: 10;
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 18px;
+      background: black; z-index: 10;
       cursor: pointer;
     }
 
     #status {
-      position: fixed;
-      top: 12px;
-      left: 12px;
+      position: fixed; top: 12px; left: 12px;
       padding: 6px 10px;
       background: rgba(0,0,0,0.65);
       color: #00ff88;
-      font-size: 13px;
+      font-size: 13px; border-radius: 4px;
       z-index: 5;
-      border-radius: 4px;
     }
 
-    /* Keep video alive for mobile */
-    #video {
+    /* Stage-2 fallback overlay (identical size & fade) */
+    #fallback {
       position: fixed;
-      width: 1px;
-      height: 1px;
-      opacity: 0.01;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
       pointer-events: none;
+      z-index: 4;
+    }
+
+    #fallback video {
+      width: 40vw;            /* visually matches Stage-3 plane */
+      aspect-ratio: 2 / 3;   /* same frame ratio */
+      max-width: 70vw;
+      max-height: 70vh;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    /* keep video alive for mobile */
+    #video {
+      position: fixed; width: 1px; height: 1px;
+      opacity: 0.01; pointer-events: none;
     }
   </style>
 </head>
@@ -68,9 +76,15 @@
   <div id="start">Tap / Click to start AR</div>
   <div id="status">STATUS: Waiting</div>
 
+  <!-- Shared video element -->
   <video id="video" muted playsinline loop preload="auto">
     <source src="assets/demo.mp4" type="video/mp4">
   </video>
+
+  <!-- Stage-2 fallback layer -->
+  <div id="fallback">
+    <video id="fallbackVideo" muted playsinline loop></video>
+  </div>
 
   <script src="tracker.js"></script>
 </body>
