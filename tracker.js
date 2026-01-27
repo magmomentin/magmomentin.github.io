@@ -1,72 +1,43 @@
-const video = document.getElementById("arVideo");
 const container = document.getElementById("ar-container");
+const srcVideo = document.getElementById("srcVideo");
 
-/* --------------------
-   FORCE CAMERA PERMISSION FIRST
--------------------- */
-async function warmUpCamera() {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "environment" },
-    audio: false
-  });
-  stream.getTracks().forEach(track => track.stop());
-}
-
-/* --------------------
-   STATE
--------------------- */
-let confirmed = false;
-let detectStartTime = null;
-const CONFIRM_TIME = 500;
-
-/* --------------------
-   INIT
--------------------- */
 (async () => {
-  try {
-    // 🔥 THIS IS THE KEY FIX
-    await warmUpCamera();
+  const mindar = new window.MINDAR.IMAGE.MindARImage({
+    container,
+    imageTargetSrc: "assets/target.mind",
+    maxTrack: 1
+  });
 
-    const mindar = new window.MINDAR.IMAGE.MindARImage({
-      container,
-      imageTargetSrc: "assets/target.mind",
-      maxTrack: 1
-    });
+  const { renderer, scene, camera } = mindar;
 
-    const { renderer, scene, camera } = mindar;
-    const anchor = mindar.addAnchor(0);
+  // create video texture
+  const videoTexture = new THREE.VideoTexture(srcVideo);
+  videoTexture.minFilter = THREE.LinearFilter;
+  videoTexture.magFilter = THREE.LinearFilter;
+  videoTexture.format = THREE.RGBFormat;
 
-    video.pause();
-    video.currentTime = 0;
-    video.style.display = "none";
+  // plane that matches target
+  const geometry = new THREE.PlaneGeometry(1, 1);
+  const material = new THREE.MeshBasicMaterial({
+    map: videoTexture,
+    transparent: true
+  });
 
-    anchor.onTargetFound = () => {
-      if (!detectStartTime) {
-        detectStartTime = Date.now();
-        return;
-      }
+  const plane = new THREE.Mesh(geometry, material);
 
-      if (!confirmed && Date.now() - detectStartTime > CONFIRM_TIME) {
-        confirmed = true;
-        video.style.display = "block";
-        video.play();
-      }
-    };
+  const anchor = mindar.addAnchor(0);
+  anchor.group.add(plane);
 
-    anchor.onTargetLost = () => {
-      detectStartTime = null;
-      confirmed = false;
-      video.pause();
-      video.style.display = "none";
-    };
+  anchor.onTargetFound = () => {
+    srcVideo.play();
+  };
 
-    await mindar.start();
-    renderer.setAnimationLoop(() => {
-      renderer.render(scene, camera);
-    });
+  anchor.onTargetLost = () => {
+    srcVideo.pause();
+  };
 
-  } catch (e) {
-    alert("Camera access failed. Please allow camera permission.");
-    console.error(e);
-  }
+  await mindar.start();
+  renderer.setAnimationLoop(() => {
+    renderer.render(scene, camera);
+  });
 })();
