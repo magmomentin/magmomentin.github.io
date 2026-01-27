@@ -18,7 +18,7 @@ start.onclick = async () => {
 
   const mindar = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
-    imageTargetSrc: "assets/target.mind"
+    imageTargetSrc: "assets/targets.mind"
   });
 
   const { renderer, scene, camera } = mindar;
