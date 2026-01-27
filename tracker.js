@@ -5,9 +5,9 @@ const VIDEO_WIDTH_RATIO  = 0.8;
 const VIDEO_HEIGHT_RATIO = 0.8;
 
 // --------------------
-// MINDAR SETUP
+// MINDAR SETUP (CORRECT GLOBAL)
 // --------------------
-const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+const mindarThree = new window.MINDARThree({
   container: document.body,
   imageTargetSrc: "./assets/target.mind",
 });
@@ -75,15 +75,10 @@ anchor.onTargetFound = async () => {
 
   plane.scale.set(scaleW, scaleH, 1);
   plane.position.set(0, 0, 0);
-
   plane.visible = true;
 
   if (video.paused) {
-    try {
-      await video.play();
-    } catch (e) {
-      console.warn("Autoplay blocked:", e);
-    }
+    await video.play().catch(() => {});
   }
 };
 
