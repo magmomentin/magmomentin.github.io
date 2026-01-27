@@ -11,7 +11,7 @@ start.onclick = async () => {
   await video.play();
 
   // ✅ CORRECT GLOBAL FOR mindar-image-three
-  const mindar = new window.MINDARThree({
+   const mindar = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
     imageTargetSrc: "assets/target.mind"
   });
