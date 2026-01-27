@@ -1,15 +1,10 @@
 const start = document.getElementById("start");
 const video = document.getElementById("video");
 
-// 🔧 how much of the target the frame should occupy
-// 1   = full target
-// 0.9 = small margin
 const SCALE_RATIO = 1;
 
 start.onclick = async () => {
   start.remove();
-
-  // Unlock video (required)
   await video.play();
 
   const mindar = new window.MINDAR.IMAGE.MindARThree({
@@ -18,8 +13,6 @@ start.onclick = async () => {
   });
 
   const { renderer, scene, camera } = mindar;
-
-  // Camera background
   scene.add(mindar.cameraGroup);
 
   const anchor = mindar.addAnchor(0);
@@ -28,7 +21,6 @@ start.onclick = async () => {
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
 
-  // 🔒 FRAME SETTINGS (UNCHANGED)
   const FRAME_HEIGHT = 1;
   const FRAME_ASPECT = 2 / 3;
 
@@ -44,22 +36,17 @@ start.onclick = async () => {
     })
   );
 
-  // ✅ centered, no z-offset
   plane.position.set(0, 0, 0);
   plane.visible = false;
   anchor.group.add(plane);
 
-  // ✅ SCALE WITH TARGET (ONLY UPGRADE)
   anchor.onTargetFound = () => {
-    const targetW = anchor.group.scale.x;
     const targetH = anchor.group.scale.y;
 
-    plane.scale.set(
-      targetW * SCALE_RATIO,
-      targetH * SCALE_RATIO,
-      1
-    );
+    const scaleH = targetH * SCALE_RATIO;
+    const scaleW = scaleH * FRAME_ASPECT;
 
+    plane.scale.set(scaleW, scaleH, 1);
     plane.visible = true;
   };
 
