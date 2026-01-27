@@ -4,7 +4,7 @@ const video = document.getElementById("videoSource");
 (async () => {
   const mindarThree = new window.MINDAR.MindARThree({
     container: container,
-    imageTargetSrc: "assets/target.mind",
+    imageTargetSrc: "assets/targets.mind",
     maxTrack: 1
   });
 
