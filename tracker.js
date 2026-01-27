@@ -1,44 +1,86 @@
-const camera = document.getElementById("camera");
-const arLayer = document.getElementById("ar-layer");
+const video = document.getElementById("arVideo");
+const container = document.getElementById("ar-container");
 
-// CAMERA INIT
-navigator.mediaDevices.getUserMedia({
-  video: { facingMode: "environment" },
-  audio: false
-}).then(stream => {
-  camera.srcObject = stream;
-}).catch(err => {
-  alert("Camera access failed");
-  console.error(err);
-});
-
-// ---- FRAME LOCK ENGINE (SINGLE FRAME) ----
-
-// Simulated frame anchor (center of screen)
-// This is intentional for v1 stability
-let target = {
-  x: window.innerWidth / 2,
-  y: window.innerHeight / 2,
-  scale: 1,
-  rotateX: 0,
-  rotateY: 0
+/* --------------------
+   STATE MACHINE
+-------------------- */
+const STATE = {
+  IDLE: "IDLE",
+  ACTIVE: "ACTIVE",
+  LOST: "LOST"
 };
 
-// MAIN LOOP
-function updateAR() {
+let currentState = STATE.IDLE;
+let lastSeenTime = 0;
+const LOST_TIMEOUT = 800;
 
-  // Small perspective reaction (feels AR, but stable)
-  const tiltX = (window.innerHeight / 2 - target.y) * 0.001;
-  const tiltY = (window.innerWidth / 2 - target.x) * -0.001;
+/* --------------------
+   MINDAR INIT
+-------------------- */
+const mindar = new window.MINDAR.IMAGE.MindARImage({
+  container: container,
+  imageTargetSrc: "assets/target.mind",
+  maxTrack: 1
+});
 
-  arLayer.style.transform =
-    `translate(-50%, -50%)
-     scale(${target.scale})
-     rotateX(${tiltX}deg)
-     rotateY(${tiltY}deg)`;
+const { renderer, scene, camera } = mindar;
 
-  requestAnimationFrame(updateAR);
+const anchor = mindar.addAnchor(0);
+
+/* --------------------
+   ANCHOR EVENTS
+-------------------- */
+anchor.onTargetFound = () => {
+  lastSeenTime = Date.now();
+  setState(STATE.ACTIVE);
+};
+
+anchor.onTargetLost = () => {
+  lastSeenTime = Date.now();
+  setState(STATE.LOST);
+};
+
+/* --------------------
+   STATE HANDLER
+-------------------- */
+function setState(newState) {
+  if (currentState === newState) return;
+  currentState = newState;
+  updateState();
 }
 
-// START LOOP
-updateAR();
+function updateState() {
+  if (currentState === STATE.ACTIVE) {
+    video.style.display = "block";
+    if (video.paused) video.play();
+  }
+
+  if (currentState === STATE.LOST) {
+    video.pause();
+    video.style.display = "none";
+  }
+}
+
+/* --------------------
+   LOST CONFIRM LOOP
+-------------------- */
+function checkLost() {
+  if (
+    currentState === STATE.ACTIVE &&
+    Date.now() - lastSeenTime > LOST_TIMEOUT
+  ) {
+    setState(STATE.LOST);
+  }
+  requestAnimationFrame(checkLost);
+}
+
+/* --------------------
+   START
+-------------------- */
+(async () => {
+  await mindar.start();
+  renderer.setAnimationLoop(() => {
+    renderer.render(scene, camera);
+  });
+  checkLost();
+})();
