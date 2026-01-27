@@ -1,23 +1,20 @@
 const start = document.getElementById("start");
 const video = document.getElementById("video");
 
-// Video occupies % of target (MULTI-SIZE)
-const VIDEO_WIDTH_RATIO  = 0.8;
-const VIDEO_HEIGHT_RATIO = 0.8;
-
 start.onclick = async () => {
   start.remove();
 
+  // Unlock video
   await video.play();
 
-  // ✅ CORRECT GLOBAL FOR mindar-image-three
-   const mindar = new window.MINDAR.IMAGE.MindARThree({
+  const mindar = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
     imageTargetSrc: "assets/target.mind"
   });
 
   const { renderer, scene, camera } = mindar;
 
+  // 🔑 CAMERA BACKGROUND
   scene.add(mindar.cameraGroup);
 
   const anchor = mindar.addAnchor(0);
@@ -26,51 +23,38 @@ start.onclick = async () => {
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
 
-  // 🔑 UNIT PLANE (DO NOT CHANGE)
+  // 🔒 FRAME SETTINGS (MATCH TARGET IMAGE)
+  const FRAME_HEIGHT = 1;
+  const FRAME_ASPECT = 2 / 3;
+
   const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(1, 1),
+    new THREE.PlaneGeometry(
+      FRAME_HEIGHT * FRAME_ASPECT,
+      FRAME_HEIGHT
+    ),
     new THREE.MeshBasicMaterial({
       map: texture,
+      side: THREE.DoubleSide,
       transparent: true
     })
   );
 
+  plane.position.z = 0.01;
   plane.visible = false;
   anchor.group.add(plane);
 
   anchor.onTargetFound = () => {
-    const targetW = anchor.group.scale.x;
-    const targetH = anchor.group.scale.y;
-
-    let scaleW = targetW * VIDEO_WIDTH_RATIO;
-    let scaleH = targetH * VIDEO_HEIGHT_RATIO;
-
-    const videoAspect =
-      video.videoWidth && video.videoHeight
-        ? video.videoWidth / video.videoHeight
-        : scaleW / scaleH;
-
-    const frameAspect = scaleW / scaleH;
-
-    if (videoAspect > frameAspect) {
-      scaleH = scaleW / videoAspect;
-    } else {
-      scaleW = scaleH * videoAspect;
-    }
-
-    plane.scale.set(scaleW, scaleH, 1);
-    plane.position.set(0, 0, 0); // AUTO-CENTER
     plane.visible = true;
   };
 
   anchor.onTargetLost = () => {
     plane.visible = false;
-    video.pause();
   };
 
   await mindar.start();
 
   renderer.setAnimationLoop(() => {
+    texture.needsUpdate = true;
     renderer.render(scene, camera);
   });
 };

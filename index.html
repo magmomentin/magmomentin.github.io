@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>MagMoment AR</title>
 
-  <!-- MindAR (includes Three.js internally) -->
+  <!-- THREE.JS (GLOBAL) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
+
+  <!-- MINDAR (THREE VERSION, GLOBAL) -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 
   <style>
@@ -38,6 +41,7 @@
 
   <button id="start">Tap to start</button>
 
+  <!-- Hidden video source -->
   <video
     id="video"
     muted
