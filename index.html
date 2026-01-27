@@ -2,32 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, user-scalable=no"
-  />
-  <title>MagMoment AR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Hybrid AR Engine (Fixed)</title>
+  <link rel="stylesheet" href="style.css">
 
-  <!-- MindAR + THREE (NON-MODULE, SAFE FOR GITHUB PAGES) -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
-
-  <link rel="stylesheet" href="style.css" />
+  <!-- Load MindAR as ES module -->
+  <script type="module">
+    import "https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image.prod.js";
+  </script>
 </head>
 <body>
 
-  <div id="ar-container"></div>
+  <video id="camera" autoplay playsinline muted></video>
 
-  <!-- Hidden video source -->
-  <video
-    id="videoSource"
-    src="assets/demo.mp4"
-    muted
-    loop
-    playsinline
-    preload="auto"
-    style="display:none"
-  ></video>
+  <video id="arVideo" muted playsinline loop preload="auto">
+    <source src="assets/demo.mp4" type="video/mp4">
+  </video>
 
-  <script src="tracker.js"></script>
+  <!-- Load tracker as module -->
+  <script type="module" src="tracker.js"></script>
+
 </body>
 </html>
