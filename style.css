@@ -5,7 +5,7 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: #000;
-  font-family: sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 #ui-overlay {
@@ -15,21 +15,26 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
 }
 
 #start {
-  padding: 16px 32px;
-  font-size: 18px;
+  padding: 18px 36px;
+  font-size: 1.1rem;
   font-weight: bold;
   color: #fff;
   background: #007AFF;
   border: none;
-  border-radius: 30px;
+  border-radius: 50px;
   cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
+/* Ensure the camera feed fills the window */
 canvas {
   position: fixed !important;
   inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
 }

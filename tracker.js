@@ -1,5 +1,5 @@
-// We ONLY import MindAR. Three.js is accessed via window.THREE.
-import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js';
+import * as THREE from 'three';
+import { MindARThree } from 'mindar-image-three';
 
 const start = document.getElementById("start");
 const overlay = document.getElementById("ui-overlay");
@@ -8,6 +8,7 @@ const video = document.getElementById("video");
 start.onclick = async () => {
   overlay.style.display = "none";
 
+  // Initialize MindAR
   const mindarThree = new MindARThree({
     container: document.body,
     imageTargetSrc: "assets/targets.mind",
@@ -15,16 +16,16 @@ start.onclick = async () => {
 
   const { renderer, scene, camera } = mindarThree;
 
-  // Use window.THREE directly
-  const texture = new window.THREE.VideoTexture(video);
-  const material = new window.THREE.MeshBasicMaterial({ 
+  // Create Video Texture
+  const texture = new THREE.VideoTexture(video);
+  const material = new THREE.MeshBasicMaterial({ 
     map: texture,
     transparent: true 
   });
   
-  // Portrait plane (Width 1, Height 1.5)
-  const geometry = new window.THREE.PlaneGeometry(1, 1.5);
-  const plane = new window.THREE.Mesh(geometry, material);
+  // Create Plane (Portrait 2:3 ratio)
+  const geometry = new THREE.PlaneGeometry(1, 1.5);
+  const plane = new THREE.Mesh(geometry, material);
   plane.visible = false;
 
   const anchor = mindarThree.addAnchor(0);
@@ -40,6 +41,7 @@ start.onclick = async () => {
     plane.visible = false;
   };
 
+  // Start AR Engine
   await mindarThree.start();
 
   renderer.setAnimationLoop(() => {
