@@ -4,22 +4,19 @@ html, body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  background: black;
 }
 
-canvas,
-body > video {
+/* Camera canvas */
+canvas {
   position: fixed !important;
   inset: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  object-fit: contain !important;
   z-index: 1 !important;
 }
 
-body > video {
-  z-index: -1 !important;
-}
-
+/* Start button */
 #start-btn {
   position: fixed;
   inset: 0;
@@ -30,6 +27,7 @@ body > video {
   font-size: 1.2rem;
 }
 
+/* Overlay UI */
 #ui-overlay {
   position: fixed;
   inset: 0;
@@ -40,27 +38,50 @@ body > video {
   justify-content: center;
   pointer-events: none;
   color: white;
+  text-align: center;
 }
 
-.scan-frame {
-  width: 260px;
-  height: 347px;
-  border: 3px solid white;
-  border-radius: 12px;
-  box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);
+/* Reticle */
+.reticle {
+  width: 120px;
+  height: 120px;
+  position: relative;
+  margin-bottom: 16px;
 }
 
+.reticle-ring {
+  width: 100%;
+  height: 100%;
+  border: 2px solid rgba(255,255,255,0.8);
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%   { transform: scale(0.9); opacity: 0.6; }
+  50%  { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+/* Hint text */
+#hint-text {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+/* Mute button */
 #mute-btn {
   position: fixed;
-  bottom: 25px;
-  right: 25px;
+  bottom: 24px;
+  right: 24px;
   z-index: 101;
-  width: 50px;
-  height: 50px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   border: none;
   background: rgba(0,0,0,0.6);
   color: white;
+  font-size: 1.2rem;
 }
 
 .ui-hidden {

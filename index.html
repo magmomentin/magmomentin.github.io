@@ -6,20 +6,23 @@
     name="viewport"
     content="width=device-width, initial-scale=1.0, user-scalable=no"
   />
-  <title>MagMoment AR | Robust Multi-Dimension</title>
+  <title>MagMoment AR</title>
 
   <link rel="stylesheet" href="style.css" />
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 </head>
 
 <body>
   <button id="start-btn">Tap to Start AR</button>
 
+  <!-- UI Overlay -->
   <div id="ui-overlay">
-    <div class="scan-frame"></div>
-    <p>Align card inside the frame</p>
+    <div class="reticle">
+      <div class="reticle-ring"></div>
+    </div>
+    <p id="hint-text">Align card to the center</p>
   </div>
 
   <button id="mute-btn" class="ui-hidden">🔇</button>
@@ -28,6 +31,7 @@
     id="ar-video"
     muted
     playsinline
+    webkit-playsinline
     loop
     preload="auto"
     crossorigin="anonymous"

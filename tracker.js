@@ -2,23 +2,27 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const startBtn = document.getElementById("start-btn");
   const video = document.getElementById("ar-video");
   const overlay = document.getElementById("ui-overlay");
+  const hintText = document.getElementById("hint-text");
   const muteBtn = document.getElementById("mute-btn");
 
   startBtn.classList.add("ui-hidden");
 
-  // Target image aspect (354 x 472)
   const TARGET_ASPECT = 354 / 472;
+
+  const CENTER_THRESHOLD = 0.15;   // how close to center
+  const DWELL_TIME = 1000;         // 1 second
+
+  let visible = false;
+  let centeredSince = null;
+  let isPlaying = false;
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
     imageTargetSrc: "assets/targets.mind",
-    filterMinCF: 0.0001,
-    filterBeta: 0.001,
   });
 
   const { renderer, scene, camera } = mindarThree;
 
-  /* ---------- VIDEO ---------- */
   await new Promise((resolve) => {
     if (video.readyState >= 1) resolve();
     else video.onloadedmetadata = () => resolve();
@@ -30,21 +34,16 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const videoAspect = video.videoWidth / video.videoHeight;
 
   const texture = new THREE.VideoTexture(video);
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
     opacity: 0,
   });
 
-  /* ---------- FIT VIDEO INSIDE TARGET ---------- */
   const targetWidth = 1;
   const targetHeight = targetWidth / TARGET_ASPECT;
 
   let planeWidth, planeHeight;
-
   if (videoAspect > TARGET_ASPECT) {
     planeWidth = targetWidth;
     planeHeight = targetWidth / videoAspect;
@@ -53,44 +52,33 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     planeWidth = targetHeight * videoAspect;
   }
 
-  const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
-  const plane = new THREE.Mesh(geometry, material);
+  const plane = new THREE.Mesh(
+    new THREE.PlaneGeometry(planeWidth, planeHeight),
+    material
+  );
   plane.position.set(0, 0, 0.01);
 
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
-  /* ---------- AUTO SCALE LOGIC ---------- */
-  let visible = false;
-  let autoScale = 0.90;
-  let lockedScale = null;
-  let stabilityFrames = 0;
-
-  const SCALE_STEP = 0.005;
-  const MAX_SCALE = 1.0;
-  const REQUIRED_STABLE_FRAMES = 20;
-
-  plane.scale.set(autoScale, autoScale, 1);
-
   anchor.onTargetFound = () => {
     visible = true;
-    video.play();
-    overlay.classList.add("ui-hidden");
-    muteBtn.classList.remove("ui-hidden");
+    centeredSince = null;
+    hintText.textContent = "Hold steady…";
   };
 
   anchor.onTargetLost = () => {
     visible = false;
-    video.pause();
+    centeredSince = null;
 
-    // reset auto-scale
-    autoScale = 0.90;
-    lockedScale = null;
-    stabilityFrames = 0;
-    plane.scale.set(autoScale, autoScale, 1);
+    if (isPlaying) {
+      video.pause();
+      isPlaying = false;
+    }
 
     overlay.classList.remove("ui-hidden");
     muteBtn.classList.add("ui-hidden");
+    hintText.textContent = "Align card to the center";
   };
 
   muteBtn.onclick = () => {
@@ -101,24 +89,41 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   await mindarThree.start();
 
   renderer.setAnimationLoop(() => {
-    if (visible && lockedScale === null) {
-      stabilityFrames++;
+    if (visible) {
+      const pos = anchor.group.position;
 
-      if (stabilityFrames >= REQUIRED_STABLE_FRAMES) {
-        autoScale += SCALE_STEP;
+      const isCentered =
+        Math.abs(pos.x) < CENTER_THRESHOLD &&
+        Math.abs(pos.y) < CENTER_THRESHOLD;
 
-        if (autoScale >= MAX_SCALE) {
-          lockedScale = autoScale;
-        } else {
-          plane.scale.set(autoScale, autoScale, 1);
-          stabilityFrames = 0;
+      if (isCentered) {
+        if (!centeredSince) centeredSince = performance.now();
+
+        if (
+          performance.now() - centeredSince >= DWELL_TIME &&
+          !isPlaying
+        ) {
+          video.play();
+          isPlaying = true;
+          overlay.classList.add("ui-hidden");
+          muteBtn.classList.remove("ui-hidden");
+        }
+      } else {
+        centeredSince = null;
+
+        if (isPlaying) {
+          video.pause();
+          isPlaying = false;
+          overlay.classList.remove("ui-hidden");
+          muteBtn.classList.add("ui-hidden");
+          hintText.textContent = "Hold steady…";
         }
       }
     }
 
     material.opacity = THREE.MathUtils.lerp(
       material.opacity,
-      visible ? 1 : 0,
+      isPlaying ? 1 : 0,
       0.12
     );
 
