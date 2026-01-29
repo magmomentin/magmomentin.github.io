@@ -11,23 +11,15 @@
 </head>
 <body>
 
-  <button id="start">Tap to Start AR</button>
+  <button id="start-btn">Tap to Start AR</button>
+  <button id="mute-btn" class="ui-hidden">🔇</button>
 
-  <button id="mute-toggle" class="hidden">🔇</button>
-
-  <div id="scanning-overlay" class="hidden">
+  <div id="ui-overlay" class="ui-hidden">
     <div class="scan-frame"></div>
-    <p>Point camera at the target<br><small>(Tap video to expand)</small></p>
+    <p>Point camera at the target<br><small>(Tap video for Fullscreen)</small></p>
   </div>
 
-  <video
-    id="video"
-    muted
-    playsinline
-    loop
-    crossorigin="anonymous"
-    style="display:none"
-  >
+  <video id="ar-video" muted playsinline loop crossorigin="anonymous" style="display:none">
     <source src="assets/demo.mp4" type="video/mp4">
   </video>
 
