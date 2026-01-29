@@ -6,7 +6,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   startBtn.style.display = "none";
 
-  /* ---------- BIND THREE FROM MINDAR ---------- */
+  /* ✅ BIND THREE FROM MINDAR */
   const THREE = window.MINDAR.IMAGE.THREE;
 
   /* ---------- CONFIG ---------- */
@@ -14,7 +14,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   /* ---------- MINDAR INIT ---------- */
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-    container: document.body,
+    container: document.querySelector("#ar-container"),
     imageTargetSrc: "assets/targets.mind",
     filterMinCF: 0.001,
     filterBeta: 10,
@@ -119,8 +119,14 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     }
   });
 
+  /* ---------- START ---------- */
   await mindarThree.start();
   overlay.classList.remove("ui-hidden");
+
+  /* ✅ SAFE RESIZE HANDLING */
+  window.addEventListener("resize", () => {
+    mindarThree.resize();
+  });
 
   renderer.setAnimationLoop(() => {
     const delta = clock.getDelta();
