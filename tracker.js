@@ -6,8 +6,8 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   startBtn.classList.add("ui-hidden");
 
-  /* 🔴 CHANGE THIS PER TARGET */
-  const TARGET_ASPECT = 3 / 4; // width / height
+  // Target image aspect (354 x 472)
+  const TARGET_ASPECT = 354 / 472;
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
@@ -19,8 +19,13 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const { renderer, scene, camera } = mindarThree;
 
   /* ---------- VIDEO ---------- */
-  await video.play(); // needed to read dimensions
-  video.pause();
+  await new Promise((resolve) => {
+    if (video.readyState >= 1) resolve();
+    else video.onloadedmetadata = () => resolve();
+  });
+
+  video.muted = true;
+  muteBtn.textContent = "🔇";
 
   const videoAspect = video.videoWidth / video.videoHeight;
 
@@ -35,29 +40,37 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   });
 
   /* ---------- FIT VIDEO INSIDE TARGET ---------- */
-  let planeWidth = 1;
-  let planeHeight = 1 / TARGET_ASPECT;
+  const targetWidth = 1;
+  const targetHeight = targetWidth / TARGET_ASPECT;
 
-  // contain logic
+  let planeWidth, planeHeight;
+
   if (videoAspect > TARGET_ASPECT) {
-    // video is wider → limit width
-    planeWidth = 1;
-    planeHeight = 1 / videoAspect;
+    planeWidth = targetWidth;
+    planeHeight = targetWidth / videoAspect;
   } else {
-    // video is taller → limit height
-    planeHeight = 1 / TARGET_ASPECT;
-    planeWidth = planeHeight * videoAspect;
+    planeHeight = targetHeight;
+    planeWidth = targetHeight * videoAspect;
   }
 
   const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
   const plane = new THREE.Mesh(geometry, material);
-
   plane.position.set(0, 0, 0.01);
 
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
+  /* ---------- AUTO SCALE LOGIC ---------- */
   let visible = false;
+  let autoScale = 0.90;
+  let lockedScale = null;
+  let stabilityFrames = 0;
+
+  const SCALE_STEP = 0.005;
+  const MAX_SCALE = 1.0;
+  const REQUIRED_STABLE_FRAMES = 20;
+
+  plane.scale.set(autoScale, autoScale, 1);
 
   anchor.onTargetFound = () => {
     visible = true;
@@ -69,6 +82,13 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   anchor.onTargetLost = () => {
     visible = false;
     video.pause();
+
+    // reset auto-scale
+    autoScale = 0.90;
+    lockedScale = null;
+    stabilityFrames = 0;
+    plane.scale.set(autoScale, autoScale, 1);
+
     overlay.classList.remove("ui-hidden");
     muteBtn.classList.add("ui-hidden");
   };
@@ -81,11 +101,27 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   await mindarThree.start();
 
   renderer.setAnimationLoop(() => {
+    if (visible && lockedScale === null) {
+      stabilityFrames++;
+
+      if (stabilityFrames >= REQUIRED_STABLE_FRAMES) {
+        autoScale += SCALE_STEP;
+
+        if (autoScale >= MAX_SCALE) {
+          lockedScale = autoScale;
+        } else {
+          plane.scale.set(autoScale, autoScale, 1);
+          stabilityFrames = 0;
+        }
+      }
+    }
+
     material.opacity = THREE.MathUtils.lerp(
       material.opacity,
       visible ? 1 : 0,
-      0.1
+      0.12
     );
+
     renderer.render(scene, camera);
   });
 });
