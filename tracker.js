@@ -7,7 +7,6 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   startBtn.style.display = "none";
 
   /* ---------- CONFIG ---------- */
-  const BLEED_FACTOR = 1.05; // subtle, safe
   const FADE_SPEED = 6.0;
 
   /* ---------- MINDAR INIT ---------- */
@@ -25,7 +24,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
 
-  /* ---------- PLANE ---------- */
+  /* ---------- PLANE (UNIT SIZE, WILL RESCALE) ---------- */
   const geometry = new THREE.PlaneGeometry(1, 1);
   const material = new THREE.MeshBasicMaterial({
     map: texture,
@@ -34,49 +33,62 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   });
 
   const plane = new THREE.Mesh(geometry, material);
-  plane.position.z = 0.01; // critical stability fix
+  plane.position.z = 0.01;
 
   /* ---------- ANCHOR ---------- */
   const anchor = mindarThree.addAnchor(0);
-  anchor.group.rotation.order = "YXZ";
   anchor.group.add(plane);
 
   let targetOpacity = 0;
+  let targetVisible = false;
+  let videoReady = false;
+
   const clock = new THREE.Clock();
 
-  /* ---------- LETTERBOX + BLEED ---------- */
-  video.addEventListener("loadedmetadata", () => {
+  /* ---------- FIT VIDEO INSIDE TARGET ---------- */
+  function fitVideoToTarget() {
+    if (!targetVisible || !videoReady) return;
+
+    const targetW = anchor.group.scale.x;
+    const targetH = anchor.group.scale.y;
+
+    const targetAspect = targetW / targetH;
     const videoAspect = video.videoWidth / video.videoHeight;
 
-    const targetAspect =
-      anchor.group.scale.x / anchor.group.scale.y;
-
-    let scaleX = 1;
-    let scaleY = 1;
+    let scaleX = targetW;
+    let scaleY = targetH;
 
     if (videoAspect > targetAspect) {
-      scaleY = targetAspect / videoAspect;
+      scaleY = targetW / videoAspect;
     } else {
-      scaleX = videoAspect / targetAspect;
+      scaleX = targetH * videoAspect;
     }
 
-    plane.scale.set(
-      scaleX * BLEED_FACTOR,
-      scaleY * BLEED_FACTOR,
-      1
-    );
+    plane.scale.set(scaleX, scaleY, 1);
+  }
+
+  /* ---------- VIDEO READY ---------- */
+  video.addEventListener("loadedmetadata", () => {
+    videoReady = true;
+    fitVideoToTarget();
   });
 
   /* ---------- TARGET EVENTS ---------- */
   anchor.onTargetFound = () => {
+    targetVisible = true;
     targetOpacity = 1;
+
+    fitVideoToTarget();
+
     video.play();
     overlay.classList.add("ui-hidden");
     muteBtn.classList.remove("ui-hidden");
   };
 
   anchor.onTargetLost = () => {
+    targetVisible = false;
     targetOpacity = 0;
+
     video.pause();
     overlay.classList.remove("ui-hidden");
     muteBtn.classList.add("ui-hidden");
@@ -111,11 +123,8 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   renderer.setAnimationLoop(() => {
     const delta = clock.getDelta();
-
     material.opacity +=
       (targetOpacity - material.opacity) *
       (1 - Math.exp(-FADE_SPEED * delta));
 
-    renderer.render(scene, camera);
-  });
-});
+    renderer.render(scene, ca
