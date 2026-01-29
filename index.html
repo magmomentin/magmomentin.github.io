@@ -10,7 +10,7 @@
 
   <link rel="stylesheet" href="style.css" />
 
-  <!-- MindAR compatible -->
+  <!-- MindAR compatible versions -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 </head>
@@ -18,9 +18,9 @@
 <body>
   <button id="start-btn">Tap to Start AR</button>
 
-  <!-- Minimal UI Overlay -->
   <div id="ui-overlay">
-    <p id="hint-text">Point camera at the card</p>
+    <div class="scan-frame"></div>
+    <p>Point camera at the card</p>
   </div>
 
   <button id="mute-btn" class="ui-hidden">🔇</button>

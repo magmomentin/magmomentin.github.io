@@ -2,28 +2,23 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const startBtn = document.getElementById("start-btn");
   const video = document.getElementById("ar-video");
   const overlay = document.getElementById("ui-overlay");
-  const hintText = document.getElementById("hint-text");
   const muteBtn = document.getElementById("mute-btn");
 
   startBtn.classList.add("ui-hidden");
 
+  // Target image aspect (354 x 472)
   const TARGET_ASPECT = 354 / 472;
-
-  const DWELL_TIME = 500;    // small delay to avoid accidental flicker
-  const LOSS_GRACE = 1500;   // customer-friendly forgiveness
-
-  let targetVisible = false;
-  let playbackLocked = false;
-  let playRequestTime = null;
-  let lastSeenTime = null;
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
     imageTargetSrc: "assets/targets.mind",
+    filterMinCF: 0.0001,
+    filterBeta: 0.001,
   });
 
   const { renderer, scene, camera } = mindarThree;
 
+  /* ---------- VIDEO ---------- */
   await new Promise((resolve) => {
     if (video.readyState >= 1) resolve();
     else video.onloadedmetadata = () => resolve();
@@ -35,43 +30,54 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const videoAspect = video.videoWidth / video.videoHeight;
 
   const texture = new THREE.VideoTexture(video);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
     opacity: 0,
   });
 
-  const targetWidth = 1;
-  const targetHeight = targetWidth / TARGET_ASPECT;
+  /* ---------- FIXED SIZE PLANE ---------- */
+  const BASE_WIDTH = 1; // fixed AR world size
+  const BASE_HEIGHT = BASE_WIDTH / TARGET_ASPECT;
 
   let planeWidth, planeHeight;
+
+  // Contain video inside target area
   if (videoAspect > TARGET_ASPECT) {
-    planeWidth = targetWidth;
-    planeHeight = targetWidth / videoAspect;
+    planeWidth = BASE_WIDTH;
+    planeHeight = BASE_WIDTH / videoAspect;
   } else {
-    planeHeight = targetHeight;
-    planeWidth = targetHeight * videoAspect;
+    planeHeight = BASE_HEIGHT;
+    planeWidth = BASE_HEIGHT * videoAspect;
   }
 
-  const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(planeWidth, planeHeight),
-    material
-  );
+  const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+  const plane = new THREE.Mesh(geometry, material);
+
+  // Lock size forever
+  plane.scale.set(1, 1, 1);
   plane.position.set(0, 0, 0.01);
 
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
+  let visible = false;
+
   anchor.onTargetFound = () => {
-    targetVisible = true;
-    lastSeenTime = performance.now();
-    playRequestTime = performance.now();
-    hintText.textContent = "Hold steady…";
+    visible = true;
+    video.play();
+    overlay.classList.add("ui-hidden");
+    muteBtn.classList.remove("ui-hidden");
   };
 
   anchor.onTargetLost = () => {
-    targetVisible = false;
-    lastSeenTime = performance.now();
+    visible = false;
+    video.pause();
+    overlay.classList.remove("ui-hidden");
+    muteBtn.classList.add("ui-hidden");
   };
 
   muteBtn.onclick = () => {
@@ -82,35 +88,12 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   await mindarThree.start();
 
   renderer.setAnimationLoop(() => {
-    const now = performance.now();
-
-    // Start playback after small dwell (no centering required)
-    if (!playbackLocked && targetVisible) {
-      if (now - playRequestTime >= DWELL_TIME) {
-        video.play();
-        playbackLocked = true;
-        overlay.classList.add("ui-hidden");
-        muteBtn.classList.remove("ui-hidden");
-      }
-    }
-
-    // Soft-lock behavior
-    if (playbackLocked && !targetVisible) {
-      if (now - lastSeenTime > LOSS_GRACE) {
-        video.pause();
-        playbackLocked = false;
-        overlay.classList.remove("ui-hidden");
-        muteBtn.classList.add("ui-hidden");
-        hintText.textContent = "Point camera at the card";
-      }
-    }
-
+    // Fade only — no resizing
     material.opacity = THREE.MathUtils.lerp(
       material.opacity,
-      playbackLocked ? 1 : 0,
-      0.12
+      visible ? 1 : 0,
+      0.1
     );
-
     renderer.render(scene, camera);
   });
 });

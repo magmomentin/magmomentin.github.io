@@ -27,12 +27,13 @@ canvas {
   font-size: 1.2rem;
 }
 
-/* Minimal overlay */
+/* Scan overlay */
 #ui-overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   pointer-events: none;
@@ -40,9 +41,13 @@ canvas {
   text-align: center;
 }
 
-#hint-text {
-  font-size: 1rem;
-  opacity: 0.85;
+.scan-frame {
+  width: 260px;
+  height: 347px;
+  border: 2px solid rgba(255,255,255,0.8);
+  border-radius: 14px;
+  box-shadow: 0 0 0 2000px rgba(0,0,0,0.45);
+  margin-bottom: 12px;
 }
 
 /* Mute button */
