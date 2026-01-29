@@ -19,8 +19,8 @@ canvas { position: fixed !important; inset: 0 !important; z-index: 1 !important;
 }
 
 .scan-frame {
-  width: 260px;
-  height: 347px; /* Fixed 3:4 Ratio */
+  width: 354px;
+  height: 472px; /* Fixed 3:4 Ratio */
   border: 3px solid #fff;
   border-radius: 10px;
   margin-bottom: 20px;
