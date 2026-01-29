@@ -1,14 +1,11 @@
 html, body {
   margin: 0; padding: 0; width: 100%; height: 100%;
   overflow: hidden; background-color: transparent !important;
-  font-family: -apple-system, system-ui, sans-serif;
+  font-family: sans-serif;
 }
-
-/* Base AR Layering */
 body > video { position: fixed !important; inset: 0 !important; z-index: -1 !important; object-fit: cover !important; }
 canvas { position: fixed !important; inset: 0 !important; z-index: 1 !important; }
 
-/* UI Screens */
 #start-btn, #loading-screen {
   position: fixed; inset: 0; z-index: 999;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -22,19 +19,18 @@ canvas { position: fixed !important; inset: 0 !important; z-index: 1 !important;
 }
 
 .scan-frame {
-  width: 260px; /* Base Width */
-  height: 260px; /* Placeholder Height - JS will override this */
-  border: 2px dashed rgba(255,255,255,0.5);
-  border-radius: 20px;
+  width: 260px;
+  height: 347px; /* 3:4 default, JS will override */
+  border: 3px solid rgba(255,255,255,0.8);
+  border-radius: 10px;
   margin-bottom: 20px;
-  transition: height 0.3s ease; /* Smooth transition when ratio is detected */
+  box-shadow: 0 0 0 2000px rgba(0,0,0,0.5); /* Focus effect */
 }
 
 #mute-btn {
   position: fixed; bottom: 30px; right: 30px; z-index: 101;
   width: 56px; height: 56px; border-radius: 50%; border: none;
-  background: rgba(0,0,0,0.6); color: white; font-size: 22px; cursor: pointer;
-  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.6); color: white; font-size: 22px;
 }
 
 .spinner {
@@ -43,5 +39,4 @@ canvas { position: fixed !important; inset: 0 !important; z-index: 1 !important;
   animation: spin 1s linear infinite; margin-bottom: 20px;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
 .ui-hidden { display: none !important; }

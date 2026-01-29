@@ -6,6 +6,13 @@ document.getElementById("start-btn").addEventListener("click", async function() 
   const scanFrame = document.querySelector(".scan-frame");
   const muteBtn = document.getElementById("mute-btn");
 
+  // --- CALIBRATION SETTINGS ---
+  // Adjust these if the alignment is slightly off
+  const OFFSET_X = 0.0; 
+  const OFFSET_Y = 0.0; // Increase to move video up, decrease to move down
+  const SCALE_MODIFIER = 1.02; // 1.0 = 100%. Use 1.05 to slightly overlap card edges
+  // ----------------------------
+
   startBtn.classList.add("ui-hidden");
   loading.classList.remove("ui-hidden");
 
@@ -18,36 +25,36 @@ document.getElementById("start-btn").addEventListener("click", async function() 
 
   const { renderer, scene, camera } = mindarThree;
 
-  // 1. Initial Setup
   const texture = new THREE.VideoTexture(video);
   const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0 });
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
+  
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
-  // 2. AUTO-CALCULATE RATIO FUNCTION
   const syncRatios = () => {
     if (video.videoWidth > 0 && video.videoHeight > 0) {
       const ratio = video.videoHeight / video.videoWidth;
       
-      // Update 3D Geometry
+      // Update 3D Geometry with Calibration
       plane.geometry.dispose();
-      plane.geometry = new THREE.PlaneGeometry(1, ratio);
+      // Width is always 1 (anchor unit), height is the ratio
+      plane.geometry = new THREE.PlaneGeometry(1 * SCALE_MODIFIER, ratio * SCALE_MODIFIER);
       
-      // Update CSS Scan Frame (Base width 260px)
+      // Apply manual offsets
+      plane.position.set(OFFSET_X, OFFSET_Y, 0.01); // 0.01 Z-offset prevents flickering
+      
+      // Update CSS UI
       scanFrame.style.height = `${260 * ratio}px`;
-      console.log("Aspect Ratio Synchronized:", ratio);
     }
   };
 
-  // Listen for metadata to load
   video.addEventListener('loadedmetadata', syncRatios);
 
   let isVisible = false;
-
   anchor.onTargetFound = () => {
     isVisible = true;
-    syncRatios(); // Re-verify ratio on detection
+    syncRatios();
     video.play();
     overlay.classList.add("ui-hidden");
     muteBtn.classList.remove("ui-hidden");
@@ -66,34 +73,12 @@ document.getElementById("start-btn").addEventListener("click", async function() 
     muteBtn.innerText = video.muted ? "🔇" : "🔊";
   };
 
-  // Fullscreen Detection
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
+  await mindarThree.start();
+  loading.classList.add("ui-hidden");
+  overlay.classList.remove("ui-hidden");
 
-  window.addEventListener("click", (e) => {
-    if (!isVisible || e.target.closest('button')) return;
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObject(plane);
-    if (intersects.length > 0) {
-      if (video.requestFullscreen) video.requestFullscreen();
-      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
-    }
+  renderer.setAnimationLoop(() => {
+    material.opacity = THREE.MathUtils.lerp(material.opacity, isVisible ? 1 : 0, 0.1);
+    renderer.render(scene, camera);
   });
-
-  try {
-    await mindarThree.start();
-    loading.classList.add("ui-hidden");
-    overlay.classList.remove("ui-hidden");
-
-    renderer.setAnimationLoop(() => {
-      // Smooth Fade
-      material.opacity = THREE.MathUtils.lerp(material.opacity, isVisible ? 1 : 0, 0.1);
-      renderer.render(scene, camera);
-    });
-  } catch (error) {
-    console.error("AR Start Failed:", error);
-    alert("Please check HTTPS and camera permissions.");
-  }
 });
