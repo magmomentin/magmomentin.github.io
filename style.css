@@ -4,7 +4,7 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: transparent; /* Essential for camera visibility */
+  background: transparent; /* Mandatory for camera visibility */
   font-family: -apple-system, system-ui, sans-serif;
 }
 
@@ -39,12 +39,12 @@ html, body {
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
-/* Injected MindAR elements */
+/* Correctly layers the AR engine elements */
 canvas, video {
   position: fixed !important;
   inset: 0;
   width: 100% !important;
   height: 100% !important;
-  object-fit: cover; /* Prevents camera distortion */
+  object-fit: cover;
   z-index: 1;
 }
