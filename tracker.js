@@ -6,21 +6,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const scanFrame = document.querySelector(".scan-frame");
   const muteBtn = document.getElementById("mute-btn");
 
+  // YOUR MAGNET RATIO: 354 (width) / 472 (height)
   const TARGET_ASPECT = 354 / 472; 
 
   const initAR = async () => {
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
       imageTargetSrc: "assets/targets.mind",
-      filterMinCF: 0.0001,
+      filterMinCF: 0.0001, 
       filterBeta: 0.001,
     });
 
     const { renderer, scene, camera } = mindarThree;
 
-    // Force renderer to fill viewport
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    // FIX: Match 3D math to the actual pixels on the screen
+    const handleResize = () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
 
     if (video.readyState < 1) {
       await new Promise(res => video.onloadedmetadata = res);
@@ -29,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const videoAspect = video.videoWidth / video.videoHeight;
     const texture = new THREE.VideoTexture(video);
 
-    // Dynamic UV Fit (Cover)
+    // FIX: Center-crop video (Object-Fit: Cover) for the 3:4 magnet
     if (videoAspect > TARGET_ASPECT) {
       const ratio = TARGET_ASPECT / videoAspect;
       texture.repeat.set(ratio, 1);
@@ -44,13 +52,15 @@ document.addEventListener("DOMContentLoaded", () => {
       map: texture, 
       transparent: true, 
       opacity: 0,
-      depthWrite: false // Prevents glittering
+      depthWrite: false // Prevents the 'glittering' flickering
     });
 
-    // Width is always 1 in Mind-AR, Height is calculated based on aspect ratio
+    // FIX: Plane matches your target height ratio (1.333)
     const geometry = new THREE.PlaneGeometry(1, 1 / TARGET_ASPECT);
     const plane = new THREE.Mesh(geometry, material);
-    plane.position.set(0, 0, 0.1); // Move forward to stay in front of the target
+    
+    // Offset forward to avoid flickering
+    plane.position.set(0, 0, 0.1); 
     
     const anchor = mindarThree.addAnchor(0);
     anchor.group.add(plane);
@@ -76,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
     startBtn.classList.remove("ui-hidden");
 
     renderer.setAnimationLoop(() => {
+      // Smooth fade transition
       material.opacity = THREE.MathUtils.lerp(material.opacity, isTracking ? 1 : 0, 0.1);
       plane.visible = material.opacity > 0.005;
       renderer.render(scene, camera);
@@ -90,6 +101,8 @@ document.addEventListener("DOMContentLoaded", () => {
   startBtn.onclick = () => {
     startBtn.classList.add("ui-hidden");
     overlay.classList.remove("ui-hidden");
+    // Trigger resize to fix alignment on start
+    window.dispatchEvent(new Event('resize')); 
     video.play().then(() => video.pause()); 
   };
 
