@@ -6,48 +6,63 @@ const overlay = document.getElementById("ui-overlay");
 const video = document.getElementById("video");
 
 start.onclick = async () => {
-  // Hide UI to reveal the camera feed
-  overlay.style.display = "none";
+  overlay.style.opacity = "0";
+  setTimeout(() => { overlay.style.display = "none"; }, 500);
 
   const mindarThree = new MindARThree({
     container: document.body,
     imageTargetSrc: "assets/targets.mind",
+    uiScanning: "yes", // Built-in scanning overlay
+    uiLoading: "yes"
   });
 
   const { renderer, scene, camera } = mindarThree;
 
-  // Setup Video Texture and Plane
+  // IMPROVISATION: Video Texture with better filtering for sharpness
   const texture = new THREE.VideoTexture(video);
-  const geometry = new THREE.PlaneGeometry(1, 1.5); // Adjust to (1.5, 1) if landscape
-  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+
+  // IMPROVISATION: Hologram Material (Transparent for fade-in)
+  const material = new THREE.MeshBasicMaterial({ 
+    map: texture, 
+    transparent: true, 
+    opacity: 0 
+  });
+  
+  const geometry = new THREE.PlaneGeometry(1, 1.5); 
   const plane = new THREE.Mesh(geometry, material);
   
-  plane.visible = false;
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
+  let targetVisible = false;
+
   anchor.onTargetFound = () => {
+    targetVisible = true;
     video.play();
-    plane.visible = true;
   };
 
   anchor.onTargetLost = () => {
+    targetVisible = false;
     video.pause();
-    plane.visible = false;
   };
 
   try {
-    console.log("Starting AR Engine...");
-    await mindarThree.start(); // Triggers camera permission
+    await mindarThree.start();
     
     renderer.setAnimationLoop(() => {
+      // IMPROVISATION: Smooth Opacity Transition
+      if (targetVisible && material.opacity < 1) {
+        material.opacity += 0.05;
+      } else if (!targetVisible && material.opacity > 0) {
+        material.opacity -= 0.1;
+      }
+      
       renderer.render(scene, camera);
     });
-    console.log("AR Engine Started Successfully");
-  } catch (error) {
-    console.error("Failed to start AR:", error);
-    // Bring back the overlay or alert the user
-    overlay.style.display = "flex";
-    alert("Camera error: Please ensure you are on HTTPS and have granted camera permissions.");
+  } catch (err) {
+    console.error("AR Engine failed:", err);
+    alert("Camera initialization failed. Please ensure you are using HTTPS.");
   }
 };
