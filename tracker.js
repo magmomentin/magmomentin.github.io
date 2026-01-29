@@ -1,12 +1,12 @@
 const start = document.getElementById("start");
 const video = document.getElementById("video");
 
-const FRAME_ASPECT = 2 / 3; // 3:4 portrait video
+const FRAME_ASPECT = 2 / 3; // 3:4 portrait
 
 start.onclick = async () => {
   start.remove();
 
-  // unlock video
+  // unlock video on user gesture
   await video.play();
 
   const mindar = new window.MINDAR.IMAGE.MindARThree({
@@ -36,7 +36,6 @@ start.onclick = async () => {
   plane.visible = false;
   anchor.group.add(plane);
 
-  // ✅ FIX: no scaling math here
   anchor.onTargetFound = () => {
     plane.visible = true;
   };

@@ -5,18 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>MagMoment AR</title>
 
-  <!-- ✅ MindAR ONLY (it injects THREE globally) -->
+  <!-- IMPORTANT: MindAR already bundles THREE -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: system-ui, sans-serif;
+    }
+
+    canvas {
+      position: fixed !important;
+      inset: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+    }
+
+    #start {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      font-size: 18px;
+    }
+  </style>
 </head>
 <body>
 
   <button id="start">Tap to start</button>
 
-  <video id="video" muted playsinline loop preload="auto" style="display:none">
+  <video
+    id="video"
+    muted
+    playsinline
+    loop
+    preload="auto"
+    style="display:none"
+  >
     <source src="assets/demo.mp4" type="video/mp4">
   </video>
 
-  <!-- ✅ tracker.js MUST be last and NOT a module -->
+  <!-- MUST be last, MUST NOT be module -->
   <script src="tracker.js"></script>
 
 </body>
