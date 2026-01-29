@@ -3,52 +3,58 @@ document.getElementById("start-btn").addEventListener("click", async function() 
   const loading = document.getElementById("loading-screen");
   const video = document.getElementById("ar-video");
   const overlay = document.getElementById("ui-overlay");
+  const scanFrame = document.querySelector(".scan-frame");
   const muteBtn = document.getElementById("mute-btn");
 
-  // Initial State Transitions
   startBtn.classList.add("ui-hidden");
   loading.classList.remove("ui-hidden");
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
     imageTargetSrc: "assets/targets.mind",
-    filterMinCF: 0.0001, // Jitter reduction
+    filterMinCF: 0.0001,
     filterBeta: 0.001,
   });
 
   const { renderer, scene, camera } = mindarThree;
 
-  // --- ALIGNMENT & GEOMETRY ---
-  // Default for Portrait (1 unit width, 1.5 unit height)
-  const planeWidth = 1;
-  const planeHeight = 1.5; 
-  
+  // 1. Initial Setup
   const texture = new THREE.VideoTexture(video);
-  const material = new THREE.MeshBasicMaterial({ 
-    map: texture, 
-    transparent: true, 
-    opacity: 0,
-    side: THREE.DoubleSide 
-  });
-
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(planeWidth, planeHeight), material);
-  plane.position.set(0, 0, 0); // Vertical & Horizontal Centering
-
+  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0 });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
-  let isTargetVisible = false;
+  // 2. AUTO-CALCULATE RATIO FUNCTION
+  const syncRatios = () => {
+    if (video.videoWidth > 0 && video.videoHeight > 0) {
+      const ratio = video.videoHeight / video.videoWidth;
+      
+      // Update 3D Geometry
+      plane.geometry.dispose();
+      plane.geometry = new THREE.PlaneGeometry(1, ratio);
+      
+      // Update CSS Scan Frame (Base width 260px)
+      scanFrame.style.height = `${260 * ratio}px`;
+      console.log("Aspect Ratio Synchronized:", ratio);
+    }
+  };
 
-  // Event Listeners
+  // Listen for metadata to load
+  video.addEventListener('loadedmetadata', syncRatios);
+
+  let isVisible = false;
+
   anchor.onTargetFound = () => {
-    isTargetVisible = true;
+    isVisible = true;
+    syncRatios(); // Re-verify ratio on detection
     video.play();
     overlay.classList.add("ui-hidden");
     muteBtn.classList.remove("ui-hidden");
   };
 
   anchor.onTargetLost = () => {
-    isTargetVisible = false;
+    isVisible = false;
     video.pause();
     overlay.classList.remove("ui-hidden");
     muteBtn.classList.add("ui-hidden");
@@ -60,18 +66,16 @@ document.getElementById("start-btn").addEventListener("click", async function() 
     muteBtn.innerText = video.muted ? "🔇" : "🔊";
   };
 
-  // Fullscreen Raycaster logic
+  // Fullscreen Detection
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
 
   window.addEventListener("click", (e) => {
-    if (!isTargetVisible || e.target.closest('button')) return;
-    
+    if (!isVisible || e.target.closest('button')) return;
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObject(plane);
-    
     if (intersects.length > 0) {
       if (video.requestFullscreen) video.requestFullscreen();
       else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
@@ -84,12 +88,12 @@ document.getElementById("start-btn").addEventListener("click", async function() 
     overlay.classList.remove("ui-hidden");
 
     renderer.setAnimationLoop(() => {
-      // Smooth Alpha Fade
-      material.opacity = THREE.MathUtils.lerp(material.opacity, isTargetVisible ? 1 : 0, 0.1);
+      // Smooth Fade
+      material.opacity = THREE.MathUtils.lerp(material.opacity, isVisible ? 1 : 0, 0.1);
       renderer.render(scene, camera);
     });
   } catch (error) {
-    console.error("AR Initialization Failed:", error);
-    alert("Please check camera permissions and HTTPS.");
+    console.error("AR Start Failed:", error);
+    alert("Please check HTTPS and camera permissions.");
   }
 });
