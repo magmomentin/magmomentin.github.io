@@ -1,14 +1,81 @@
-html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
-#start { position: fixed; inset: 0; z-index: 100; background: #111; color: white; border: none; font-size: 1.2rem; font-weight: bold; cursor: pointer; }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: transparent; /* Allows camera feed to show through */
+  font-family: system-ui, sans-serif;
+}
+
+/* MindAR creates these elements dynamically */
+canvas {
+  position: fixed !important;
+  inset: 0;
+  z-index: 1;
+}
+
+/* The camera feed element created by MindAR */
+body > video {
+  position: fixed !important;
+  inset: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
+  z-index: 0;
+}
+
+#start {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #111;
+  color: white;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 #mute-toggle {
-  position: fixed; bottom: 30px; right: 30px; z-index: 20; width: 56px; height: 56px;
-  border-radius: 50%; border: none; background: rgba(255, 255, 255, 0.2); color: white;
-  font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: opacity 0.3s;
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 500;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 24px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition: opacity 0.3s;
 }
+
 #scanning-overlay {
-  position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; color: white; pointer-events: none; text-align: center;
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  pointer-events: none;
+  text-align: center;
 }
-.scan-frame { width: 260px; height: 380px; border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 20px; margin-bottom: 20px; }
-.hidden { opacity: 0 !important; pointer-events: none; }
+
+.scan-frame {
+  width: 260px;
+  height: 380px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.hidden {
+  display: none !important;
+}
