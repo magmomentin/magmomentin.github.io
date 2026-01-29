@@ -4,52 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>MagMoment AR</title>
-
-  <!-- IMPORTANT: MindAR already bundles THREE -->
+  <link rel="stylesheet" href="style.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
-
-  <style>
-    html, body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      font-family: system-ui, sans-serif;
-    }
-
-    canvas {
-      position: fixed !important;
-      inset: 0;
-      width: 100vw !important;
-      height: 100vh !important;
-    }
-
-    #start {
-      position: fixed;
-      inset: 0;
-      z-index: 10;
-      font-size: 18px;
-    }
-  </style>
 </head>
 <body>
 
-  <button id="start">Tap to start</button>
+  <button id="start-btn">Tap to Start AR</button>
+  <button id="mute-btn" class="ui-hidden">🔇</button>
 
-  <video
-    id="video"
-    muted
-    playsinline
-    loop
-    preload="auto"
-    style="display:none"
-  >
+  <div id="ui-overlay" class="ui-hidden">
+    <div class="scan-frame"></div>
+    <p>Point camera at the target<br><small>(Tap video for Fullscreen)</small></p>
+  </div>
+
+  <video id="ar-video" muted playsinline loop crossorigin="anonymous" style="display:none">
     <source src="assets/demo.mp4" type="video/mp4">
   </video>
 
-  <!-- MUST be last, MUST NOT be module -->
   <script src="tracker.js"></script>
-
 </body>
 </html>

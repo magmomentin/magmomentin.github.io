@@ -1,59 +1,71 @@
-const start = document.getElementById("start");
-const video = document.getElementById("video");
+document.getElementById("start-btn").addEventListener("click", async function() {
+  const startBtn = this;
+  const video = document.getElementById("ar-video");
+  const overlay = document.getElementById("ui-overlay");
+  const muteBtn = document.getElementById("mute-btn");
 
-const SCALE_RATIO = 1;
+  startBtn.style.display = "none";
 
-start.onclick = async () => {
-  start.remove();
-
-  // Unlock video
-  await video.play();
-
-  const mindar = new window.MINDAR.IMAGE.MindARThree({
+  const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
-    imageTargetSrc: "assets/targets.mind"
+    imageTargetSrc: "assets/targets.mind",
   });
 
-  const { renderer, scene, camera } = mindar;
-  scene.add(mindar.cameraGroup);
+  const { renderer, scene, camera } = mindarThree;
 
-  const anchor = mindar.addAnchor(0);
-
+  // AR Content Setup
   const texture = new THREE.VideoTexture(video);
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
+  const geometry = new THREE.PlaneGeometry(1, 1.5); // Adjust aspect ratio here
+  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0 });
+  const plane = new THREE.Mesh(geometry, material);
 
-  // 🔧 FIX STARTS HERE
-  // Use unit geometry, not pre-scaled geometry
-  const FRAME_ASPECT = 2 / 3; // 3:4 video
-
-  const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(FRAME_ASPECT, 1),
-    new THREE.MeshBasicMaterial({
-      map: texture,
-      side: THREE.DoubleSide,
-      transparent: true
-    })
-  );
-  // 🔧 FIX ENDS HERE
-
-  plane.position.set(0, 0, 0);
-  plane.visible = false;
+  const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
-  // 🔧 FIX: remove double-scaling logic
+  let isVisible = false;
+
   anchor.onTargetFound = () => {
-    plane.visible = true;
+    isVisible = true;
+    video.play();
+    overlay.classList.add("ui-hidden");
+    muteBtn.classList.remove("ui-hidden");
   };
 
   anchor.onTargetLost = () => {
-    plane.visible = false;
+    isVisible = false;
+    video.pause();
+    overlay.classList.remove("ui-hidden");
+    muteBtn.classList.add("ui-hidden");
   };
 
-  await mindar.start();
+  // Mute Toggle
+  muteBtn.onclick = () => {
+    video.muted = !video.muted;
+    muteBtn.innerText = video.muted ? "🔇" : "🔊";
+  };
+
+  // Fullscreen Raycaster
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+
+  window.addEventListener("click", (e) => {
+    if (!isVisible || e.target.id === "mute-btn") return;
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObject(plane);
+    if (intersects.length > 0) {
+      if (video.requestFullscreen) video.requestFullscreen();
+      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+    }
+  });
+
+  // Start Engine
+  await mindarThree.start();
+  overlay.classList.remove("ui-hidden");
 
   renderer.setAnimationLoop(() => {
-    texture.needsUpdate = true;
+    material.opacity = THREE.MathUtils.lerp(material.opacity, isVisible ? 1 : 0, 0.1);
     renderer.render(scene, camera);
   });
-};
+});
