@@ -5,60 +5,45 @@ const muteBtn = document.getElementById("mute-toggle");
 const video = document.getElementById("video");
 
 startBtn.onclick = async () => {
-  // 1. Initial UI Transition
   startBtn.style.display = "none";
   loadingOverlay.style.display = "flex";
 
   try {
-    // 2. Load Video and Metadata
+    // 1. Load Video
     await new Promise((resolve, reject) => {
       video.onloadedmetadata = () => resolve();
-      video.onerror = () => reject("Video load failed");
-      video.muted = true; // Required for initial autoplay
+      video.onerror = () => reject("Video failed to load. Check assets/demo.mp4");
+      video.muted = true;
       video.play();
     });
 
     const videoAspect = video.videoWidth / video.videoHeight;
 
-    // 3. Initialize MindAR
+    // 2. Initialize MindAR
+    // Ensure window.MINDAR exists
+    if (!window.MINDAR) {
+      throw new Error("MindAR library not loaded. Check your internet connection.");
+    }
+
     const mindar = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
-      imageTargetSrc: "assets/targets.mind"
+      imageTargetSrc: "assets/targets.mind" // CHECK THIS FILE PATH
     });
 
     const { renderer, scene, camera } = mindar;
     scene.add(mindar.cameraGroup);
-
     const anchor = mindar.addAnchor(0);
 
-    // 4. Setup 3D Plane with Dynamic Aspect Ratio
+    // 3. Setup Plane
     const texture = new THREE.VideoTexture(video);
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-
-    const planeHeight = 1;
-    const planeWidth = planeHeight * videoAspect;
-
     const plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(planeWidth, planeHeight),
-      new THREE.MeshBasicMaterial({
-        map: texture,
-        side: THREE.DoubleSide,
-        transparent: true
-      })
+      new THREE.PlaneGeometry(videoAspect, 1),
+      new THREE.MeshBasicMaterial({ map: texture, transparent: true })
     );
-
     plane.visible = false;
     anchor.group.add(plane);
 
-    // 5. Audio Toggle Logic
-    muteBtn.onclick = (e) => {
-      e.stopPropagation();
-      video.muted = !video.muted;
-      muteBtn.innerText = video.muted ? "🔇" : "🔊";
-    };
-
-    // 6. Anchor Events
+    // 4. Anchor Events
     anchor.onTargetFound = () => {
       plane.visible = true;
       scanOverlay.style.display = "none";
@@ -71,8 +56,12 @@ startBtn.onclick = async () => {
       muteBtn.style.display = "none";
     };
 
-    // 7. Start Engine
+    // 5. Start Engine
+    console.log("Starting MindAR...");
     await mindar.start();
+    
+    // SUCCESS: Hide loading and show scan guide
+    console.log("MindAR Started Successfully");
     loadingOverlay.style.display = "none";
     scanOverlay.style.display = "flex";
 
@@ -82,8 +71,9 @@ startBtn.onclick = async () => {
     });
 
   } catch (err) {
-    console.error(err);
-    alert("AR Initialization Error: Ensure camera permissions are granted and assets exist.");
+    // ERROR: Hide loading so user isn't stuck, and show error
     loadingOverlay.style.display = "none";
+    console.error("AR Error:", err);
+    alert("Error: " + err);
   }
 };
