@@ -12,39 +12,46 @@ start.onclick = async () => {
   const mindarThree = new MindARThree({
     container: document.body,
     imageTargetSrc: "assets/targets.mind",
-    uiScanning: "yes", // Built-in scanning overlay
+    uiScanning: "yes", // Shows a scanning guide to the user
     uiLoading: "yes"
   });
 
   const { renderer, scene, camera } = mindarThree;
 
-  // IMPROVISATION: Video Texture with better filtering for sharpness
   const texture = new THREE.VideoTexture(video);
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
 
-  // IMPROVISATION: Hologram Material (Transparent for fade-in)
   const material = new THREE.MeshBasicMaterial({ 
     map: texture, 
     transparent: true, 
     opacity: 0 
   });
   
-  const geometry = new THREE.PlaneGeometry(1, 1.5); 
+  // Create a placeholder plane
+  const geometry = new THREE.PlaneGeometry(1, 1); 
   const plane = new THREE.Mesh(geometry, material);
   
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
-  let targetVisible = false;
+  // DYNAMIC ASPECT RATIO: Matches plane to video dimensions
+  video.addEventListener('loadedmetadata', () => {
+    const videoAspect = video.videoWidth / video.videoHeight;
+    // Set width based on aspect, keep height at 1
+    plane.geometry = new THREE.PlaneGeometry(videoAspect, 1);
+    console.log("Plane resized to match video aspect ratio.");
+  });
+
+  let isTargetVisible = false;
 
   anchor.onTargetFound = () => {
-    targetVisible = true;
+    isTargetVisible = true;
     video.play();
   };
 
   anchor.onTargetLost = () => {
-    targetVisible = false;
+    isTargetVisible = false;
     video.pause();
   };
 
@@ -52,17 +59,15 @@ start.onclick = async () => {
     await mindarThree.start();
     
     renderer.setAnimationLoop(() => {
-      // IMPROVISATION: Smooth Opacity Transition
-      if (targetVisible && material.opacity < 1) {
+      // Smooth holographic fade effect
+      if (isTargetVisible && material.opacity < 1) {
         material.opacity += 0.05;
-      } else if (!targetVisible && material.opacity > 0) {
+      } else if (!isTargetVisible && material.opacity > 0) {
         material.opacity -= 0.1;
       }
-      
       renderer.render(scene, camera);
     });
   } catch (err) {
-    console.error("AR Engine failed:", err);
-    alert("Camera initialization failed. Please ensure you are using HTTPS.");
+    console.error("AR Start Error:", err);
   }
 };
