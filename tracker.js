@@ -4,6 +4,16 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const overlay = document.getElementById("ui-overlay");
   const muteBtn = document.getElementById("mute-btn");
 
+  /* ---------- 🔓 VIDEO UNLOCK (CRITICAL FIX) ---------- */
+  video.muted = true;
+  try {
+    await video.play();   // user gesture context
+    video.pause();        // keep it unlocked
+    video.currentTime = 0;
+  } catch (e) {
+    console.warn("Video unlock failed", e);
+  }
+
   startBtn.style.display = "none";
 
   /* ---------- THREE FROM MINDAR ---------- */
@@ -11,7 +21,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   /* ---------- CONFIG ---------- */
   const FADE_SPEED = 6.0;
-  const SMOOTH_POS = 0.18;   // lower = smoother
+  const SMOOTH_POS = 0.18;
   const SMOOTH_ROT = 0.15;
   const SMOOTH_SCALE = 0.20;
 
@@ -56,7 +66,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const clock = new THREE.Clock();
 
-  /* ---------- TARGET FIT ---------- */
+  /* ---------- FIT VIDEO ---------- */
   function fitVideoToTarget() {
     if (!targetVisible || !videoReady) return;
 
@@ -84,14 +94,19 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   });
 
   /* ---------- TARGET EVENTS ---------- */
-  anchor.onTargetFound = () => {
+  anchor.onTargetFound = async () => {
     targetVisible = true;
     targetOpacity = 1;
-
     anchor.group.visible = true;
+
     fitVideoToTarget();
 
-    video.play();
+    try {
+      await video.play(); // now ALWAYS works
+    } catch (e) {
+      console.warn("Play blocked", e);
+    }
+
     overlay.classList.add("ui-hidden");
     muteBtn.classList.remove("ui-hidden");
   };
@@ -99,10 +114,10 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   anchor.onTargetLost = () => {
     targetVisible = false;
     targetOpacity = 0;
-
     anchor.group.visible = false;
 
     video.pause();
+
     overlay.classList.remove("ui-hidden");
     muteBtn.classList.add("ui-hidden");
   };
@@ -145,29 +160,14 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   renderer.setAnimationLoop(() => {
     const delta = clock.getDelta();
 
-    /* Smooth opacity */
     material.opacity +=
       (targetOpacity - material.opacity) *
       (1 - Math.exp(-FADE_SPEED * delta));
 
     if (anchor.group.visible) {
-      /* Smooth position */
-      smoothGroup.position.lerp(
-        anchor.group.position,
-        SMOOTH_POS
-      );
-
-      /* Smooth rotation */
-      smoothGroup.quaternion.slerp(
-        anchor.group.quaternion,
-        SMOOTH_ROT
-      );
-
-      /* Smooth scale */
-      smoothGroup.scale.lerp(
-        anchor.group.scale,
-        SMOOTH_SCALE
-      );
+      smoothGroup.position.lerp(anchor.group.position, SMOOTH_POS);
+      smoothGroup.quaternion.slerp(anchor.group.quaternion, SMOOTH_ROT);
+      smoothGroup.scale.lerp(anchor.group.scale, SMOOTH_SCALE);
     }
 
     renderer.render(scene, camera);
