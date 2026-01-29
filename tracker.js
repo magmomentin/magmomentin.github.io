@@ -4,7 +4,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const overlay = document.getElementById("ui-overlay");
   const muteBtn = document.getElementById("mute-btn");
 
-  /* ---------- 🔓 UNLOCK VIDEO ---------- */
+  /* ---------- UNLOCK VIDEO (MOBILE REQUIRED) ---------- */
   video.muted = true;
   try {
     await video.play();
@@ -14,13 +14,15 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   startBtn.style.display = "none";
 
+  /* ---------- THREE FROM MINDAR ---------- */
   const THREE = window.MINDAR.IMAGE.THREE;
 
   /* ---------- CONFIG ---------- */
   const FADE_SPEED = 6.0;
-  const SMOOTH = 0.18;
+  const POS_SMOOTH = 0.2;   // ↓ lower = smoother
+  const ROT_SMOOTH = 0.15;
 
-  /* ---------- MINDAR ---------- */
+  /* ---------- MINDAR INIT ---------- */
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.querySelector("#ar-container"),
     imageTargetSrc: "assets/targets.mind",
@@ -61,21 +63,28 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const clock = new THREE.Clock();
 
-  /* ---------- FIT VIDEO ---------- */
+  /* ---------- SMOOTHING STATE ---------- */
+  const smoothPosition = new THREE.Vector3();
+  const smoothQuaternion = new THREE.Quaternion();
+
+  /* ---------- FIT VIDEO TO TARGET ---------- */
   function fitVideo() {
     if (!videoReady) return;
 
     const w = anchor.group.scale.x;
     const h = anchor.group.scale.y;
 
-    const ta = w / h;
-    const va = video.videoWidth / video.videoHeight;
+    const targetAspect = w / h;
+    const videoAspect = video.videoWidth / video.videoHeight;
 
     let sx = w;
     let sy = h;
 
-    if (va > ta) sy = w / va;
-    else sx = h * va;
+    if (videoAspect > targetAspect) {
+      sy = w / videoAspect;
+    } else {
+      sx = h * videoAspect;
+    }
 
     plane.scale.set(sx, sy, 1);
   }
@@ -122,20 +131,25 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   renderer.setAnimationLoop(() => {
     const delta = clock.getDelta();
 
+    /* Keep video frames updating */
     if (!video.paused && video.readyState >= 2) {
       texture.needsUpdate = true;
     }
 
+    /* Fade video */
     material.opacity +=
       (targetOpacity - material.opacity) *
       (1 - Math.exp(-FADE_SPEED * delta));
 
-    /* 🔥 JITTER SMOOTHING (SAFE) */
-    smoothGroup.position.lerp(new THREE.Vector3(0, 0, 0), SMOOTH);
-    smoothGroup.quaternion.slerp(
-      new THREE.Quaternion(),
-      SMOOTH
-    );
+    if (anchor.group.visible) {
+      /* POSITION smoothing */
+      smoothPosition.lerp(anchor.group.position, POS_SMOOTH);
+      smoothGroup.position.copy(smoothPosition);
+
+      /* ROTATION smoothing */
+      smoothQuaternion.slerp(anchor.group.quaternion, ROT_SMOOTH);
+      smoothGroup.quaternion.copy(smoothQuaternion);
+    }
 
     renderer.render(scene, camera);
   });
