@@ -16,17 +16,12 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const THREE = window.MINDAR.IMAGE.THREE;
 
-  /* ---------- CONFIG (IMPORTANT) ---------- */
+  /* ---------- CONFIG ---------- */
   const FADE_SPEED = 6.0;
 
-  const BASE_POS_SMOOTH = 0.08;   // very smooth when stable
-  const BASE_ROT_SMOOTH = 0.06;
-
-  const MOVE_POS_SMOOTH = 0.25;   // responsive when moving
-  const MOVE_ROT_SMOOTH = 0.20;
-
-  const DEAD_ZONE_POS = 0.002;    // world units
-  const DEAD_ZONE_ROT = 0.002;    // quaternion delta
+  const STABLE_FRAMES_REQUIRED = 25; // ~0.4 sec
+  const POS_THRESHOLD = 0.0015;
+  const ROT_THRESHOLD = 0.0015;
 
   /* ---------- MINDAR ---------- */
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
@@ -45,36 +40,38 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   texture.colorSpace = THREE.SRGBColorSpace;
 
   /* ---------- PLANE ---------- */
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    opacity: 0,
+  });
+
   const plane = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
-    new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      opacity: 0,
-    })
+    material
   );
   plane.position.z = 0.01;
 
-  /* ---------- SMOOTH GROUP ---------- */
-  const smoothGroup = new THREE.Group();
-  smoothGroup.add(plane);
+  /* ---------- CONTENT GROUP ---------- */
+  const contentGroup = new THREE.Group();
+  contentGroup.add(plane);
+  scene.add(contentGroup);
 
   /* ---------- ANCHOR ---------- */
   const anchor = mindarThree.addAnchor(0);
-  anchor.group.add(smoothGroup);
   anchor.group.visible = false;
 
-  let targetOpacity = 0;
   let videoReady = false;
+  let targetOpacity = 0;
+
+  /* ---------- LOCK STATE ---------- */
+  let locked = false;
+  let stableFrames = 0;
+
+  const lastPos = new THREE.Vector3();
+  const lastQuat = new THREE.Quaternion();
 
   const clock = new THREE.Clock();
-
-  /* ---------- SMOOTH STATE ---------- */
-  const smoothPos = new THREE.Vector3();
-  const smoothQuat = new THREE.Quaternion();
-
-  const prevPos = new THREE.Vector3();
-  const prevQuat = new THREE.Quaternion();
 
   /* ---------- FIT VIDEO ---------- */
   function fitVideo() {
@@ -100,15 +97,16 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     fitVideo();
   });
 
-  /* ---------- TARGET EVENTS ---------- */
+  /* ---------- TARGET FOUND ---------- */
   anchor.onTargetFound = async () => {
     anchor.group.visible = true;
     targetOpacity = 1;
 
-    smoothPos.copy(anchor.group.position);
-    smoothQuat.copy(anchor.group.quaternion);
-    prevPos.copy(anchor.group.position);
-    prevQuat.copy(anchor.group.quaternion);
+    locked = false;
+    stableFrames = 0;
+
+    lastPos.copy(anchor.group.position);
+    lastQuat.copy(anchor.group.quaternion);
 
     fitVideo();
     await video.play();
@@ -117,9 +115,12 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     muteBtn.classList.remove("ui-hidden");
   };
 
+  /* ---------- TARGET LOST ---------- */
   anchor.onTargetLost = () => {
     anchor.group.visible = false;
     targetOpacity = 0;
+    locked = false;
+
     video.pause();
 
     overlay.classList.remove("ui-hidden");
@@ -146,38 +147,36 @@ document.getElementById("start-btn").addEventListener("click", async () => {
       texture.needsUpdate = true;
     }
 
-    materialFade(delta);
+    material.opacity +=
+      (targetOpacity - material.opacity) *
+      (1 - Math.exp(-FADE_SPEED * delta));
 
-    if (anchor.group.visible) {
-      const posDelta = anchor.group.position.distanceTo(prevPos);
-      const rotDelta = 1 - Math.abs(anchor.group.quaternion.dot(prevQuat));
+    if (anchor.group.visible && !locked) {
+      const posDelta = anchor.group.position.distanceTo(lastPos);
+      const rotDelta =
+        1 - Math.abs(anchor.group.quaternion.dot(lastQuat));
 
-      const posSmooth =
-        posDelta < DEAD_ZONE_POS
-          ? BASE_POS_SMOOTH
-          : MOVE_POS_SMOOTH;
+      if (
+        posDelta < POS_THRESHOLD &&
+        rotDelta < ROT_THRESHOLD
+      ) {
+        stableFrames++;
+      } else {
+        stableFrames = 0;
+      }
 
-      const rotSmooth =
-        rotDelta < DEAD_ZONE_ROT
-          ? BASE_ROT_SMOOTH
-          : MOVE_ROT_SMOOTH;
+      if (stableFrames >= STABLE_FRAMES_REQUIRED) {
+        // 🔒 LOCK POSE
+        contentGroup.position.copy(anchor.group.position);
+        contentGroup.quaternion.copy(anchor.group.quaternion);
+        contentGroup.scale.copy(anchor.group.scale);
+        locked = true;
+      }
 
-      smoothPos.lerp(anchor.group.position, posSmooth);
-      smoothQuat.slerp(anchor.group.quaternion, rotSmooth);
-
-      smoothGroup.position.copy(smoothPos);
-      smoothGroup.quaternion.copy(smoothQuat);
-
-      prevPos.copy(anchor.group.position);
-      prevQuat.copy(anchor.group.quaternion);
+      lastPos.copy(anchor.group.position);
+      lastQuat.copy(anchor.group.quaternion);
     }
 
     renderer.render(scene, camera);
   });
-
-  function materialFade(delta) {
-    plane.material.opacity +=
-      (targetOpacity - plane.material.opacity) *
-      (1 - Math.exp(-FADE_SPEED * delta));
-  }
 });
