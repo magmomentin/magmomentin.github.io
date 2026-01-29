@@ -5,12 +5,10 @@ document.getElementById("start-btn").addEventListener("click", async function() 
   const overlay = document.getElementById("ui-overlay");
   const muteBtn = document.getElementById("mute-btn");
 
-  // --- HARDCODED CALIBRATION ---
-  const ASPECT_RATIO = 1.333; // 4 divided by 3
-  const SCALE_ADJUST = 1.02;  // 1.02 (102%) covers physical edges/bleed
-  const OFFSET_Y = 0.0;       // Increase (e.g., 0.05) to move video UP
-  const OFFSET_X = 0.0;       // Increase (e.g., 0.05) to move video RIGHT
-  // -----------------------------
+  // --- HARDCODED ALIGNMENT ---
+  const RATIO = 1.333; // 4/3 aspect ratio
+  const SCALE = 1.01;  // Slight over-scale to hide physical edges
+  // ---------------------------
 
   startBtn.classList.add("ui-hidden");
   loading.classList.remove("ui-hidden");
@@ -24,6 +22,7 @@ document.getElementById("start-btn").addEventListener("click", async function() 
 
   const { renderer, scene, camera } = mindarThree;
 
+  // 1. Plane Setup
   const texture = new THREE.VideoTexture(video);
   const material = new THREE.MeshBasicMaterial({ 
     map: texture, 
@@ -32,12 +31,8 @@ document.getElementById("start-btn").addEventListener("click", async function() 
     side: THREE.DoubleSide 
   });
 
-  // Hardcoded Geometry: Width is 1, Height is 1.333
-  const geometry = new THREE.PlaneGeometry(1 * SCALE_ADJUST, ASPECT_RATIO * SCALE_ADJUST);
-  const plane = new THREE.Mesh(geometry, material);
-  
-  // Apply hardcoded offsets
-  plane.position.set(OFFSET_X, OFFSET_Y, 0.01); 
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(1 * SCALE, RATIO * SCALE), material);
+  plane.position.set(0, 0, 0.01); // 0.01 Z-offset prevents flickering
 
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
@@ -64,16 +59,19 @@ document.getElementById("start-btn").addEventListener("click", async function() 
     muteBtn.innerText = video.muted ? "🔇" : "🔊";
   };
 
-  // Fullscreen Raycaster
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
+  // 2. Fullscreen Logic
   window.addEventListener("click", (e) => {
     if (!isVisible || e.target.closest('button')) return;
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    
+    // Simple intersection check for the plane
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2(
+      (e.clientX / window.innerWidth) * 2 - 1,
+      -(e.clientY / window.innerHeight) * 2 + 1
+    );
+
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObject(plane);
-    if (intersects.length > 0) {
+    if (raycaster.intersectObject(plane).length > 0) {
       if (video.requestFullscreen) video.requestFullscreen();
       else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
     }
@@ -89,6 +87,6 @@ document.getElementById("start-btn").addEventListener("click", async function() 
       renderer.render(scene, camera);
     });
   } catch (err) {
-    console.error(err);
+    console.error("AR Engine failed:", err);
   }
 });
