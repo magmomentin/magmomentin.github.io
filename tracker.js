@@ -11,12 +11,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const initAR = async () => {
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
-      imageTargetSrc: "assets/targets.mind", // Uses your uploaded file
+      imageTargetSrc: "assets/targets.mind",
       filterMinCF: 0.0001,
       filterBeta: 0.001,
     });
 
     const { renderer, scene, camera } = mindarThree;
+
+    // Force renderer to fill viewport
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
 
     if (video.readyState < 1) {
       await new Promise(res => video.onloadedmetadata = res);
@@ -25,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const videoAspect = video.videoWidth / video.videoHeight;
     const texture = new THREE.VideoTexture(video);
 
-    // Dynamic "Cover" Fit
+    // Dynamic UV Fit (Cover)
     if (videoAspect > TARGET_ASPECT) {
       const ratio = TARGET_ASPECT / videoAspect;
       texture.repeat.set(ratio, 1);
@@ -43,9 +47,10 @@ document.addEventListener("DOMContentLoaded", () => {
       depthWrite: false // Prevents glittering
     });
 
+    // Width is always 1 in Mind-AR, Height is calculated based on aspect ratio
     const geometry = new THREE.PlaneGeometry(1, 1 / TARGET_ASPECT);
     const plane = new THREE.Mesh(geometry, material);
-    plane.position.set(0, 0, 0.1); // Stronger offset to prevent Z-fighting
+    plane.position.set(0, 0, 0.1); // Move forward to stay in front of the target
     
     const anchor = mindarThree.addAnchor(0);
     anchor.group.add(plane);
