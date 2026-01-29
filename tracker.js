@@ -1,41 +1,40 @@
 document.getElementById("start-btn").addEventListener("click", async function() {
   const startBtn = this;
-  const loading = document.getElementById("loading-screen");
   const video = document.getElementById("ar-video");
   const overlay = document.getElementById("ui-overlay");
   const muteBtn = document.getElementById("mute-btn");
 
-  // --- HARDCODED ALIGNMENT ---
-  const RATIO = 1.333; // 4/3 aspect ratio
-  const SCALE = 1.01;  // Slight over-scale to hide physical edges
-  // ---------------------------
-
   startBtn.classList.add("ui-hidden");
-  loading.classList.remove("ui-hidden");
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-    container: document.body,
+    container: document.body, // Root container for tracking
     imageTargetSrc: "assets/targets.mind",
-    filterMinCF: 0.0001,
+    filterMinCF: 0.0001, // Jitter reduction
     filterBeta: 0.001,
   });
 
   const { renderer, scene, camera } = mindarThree;
 
-  // 1. Plane Setup
+  // 1. Setup Video Texture
   const texture = new THREE.VideoTexture(video);
   const material = new THREE.MeshBasicMaterial({ 
     map: texture, 
     transparent: true, 
-    opacity: 0,
-    side: THREE.DoubleSide 
+    opacity: 0 
   });
 
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(1 * SCALE, RATIO * SCALE), material);
-  plane.position.set(0, 0, 0.01); // 0.01 Z-offset prevents flickering
+  // 2. Setup Geometry for 3:4 Aspect Ratio
+  // MindAR width is always 1.0; Height = 4/3 = 1.333
+  const geometry = new THREE.PlaneGeometry(1, 1.333);
+  const plane = new THREE.Mesh(geometry, material);
 
-  const anchor = mindarThree.addAnchor(0);
-  anchor.group.add(plane);
+  // 3. LOCK TO CENTER
+  // 0,0,0 is the exact center of the physical card
+  // 0.01 on Z-axis prevents flickering (Z-fighting)
+  plane.position.set(0, 0, 0.01); 
+
+  const anchor = mindarThree.addAnchor(0); // Tracks the first image in targets.mind
+  anchor.group.add(plane); 
 
   let isVisible = false;
 
@@ -53,40 +52,16 @@ document.getElementById("start-btn").addEventListener("click", async function() 
     muteBtn.classList.add("ui-hidden");
   };
 
-  muteBtn.onclick = (e) => {
-    e.stopPropagation();
+  muteBtn.onclick = () => {
     video.muted = !video.muted;
     muteBtn.innerText = video.muted ? "🔇" : "🔊";
   };
 
-  // 2. Fullscreen Logic
-  window.addEventListener("click", (e) => {
-    if (!isVisible || e.target.closest('button')) return;
-    
-    // Simple intersection check for the plane
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2(
-      (e.clientX / window.innerWidth) * 2 - 1,
-      -(e.clientY / window.innerHeight) * 2 + 1
-    );
+  await mindarThree.start();
 
-    raycaster.setFromCamera(mouse, camera);
-    if (raycaster.intersectObject(plane).length > 0) {
-      if (video.requestFullscreen) video.requestFullscreen();
-      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
-    }
+  renderer.setAnimationLoop(() => {
+    // Smooth Alpha Transition
+    material.opacity = THREE.MathUtils.lerp(material.opacity, isVisible ? 1 : 0, 0.1);
+    renderer.render(scene, camera);
   });
-
-  try {
-    await mindarThree.start();
-    loading.classList.add("ui-hidden");
-    overlay.classList.remove("ui-hidden");
-
-    renderer.setAnimationLoop(() => {
-      material.opacity = THREE.MathUtils.lerp(material.opacity, isVisible ? 1 : 0, 0.1);
-      renderer.render(scene, camera);
-    });
-  } catch (err) {
-    console.error("AR Engine failed:", err);
-  }
 });
