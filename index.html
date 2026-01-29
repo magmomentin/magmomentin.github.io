@@ -8,25 +8,23 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+  <!-- THREE.js (required first) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+
+  <!-- MindAR (NON-MODULE BUILD) -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 </head>
 
 <body>
 
-  <!-- Scan hint -->
   <div id="hint">Scan your MagMoment</div>
 
-  <!-- Controls -->
   <div id="controls" class="hidden">
     <button id="replay">🔁</button>
     <button id="sound">🔊</button>
   </div>
 
-  <!-- Brand watermark -->
-  <div id="brand" class="hidden">
-    <img src="assets/logo.png" alt="MagMoment">
-  </div>
-
+   <!-- Your logic -->
   <script src="main.js"></script>
 </body>
 </html>
