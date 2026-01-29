@@ -6,32 +6,26 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   startBtn.style.display = "none";
 
-  /* -------------------------
-     CONFIG
-  -------------------------- */
-  const BLEED_FACTOR = 1.15; // 1 = exact fit, >1 = intentional bleed
-  const FADE_SPEED = 6.0;    // higher = faster fade
+  /* ---------- CONFIG ---------- */
+  const BLEED_FACTOR = 1.05; // subtle, safe
+  const FADE_SPEED = 6.0;
 
-  /* -------------------------
-     MINDAR INIT
-  -------------------------- */
+  /* ---------- MINDAR INIT ---------- */
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
     imageTargetSrc: "assets/targets.mind",
+    filterMinCF: 0.001,
+    filterBeta: 10,
   });
 
   const { renderer, scene, camera } = mindarThree;
 
-  /* -------------------------
-     VIDEO TEXTURE
-  -------------------------- */
+  /* ---------- VIDEO TEXTURE ---------- */
   const texture = new THREE.VideoTexture(video);
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
 
-  /* -------------------------
-     PLANE (1x1 BASE)
-  -------------------------- */
+  /* ---------- PLANE ---------- */
   const geometry = new THREE.PlaneGeometry(1, 1);
   const material = new THREE.MeshBasicMaterial({
     map: texture,
@@ -40,30 +34,26 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   });
 
   const plane = new THREE.Mesh(geometry, material);
+  plane.position.z = 0.01; // critical stability fix
 
-  /* -------------------------
-     ANCHOR
-  -------------------------- */
+  /* ---------- ANCHOR ---------- */
   const anchor = mindarThree.addAnchor(0);
+  anchor.group.rotation.order = "YXZ";
   anchor.group.add(plane);
 
   let targetOpacity = 0;
   const clock = new THREE.Clock();
 
-  /* -------------------------
-     LETTERBOX + BLEED
-  -------------------------- */
+  /* ---------- LETTERBOX + BLEED ---------- */
   video.addEventListener("loadedmetadata", () => {
     const videoAspect = video.videoWidth / video.videoHeight;
 
-    const targetWidth = anchor.group.scale.x;
-    const targetHeight = anchor.group.scale.y;
-    const targetAspect = targetWidth / targetHeight;
+    const targetAspect =
+      anchor.group.scale.x / anchor.group.scale.y;
 
     let scaleX = 1;
     let scaleY = 1;
 
-    // contain (letterbox)
     if (videoAspect > targetAspect) {
       scaleY = targetAspect / videoAspect;
     } else {
@@ -77,9 +67,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     );
   });
 
-  /* -------------------------
-     TARGET EVENTS
-  -------------------------- */
+  /* ---------- TARGET EVENTS ---------- */
   anchor.onTargetFound = () => {
     targetOpacity = 1;
     video.play();
@@ -94,17 +82,13 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     muteBtn.classList.add("ui-hidden");
   };
 
-  /* -------------------------
-     MUTE
-  -------------------------- */
+  /* ---------- MUTE ---------- */
   muteBtn.onclick = () => {
     video.muted = !video.muted;
     muteBtn.textContent = video.muted ? "🔇" : "🔊";
   };
 
-  /* -------------------------
-     FULLSCREEN TAP
-  -------------------------- */
+  /* ---------- FULLSCREEN TAP ---------- */
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
@@ -116,13 +100,12 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
     raycaster.setFromCamera(pointer, camera);
     if (raycaster.intersectObject(plane).length > 0) {
-      video.requestFullscreen?.() || video.webkitEnterFullscreen?.();
+      video.requestFullscreen?.() ||
+        video.webkitEnterFullscreen?.();
     }
   });
 
-  /* -------------------------
-     START AR
-  -------------------------- */
+  /* ---------- START ---------- */
   await mindarThree.start();
   overlay.classList.remove("ui-hidden");
 
