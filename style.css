@@ -4,22 +4,27 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #000;
-  font-family: system-ui, -apple-system, sans-serif;
+  background: transparent; /* Allows camera to show through */
+  font-family: -apple-system, system-ui, sans-serif;
 }
 
 #ui-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 2000;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  text-align: center;
 }
 
+#ui-content h1 { margin-bottom: 10px; }
+#ui-content p { margin-bottom: 25px; opacity: 0.8; }
+
 #start {
-  padding: 18px 36px;
+  padding: 16px 40px;
   font-size: 1.1rem;
   font-weight: bold;
   color: #fff;
@@ -27,14 +32,15 @@ html, body {
   border: none;
   border-radius: 50px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
-/* Ensure the camera feed fills the window */
-canvas {
+/* Style for the AR canvas and video feed injected by MindAR */
+canvas, video {
   position: fixed !important;
   inset: 0;
   width: 100% !important;
   height: 100% !important;
   object-fit: cover;
+  z-index: 1;
 }
