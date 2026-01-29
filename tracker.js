@@ -4,7 +4,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const overlay = document.getElementById("ui-overlay");
   const muteBtn = document.getElementById("mute-btn");
 
-  /* ---------- UNLOCK VIDEO ---------- */
+  /* ---------- UNLOCK VIDEO (MOBILE) ---------- */
   video.muted = true;
   try {
     await video.play();
@@ -19,7 +19,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   /* ---------- CONFIG ---------- */
   const FADE_SPEED = 6.0;
 
-  const STABLE_FRAMES_REQUIRED = 25; // ~0.4 sec
+  const STABLE_FRAMES_REQUIRED = 20;
   const POS_THRESHOLD = 0.0015;
   const ROT_THRESHOLD = 0.0015;
 
@@ -52,19 +52,17 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   );
   plane.position.z = 0.01;
 
-  /* ---------- CONTENT GROUP ---------- */
-  const contentGroup = new THREE.Group();
-  contentGroup.add(plane);
-  scene.add(contentGroup);
+  /* ---------- LOCK GROUP (INSIDE ANCHOR) ---------- */
+  const lockGroup = new THREE.Group();
+  lockGroup.add(plane);
 
   /* ---------- ANCHOR ---------- */
   const anchor = mindarThree.addAnchor(0);
+  anchor.group.add(lockGroup);
   anchor.group.visible = false;
 
   let videoReady = false;
   let targetOpacity = 0;
-
-  /* ---------- LOCK STATE ---------- */
   let locked = false;
   let stableFrames = 0;
 
@@ -73,7 +71,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const clock = new THREE.Clock();
 
-  /* ---------- FIT VIDEO ---------- */
+  /* ---------- FIT VIDEO TO TARGET ---------- */
   function fitVideo() {
     if (!videoReady) return;
 
@@ -166,10 +164,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
       }
 
       if (stableFrames >= STABLE_FRAMES_REQUIRED) {
-        // 🔒 LOCK POSE
-        contentGroup.position.copy(anchor.group.position);
-        contentGroup.quaternion.copy(anchor.group.quaternion);
-        contentGroup.scale.copy(anchor.group.scale);
+        // 🔒 LOCK (stop updating, but stay in anchor)
         locked = true;
       }
 
