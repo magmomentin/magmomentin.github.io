@@ -1,40 +1,44 @@
-const startBtn = document.getElementById("start-btn");
-const overlay = document.getElementById("ui-overlay");
-const guide = document.getElementById("scanning-guide");
+const startButton = document.getElementById("startButton");
+const muteBtn = document.getElementById("mute-btn");
+const overlay = document.getElementById("overlay");
+const guide = document.getElementById("guide-box");
 const video = document.getElementById("video");
 
-startBtn.onclick = async () => {
-  overlay.style.opacity = "0";
-  setTimeout(() => overlay.remove(), 500);
+// Audio Toggle Logic
+muteBtn.onclick = () => {
+  video.muted = !video.muted;
+  muteBtn.innerText = video.muted ? "🔇" : "🔊";
+};
+
+startButton.onclick = async () => {
+  overlay.style.display = "none";
   guide.style.display = "block";
+  muteBtn.style.display = "block";
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
     imageTargetSrc: "assets/target.mind",
-    // Filter out jitter for a smoother video experience
-    filterMinCF: 0.0001,
-    filterBeta: 0.001
+    uiLoading: "no",
+    uiScanning: "no"
   });
 
   const { renderer, scene, camera } = mindarThree;
 
-  // Set up Video Texture
   const texture = new THREE.VideoTexture(video);
-  texture.encoding = THREE.sRGBEncoding; // Better color accuracy
+  texture.encoding = THREE.sRGBEncoding;
 
-  // Match target image aspect ratio (Width/Height)
-  // If target is 2:3, Width = 0.66, Height = 1
-  const geometry = new THREE.PlaneGeometry(0.66, 1);
+  // 3:4 Aspect Ratio (Width 0.75, Height 1.0)
+  const geometry = new THREE.PlaneGeometry(0.75, 1);
   const material = new THREE.MeshBasicMaterial({ map: texture });
   const plane = new THREE.Mesh(geometry, material);
+  plane.position.z = 0.01; // Avoid Z-fighting
 
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
-  // Logic to play/pause only when visible
   anchor.onTargetFound = () => {
     guide.style.display = "none";
-    video.play();
+    video.play().catch(e => console.error("Play error:", e));
   };
 
   anchor.onTargetLost = () => {
@@ -42,11 +46,12 @@ startBtn.onclick = async () => {
     video.pause();
   };
 
-  await mindarThree.start();
-
-  renderer.setAnimationLoop(() => {
-    // Note: VideoTexture doesn't always need manual 'needsUpdate' 
-    // in newer Three.js versions, but it's safe to keep if using older builds.
-    renderer.render(scene, camera);
-  });
+  try {
+    await mindarThree.start();
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+  } catch (error) {
+    console.error("Camera/HTTPS error:", error);
+  }
 };
