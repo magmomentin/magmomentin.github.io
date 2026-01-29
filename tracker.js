@@ -7,7 +7,7 @@ document.getElementById("start-btn").addEventListener("click", async function() 
   startBtn.classList.add("ui-hidden");
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-    container: document.body, // Root container for tracking
+    container: document.body,
     imageTargetSrc: "assets/targets.mind",
     filterMinCF: 0.0001, // Jitter reduction
     filterBeta: 0.001,
@@ -15,7 +15,7 @@ document.getElementById("start-btn").addEventListener("click", async function() 
 
   const { renderer, scene, camera } = mindarThree;
 
-  // 1. Setup Video Texture
+  // 1. Setup Video Content
   const texture = new THREE.VideoTexture(video);
   const material = new THREE.MeshBasicMaterial({ 
     map: texture, 
@@ -23,18 +23,25 @@ document.getElementById("start-btn").addEventListener("click", async function() 
     opacity: 0 
   });
 
-  // 2. Setup Geometry for 3:4 Aspect Ratio
-  // MindAR width is always 1.0; Height = 4/3 = 1.333
+  // 2. Geometry: Width 1.0 (MindAR Standard), Height 1.333 (3:4 ratio)
   const geometry = new THREE.PlaneGeometry(1, 1.333);
   const plane = new THREE.Mesh(geometry, material);
 
-  // 3. LOCK TO CENTER
-  // 0,0,0 is the exact center of the physical card
-  // 0.01 on Z-axis prevents flickering (Z-fighting)
-  plane.position.set(0, 0, 0.01); 
+  // 3. LOCK POSITION & ROTATION
+  // Zeroing rotation ensures the video stays flat against the anchor
+  plane.rotation.set(0, 0, 0); 
+  plane.position.set(0, 0, 0.01); // 0.01 Z-offset prevents flickering
 
-  const anchor = mindarThree.addAnchor(0); // Tracks the first image in targets.mind
+  const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane); 
+
+  // 4. PERSPECTIVE FIX: Resize Listener
+  // This prevents tilting when browser UI elements hide/show
+  window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
 
   let isVisible = false;
 
@@ -60,7 +67,6 @@ document.getElementById("start-btn").addEventListener("click", async function() 
   await mindarThree.start();
 
   renderer.setAnimationLoop(() => {
-    // Smooth Alpha Transition
     material.opacity = THREE.MathUtils.lerp(material.opacity, isVisible ? 1 : 0, 0.1);
     renderer.render(scene, camera);
   });
