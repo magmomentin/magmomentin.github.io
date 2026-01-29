@@ -24,9 +24,12 @@
 
   <button id="mute-btn" class="ui-hidden">🔇</button>
 
+  <!-- IMPORTANT: video is NOT fullscreen, only texture -->
   <video
     id="ar-video"
+    muted
     playsinline
+    webkit-playsinline
     loop
     preload="auto"
     crossorigin="anonymous"

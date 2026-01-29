@@ -7,19 +7,16 @@ html, body {
   background: black;
 }
 
-canvas,
-body > video {
+/* ✅ ONLY canvas is fullscreen (camera feed) */
+canvas {
   position: fixed !important;
   inset: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  object-fit: contain !important;
   z-index: 1 !important;
 }
 
-body > video {
-  z-index: -1 !important;
-}
+/* ❌ video is NOT styled or layered */
 
 #start-btn {
   position: fixed;

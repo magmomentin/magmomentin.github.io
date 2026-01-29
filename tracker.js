@@ -6,7 +6,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   startBtn.classList.add("ui-hidden");
 
-  // MUST match scan-frame exactly
+  // Must match scan-frame exactly
   const TARGET_ASPECT = 260 / 347;
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
@@ -18,7 +18,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const { renderer, scene, camera } = mindarThree;
 
-  // ✅ Wait for real video dimensions
+  // ✅ Wait for video metadata (prevents NaN sizing)
   await new Promise((resolve) => {
     if (video.readyState >= 1) resolve();
     else video.onloadedmetadata = () => resolve();
