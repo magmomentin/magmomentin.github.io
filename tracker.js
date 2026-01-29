@@ -1,79 +1,58 @@
-const startBtn = document.getElementById("start");
-const loadingOverlay = document.getElementById("loading-overlay");
-const scanOverlay = document.getElementById("scan-overlay");
-const muteBtn = document.getElementById("mute-toggle");
+const start = document.getElementById("start");
+const overlay = document.getElementById("ui-overlay");
 const video = document.getElementById("video");
 
-startBtn.onclick = async () => {
-  startBtn.style.display = "none";
-  loadingOverlay.style.display = "flex";
+start.onclick = async () => {
+  // Hide UI
+  overlay.style.display = "none";
 
-  try {
-    // 1. Load Video
-    await new Promise((resolve, reject) => {
-      video.onloadedmetadata = () => resolve();
-      video.onerror = () => reject("Video failed to load. Check assets/demo.mp4");
-      video.muted = true;
-      video.play();
-    });
+  // Initialize MindAR with Three.js
+  const mindar = new window.MINDAR.IMAGE.MindARThree({
+    container: document.body,
+    imageTargetSrc: "assets/targets.mind"
+  });
 
-    const videoAspect = video.videoWidth / video.videoHeight;
+  const { renderer, scene, camera } = mindar;
 
-    // 2. Initialize MindAR
-    // Ensure window.MINDAR exists
-    if (!window.MINDAR) {
-      throw new Error("MindAR library not loaded. Check your internet connection.");
-    }
+  // Create Video Texture
+  const texture = new THREE.VideoTexture(video);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.format = THREE.RGBAFormat;
 
-    const mindar = new window.MINDAR.IMAGE.MindARThree({
-      container: document.body,
-      imageTargetSrc: "assets/targets.mind" // CHECK THIS FILE PATH
-    });
+  // Standard geometry (Width 1, Height 1.5 for a 2:3 vertical photo)
+  // Adjust to 1.5, 1 if your target is horizontal.
+  const geometry = new THREE.PlaneGeometry(1, 1.5);
+  const material = new THREE.MeshBasicMaterial({ 
+    map: texture,
+    transparent: true,
+    side: THREE.DoubleSide 
+  });
 
-    const { renderer, scene, camera } = mindar;
-    scene.add(mindar.cameraGroup);
-    const anchor = mindar.addAnchor(0);
+  const plane = new THREE.Mesh(geometry, material);
+  plane.visible = false;
 
-    // 3. Setup Plane
-    const texture = new THREE.VideoTexture(video);
-    const plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(videoAspect, 1),
-      new THREE.MeshBasicMaterial({ map: texture, transparent: true })
-    );
+  // Add anchor for the first target in the .mind file
+  const anchor = mindar.addAnchor(0);
+  anchor.group.add(plane);
+
+  // Interaction logic
+  anchor.onTargetFound = () => {
+    plane.visible = true;
+    video.play();
+    console.log("Target detected");
+  };
+
+  anchor.onTargetLost = () => {
     plane.visible = false;
-    anchor.group.add(plane);
+    video.pause();
+    console.log("Target lost");
+  };
 
-    // 4. Anchor Events
-    anchor.onTargetFound = () => {
-      plane.visible = true;
-      scanOverlay.style.display = "none";
-      muteBtn.style.display = "block";
-    };
+  // Start the engine
+  await mindar.start();
 
-    anchor.onTargetLost = () => {
-      plane.visible = false;
-      scanOverlay.style.display = "flex";
-      muteBtn.style.display = "none";
-    };
-
-    // 5. Start Engine
-    console.log("Starting MindAR...");
-    await mindar.start();
-    
-    // SUCCESS: Hide loading and show scan guide
-    console.log("MindAR Started Successfully");
-    loadingOverlay.style.display = "none";
-    scanOverlay.style.display = "flex";
-
-    renderer.setAnimationLoop(() => {
-      texture.needsUpdate = true;
-      renderer.render(scene, camera);
-    });
-
-  } catch (err) {
-    // ERROR: Hide loading so user isn't stuck, and show error
-    loadingOverlay.style.display = "none";
-    console.error("AR Error:", err);
-    alert("Error: " + err);
-  }
+  renderer.setAnimationLoop(() => {
+    renderer.render(scene, camera);
+  });
 };
