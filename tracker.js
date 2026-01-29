@@ -6,28 +6,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const scanFrame = document.querySelector(".scan-frame");
   const muteBtn = document.getElementById("mute-btn");
 
-  // Fixed proportions for your magnet product (Width / Height)
   const TARGET_ASPECT = 354 / 472; 
 
   const initAR = async () => {
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
       imageTargetSrc: "assets/targets.mind",
-      filterMinCF: 0.0001, // Smooth tracking
+      filterMinCF: 0.0001, 
       filterBeta: 0.001,
     });
 
     const { renderer, scene, camera } = mindarThree;
 
-    // Ensure video dimensions are ready for aspect ratio calculation
+    // Fixed: High-performance renderer settings
+    renderer.outputEncoding = THREE.sRGBEncoding;
+
     if (video.readyState < 1) {
       await new Promise(res => video.onloadedmetadata = res);
     }
 
     const videoAspect = video.videoWidth / video.videoHeight;
     const texture = new THREE.VideoTexture(video);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
 
-    // Enhancement: Dynamic UV Mapping (Object-Fit: Cover)
+    // Dynamic UV Mapping
     if (videoAspect > TARGET_ASPECT) {
       const ratio = TARGET_ASPECT / videoAspect;
       texture.repeat.set(ratio, 1);
@@ -38,10 +41,18 @@ document.addEventListener("DOMContentLoaded", () => {
       texture.offset.set(0, (1 - ratio) / 2);
     }
 
-    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0 });
+    const material = new THREE.MeshBasicMaterial({ 
+      map: texture, 
+      transparent: true, 
+      opacity: 0,
+      depthWrite: false // Fix: Prevents "glittering" or flickering against the background
+    });
+
     const geometry = new THREE.PlaneGeometry(1, 1 / TARGET_ASPECT);
     const plane = new THREE.Mesh(geometry, material);
-    plane.position.set(0, 0, 0.01);
+    
+    // Fix: Move plane slightly further forward (0.1 instead of 0.01) to stop flickering
+    plane.position.set(0, 0, 0.1);
     
     const anchor = mindarThree.addAnchor(0);
     anchor.group.add(plane);
@@ -50,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     anchor.onTargetFound = () => {
       isTracking = true;
-      video.play().catch(() => {}); // Play only if browser allows
+      video.play().catch(() => {}); 
       scanFrame.classList.add("detected");
       muteBtn.classList.remove("ui-hidden");
     };
@@ -62,13 +73,11 @@ document.addEventListener("DOMContentLoaded", () => {
       muteBtn.classList.add("ui-hidden");
     };
 
-    // Initialization complete
     await mindarThree.start();
     loader.classList.add("ui-hidden");
     startBtn.classList.remove("ui-hidden");
 
     renderer.setAnimationLoop(() => {
-      // Smooth fade transition
       material.opacity = THREE.MathUtils.lerp(material.opacity, isTracking ? 1 : 0, 0.1);
       plane.visible = material.opacity > 0.005;
       renderer.render(scene, camera);
@@ -83,12 +92,8 @@ document.addEventListener("DOMContentLoaded", () => {
   startBtn.onclick = () => {
     startBtn.classList.add("ui-hidden");
     overlay.classList.remove("ui-hidden");
-    // iOS/Safari workaround: play/pause on user tap to unlock audio
     video.play().then(() => video.pause()); 
   };
 
-  initAR().catch(err => {
-    console.error("AR Initialization Failed:", err);
-    loader.innerHTML = "<p>Error starting camera. Please refresh.</p>";
-  });
+  initAR();
 });
