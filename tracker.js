@@ -4,28 +4,23 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const overlay = document.getElementById("ui-overlay");
   const muteBtn = document.getElementById("mute-btn");
 
-  /* ---------- 🔓 VIDEO UNLOCK (MOBILE FIX) ---------- */
+  /* ---------- 🔓 UNLOCK VIDEO ---------- */
   video.muted = true;
   try {
     await video.play();
     video.pause();
     video.currentTime = 0;
-  } catch (e) {
-    console.warn("Video unlock failed", e);
-  }
+  } catch {}
 
   startBtn.style.display = "none";
 
-  /* ---------- THREE FROM MINDAR ---------- */
   const THREE = window.MINDAR.IMAGE.THREE;
 
   /* ---------- CONFIG ---------- */
   const FADE_SPEED = 6.0;
-  const SMOOTH_POS = 0.18;
-  const SMOOTH_ROT = 0.15;
-  const SMOOTH_SCALE = 0.20;
+  const SMOOTH = 0.18;
 
-  /* ---------- MINDAR INIT ---------- */
+  /* ---------- MINDAR ---------- */
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.querySelector("#ar-container"),
     imageTargetSrc: "assets/targets.mind",
@@ -40,7 +35,6 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.needsUpdate = true;
 
   /* ---------- PLANE ---------- */
   const geometry = new THREE.PlaneGeometry(1, 1);
@@ -53,71 +47,59 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const plane = new THREE.Mesh(geometry, material);
   plane.position.z = 0.01;
 
-  /* ---------- SMOOTH GROUP ---------- */
+  /* ---------- SMOOTH GROUP (INSIDE ANCHOR) ---------- */
   const smoothGroup = new THREE.Group();
   smoothGroup.add(plane);
-  scene.add(smoothGroup);
 
   /* ---------- ANCHOR ---------- */
   const anchor = mindarThree.addAnchor(0);
+  anchor.group.add(smoothGroup);
   anchor.group.visible = false;
 
   let targetOpacity = 0;
-  let targetVisible = false;
   let videoReady = false;
 
   const clock = new THREE.Clock();
 
-  /* ---------- FIT VIDEO TO TARGET ---------- */
-  function fitVideoToTarget() {
-    if (!targetVisible || !videoReady) return;
+  /* ---------- FIT VIDEO ---------- */
+  function fitVideo() {
+    if (!videoReady) return;
 
-    const targetW = anchor.group.scale.x;
-    const targetH = anchor.group.scale.y;
+    const w = anchor.group.scale.x;
+    const h = anchor.group.scale.y;
 
-    const targetAspect = targetW / targetH;
-    const videoAspect = video.videoWidth / video.videoHeight;
+    const ta = w / h;
+    const va = video.videoWidth / video.videoHeight;
 
-    let scaleX = targetW;
-    let scaleY = targetH;
+    let sx = w;
+    let sy = h;
 
-    if (videoAspect > targetAspect) {
-      scaleY = targetW / videoAspect;
-    } else {
-      scaleX = targetH * videoAspect;
-    }
+    if (va > ta) sy = w / va;
+    else sx = h * va;
 
-    plane.scale.set(scaleX, scaleY, 1);
+    plane.scale.set(sx, sy, 1);
   }
 
   video.addEventListener("loadedmetadata", () => {
     videoReady = true;
-    fitVideoToTarget();
+    fitVideo();
   });
 
   /* ---------- TARGET EVENTS ---------- */
   anchor.onTargetFound = async () => {
-    targetVisible = true;
-    targetOpacity = 1;
     anchor.group.visible = true;
+    targetOpacity = 1;
 
-    fitVideoToTarget();
-
-    try {
-      await video.play();
-    } catch (e) {
-      console.warn("Play blocked", e);
-    }
+    fitVideo();
+    await video.play();
 
     overlay.classList.add("ui-hidden");
     muteBtn.classList.remove("ui-hidden");
   };
 
   anchor.onTargetLost = () => {
-    targetVisible = false;
-    targetOpacity = 0;
     anchor.group.visible = false;
-
+    targetOpacity = 0;
     video.pause();
 
     overlay.classList.remove("ui-hidden");
@@ -130,39 +112,16 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     muteBtn.textContent = video.muted ? "🔇" : "🔊";
   };
 
-  /* ---------- FULLSCREEN TAP ---------- */
-  const raycaster = new THREE.Raycaster();
-  const pointer = new THREE.Vector2();
-
-  window.addEventListener("click", (e) => {
-    if (e.target.id === "mute-btn") return;
-
-    pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(pointer, camera);
-    if (raycaster.intersectObject(plane).length > 0) {
-      if (video.requestFullscreen) {
-        video.requestFullscreen();
-      } else if (video.webkitEnterFullscreen) {
-        video.webkitEnterFullscreen();
-      }
-    }
-  });
-
   /* ---------- START ---------- */
   await mindarThree.start();
   overlay.classList.remove("ui-hidden");
 
-  window.addEventListener("resize", () => {
-    mindarThree.resize();
-  });
+  window.addEventListener("resize", () => mindarThree.resize());
 
   /* ---------- RENDER LOOP ---------- */
   renderer.setAnimationLoop(() => {
     const delta = clock.getDelta();
 
-    /* ✅ FORCE VIDEO FRAME UPDATE (CRITICAL) */
     if (!video.paused && video.readyState >= 2) {
       texture.needsUpdate = true;
     }
@@ -171,11 +130,12 @@ document.getElementById("start-btn").addEventListener("click", async () => {
       (targetOpacity - material.opacity) *
       (1 - Math.exp(-FADE_SPEED * delta));
 
-    if (anchor.group.visible) {
-      smoothGroup.position.lerp(anchor.group.position, SMOOTH_POS);
-      smoothGroup.quaternion.slerp(anchor.group.quaternion, SMOOTH_ROT);
-      smoothGroup.scale.lerp(anchor.group.scale, SMOOTH_SCALE);
-    }
+    /* 🔥 JITTER SMOOTHING (SAFE) */
+    smoothGroup.position.lerp(new THREE.Vector3(0, 0, 0), SMOOTH);
+    smoothGroup.quaternion.slerp(
+      new THREE.Quaternion(),
+      SMOOTH
+    );
 
     renderer.render(scene, camera);
   });
