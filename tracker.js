@@ -6,11 +6,14 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   startBtn.style.display = "none";
 
-  /* ✅ BIND THREE FROM MINDAR */
+  /* ---------- THREE FROM MINDAR ---------- */
   const THREE = window.MINDAR.IMAGE.THREE;
 
   /* ---------- CONFIG ---------- */
   const FADE_SPEED = 6.0;
+  const SMOOTH_POS = 0.18;   // lower = smoother
+  const SMOOTH_ROT = 0.15;
+  const SMOOTH_SCALE = 0.20;
 
   /* ---------- MINDAR INIT ---------- */
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
@@ -38,9 +41,14 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const plane = new THREE.Mesh(geometry, material);
   plane.position.z = 0.01;
 
+  /* ---------- SMOOTH GROUP ---------- */
+  const smoothGroup = new THREE.Group();
+  smoothGroup.add(plane);
+  scene.add(smoothGroup);
+
   /* ---------- ANCHOR ---------- */
   const anchor = mindarThree.addAnchor(0);
-  anchor.group.add(plane);
+  anchor.group.visible = false;
 
   let targetOpacity = 0;
   let targetVisible = false;
@@ -48,7 +56,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const clock = new THREE.Clock();
 
-  /* ---------- FIT VIDEO INSIDE TARGET ---------- */
+  /* ---------- TARGET FIT ---------- */
   function fitVideoToTarget() {
     if (!targetVisible || !videoReady) return;
 
@@ -75,9 +83,12 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     fitVideoToTarget();
   });
 
+  /* ---------- TARGET EVENTS ---------- */
   anchor.onTargetFound = () => {
     targetVisible = true;
     targetOpacity = 1;
+
+    anchor.group.visible = true;
     fitVideoToTarget();
 
     video.play();
@@ -89,11 +100,14 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     targetVisible = false;
     targetOpacity = 0;
 
+    anchor.group.visible = false;
+
     video.pause();
     overlay.classList.remove("ui-hidden");
     muteBtn.classList.add("ui-hidden");
   };
 
+  /* ---------- MUTE ---------- */
   muteBtn.onclick = () => {
     video.muted = !video.muted;
     muteBtn.textContent = video.muted ? "🔇" : "🔊";
@@ -123,16 +137,38 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   await mindarThree.start();
   overlay.classList.remove("ui-hidden");
 
-  /* ✅ SAFE RESIZE HANDLING */
   window.addEventListener("resize", () => {
     mindarThree.resize();
   });
 
+  /* ---------- RENDER LOOP ---------- */
   renderer.setAnimationLoop(() => {
     const delta = clock.getDelta();
+
+    /* Smooth opacity */
     material.opacity +=
       (targetOpacity - material.opacity) *
       (1 - Math.exp(-FADE_SPEED * delta));
+
+    if (anchor.group.visible) {
+      /* Smooth position */
+      smoothGroup.position.lerp(
+        anchor.group.position,
+        SMOOTH_POS
+      );
+
+      /* Smooth rotation */
+      smoothGroup.quaternion.slerp(
+        anchor.group.quaternion,
+        SMOOTH_ROT
+      );
+
+      /* Smooth scale */
+      smoothGroup.scale.lerp(
+        anchor.group.scale,
+        SMOOTH_SCALE
+      );
+    }
 
     renderer.render(scene, camera);
   });
