@@ -6,6 +6,9 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   startBtn.style.display = "none";
 
+  /* ---------- BIND THREE FROM MINDAR ---------- */
+  const THREE = window.MINDAR.IMAGE.THREE;
+
   /* ---------- CONFIG ---------- */
   const FADE_SPEED = 6.0;
 
@@ -67,17 +70,14 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     plane.scale.set(scaleX, scaleY, 1);
   }
 
-  /* ---------- VIDEO READY ---------- */
   video.addEventListener("loadedmetadata", () => {
     videoReady = true;
     fitVideoToTarget();
   });
 
-  /* ---------- TARGET EVENTS ---------- */
   anchor.onTargetFound = () => {
     targetVisible = true;
     targetOpacity = 1;
-
     fitVideoToTarget();
 
     video.play();
@@ -94,13 +94,12 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     muteBtn.classList.add("ui-hidden");
   };
 
-  /* ---------- MUTE ---------- */
   muteBtn.onclick = () => {
     video.muted = !video.muted;
     muteBtn.textContent = video.muted ? "🔇" : "🔊";
   };
 
-  /* ---------- FULLSCREEN TAP (SAFE) ---------- */
+  /* ---------- FULLSCREEN TAP ---------- */
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
@@ -120,7 +119,6 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     }
   });
 
-  /* ---------- START ---------- */
   await mindarThree.start();
   overlay.classList.remove("ui-hidden");
 
