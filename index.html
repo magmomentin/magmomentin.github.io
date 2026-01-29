@@ -6,12 +6,12 @@
     name="viewport"
     content="width=device-width, initial-scale=1.0, user-scalable=no"
   />
-  <title>MagMoment AR</title>
+  <title>MagMoment AR | Robust Multi-Dimension</title>
 
   <link rel="stylesheet" href="style.css" />
 
-  <!-- MindAR compatible versions -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/build/three.min.js"></script>
+  <!-- KEEP EXACTLY AS YOUR WORKING VERSION -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 </head>
 
@@ -20,7 +20,7 @@
 
   <div id="ui-overlay">
     <div class="scan-frame"></div>
-    <p>Point camera at the card</p>
+    <p>Align card inside the frame</p>
   </div>
 
   <button id="mute-btn" class="ui-hidden">🔇</button>
@@ -29,7 +29,6 @@
     id="ar-video"
     muted
     playsinline
-    webkit-playsinline
     loop
     preload="auto"
     crossorigin="anonymous"

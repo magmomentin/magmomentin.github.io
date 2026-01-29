@@ -4,10 +4,8 @@ html, body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: black;
 }
 
-/* ✅ ONLY canvas should be fullscreen */
 canvas {
   position: fixed !important;
   inset: 0 !important;
@@ -15,9 +13,6 @@ canvas {
   height: 100vh !important;
   z-index: 1 !important;
 }
-
-/* ❌ DO NOT style body > video at all */
-/* MindAR controls camera video internally */
 
 #start-btn {
   position: fixed;
