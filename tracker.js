@@ -9,13 +9,12 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const TARGET_ASPECT = 354 / 472;
 
-  const CENTER_THRESHOLD = 0.15;   // how centered
-  const DWELL_TIME = 1000;         // 1s before play
-  const LOSS_GRACE = 1500;         // 1.5s forgiveness
+  const DWELL_TIME = 500;    // small delay to avoid accidental flicker
+  const LOSS_GRACE = 1500;   // customer-friendly forgiveness
 
   let targetVisible = false;
-  let centeredSince = null;
   let playbackLocked = false;
+  let playRequestTime = null;
   let lastSeenTime = null;
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
@@ -66,7 +65,8 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   anchor.onTargetFound = () => {
     targetVisible = true;
     lastSeenTime = performance.now();
-    hintText.textContent = playbackLocked ? "" : "Hold steady…";
+    playRequestTime = performance.now();
+    hintText.textContent = "Hold steady…";
   };
 
   anchor.onTargetLost = () => {
@@ -84,36 +84,24 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   renderer.setAnimationLoop(() => {
     const now = performance.now();
 
-    if (!playbackLocked) {
-      if (targetVisible) {
-        const pos = anchor.group.position;
-        const centered =
-          Math.abs(pos.x) < CENTER_THRESHOLD &&
-          Math.abs(pos.y) < CENTER_THRESHOLD;
-
-        if (centered) {
-          if (!centeredSince) centeredSince = now;
-
-          if (now - centeredSince >= DWELL_TIME) {
-            video.play();
-            playbackLocked = true;
-            overlay.classList.add("ui-hidden");
-            muteBtn.classList.remove("ui-hidden");
-          }
-        } else {
-          centeredSince = null;
-          hintText.textContent = "Align card to the center";
-        }
+    // Start playback after small dwell (no centering required)
+    if (!playbackLocked && targetVisible) {
+      if (now - playRequestTime >= DWELL_TIME) {
+        video.play();
+        playbackLocked = true;
+        overlay.classList.add("ui-hidden");
+        muteBtn.classList.remove("ui-hidden");
       }
-    } else {
-      // SOFT LOCK ACTIVE
-      if (!targetVisible && now - lastSeenTime > LOSS_GRACE) {
+    }
+
+    // Soft-lock behavior
+    if (playbackLocked && !targetVisible) {
+      if (now - lastSeenTime > LOSS_GRACE) {
         video.pause();
         playbackLocked = false;
-        centeredSince = null;
         overlay.classList.remove("ui-hidden");
         muteBtn.classList.add("ui-hidden");
-        hintText.textContent = "Hold steady…";
+        hintText.textContent = "Point camera at the card";
       }
     }
 
