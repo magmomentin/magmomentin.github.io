@@ -24,7 +24,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
 
-  /* ---------- PLANE (UNIT SIZE, WILL RESCALE) ---------- */
+  /* ---------- PLANE ---------- */
   const geometry = new THREE.PlaneGeometry(1, 1);
   const material = new THREE.MeshBasicMaterial({
     map: texture,
@@ -100,7 +100,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     muteBtn.textContent = video.muted ? "🔇" : "🔊";
   };
 
-  /* ---------- FULLSCREEN TAP ---------- */
+  /* ---------- FULLSCREEN TAP (SAFE) ---------- */
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
@@ -112,8 +112,11 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
     raycaster.setFromCamera(pointer, camera);
     if (raycaster.intersectObject(plane).length > 0) {
-      video.requestFullscreen?.() ||
-        video.webkitEnterFullscreen?.();
+      if (video.requestFullscreen) {
+        video.requestFullscreen();
+      } else if (video.webkitEnterFullscreen) {
+        video.webkitEnterFullscreen();
+      }
     }
   });
 
@@ -127,4 +130,6 @@ document.getElementById("start-btn").addEventListener("click", async () => {
       (targetOpacity - material.opacity) *
       (1 - Math.exp(-FADE_SPEED * delta));
 
-    renderer.render(scene, ca
+    renderer.render(scene, camera);
+  });
+});
