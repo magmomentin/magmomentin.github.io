@@ -4,7 +4,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const overlay = document.getElementById("ui-overlay");
   const muteBtn = document.getElementById("mute-btn");
 
-  /* ---------- UNLOCK VIDEO (MOBILE) ---------- */
+  /* ---------- UNLOCK VIDEO ---------- */
   video.muted = true;
   try {
     await video.play();
@@ -16,19 +16,12 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const THREE = window.MINDAR.IMAGE.THREE;
 
-  /* ---------- CONFIG ---------- */
-  const FADE_SPEED = 6.0;
-
-  const STABLE_FRAMES_REQUIRED = 20;
-  const POS_THRESHOLD = 0.0015;
-  const ROT_THRESHOLD = 0.0015;
-
-  /* ---------- MINDAR ---------- */
+  /* ---------- MINDAR (MAX STABILITY CONFIG) ---------- */
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.querySelector("#ar-container"),
     imageTargetSrc: "assets/targets.mind",
-    filterMinCF: 0.001,
-    filterBeta: 10,
+    filterMinCF: 0.0001,
+    filterBeta: 40, // VERY strong internal smoothing
   });
 
   const { renderer, scene, camera } = mindarThree;
@@ -40,41 +33,30 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   texture.colorSpace = THREE.SRGBColorSpace;
 
   /* ---------- PLANE ---------- */
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: true,
-    opacity: 0,
-  });
-
   const plane = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
-    material
+    new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 1,
+    })
   );
   plane.position.z = 0.01;
 
-  /* ---------- LOCK GROUP (INSIDE ANCHOR) ---------- */
-  const lockGroup = new THREE.Group();
-  lockGroup.add(plane);
+  /* ---------- CONTENT ROOT (STATIC) ---------- */
+  const content = new THREE.Group();
+  content.add(plane);
+  scene.add(content);
+  content.visible = false;
 
   /* ---------- ANCHOR ---------- */
   const anchor = mindarThree.addAnchor(0);
-  anchor.group.add(lockGroup);
-  anchor.group.visible = false;
 
   let videoReady = false;
-  let targetOpacity = 0;
   let locked = false;
-  let stableFrames = 0;
 
-  const lastPos = new THREE.Vector3();
-  const lastQuat = new THREE.Quaternion();
-
-  const clock = new THREE.Clock();
-
-  /* ---------- FIT VIDEO TO TARGET ---------- */
+  /* ---------- FIT VIDEO ---------- */
   function fitVideo() {
-    if (!videoReady) return;
-
     const w = anchor.group.scale.x;
     const h = anchor.group.scale.y;
 
@@ -92,21 +74,22 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   video.addEventListener("loadedmetadata", () => {
     videoReady = true;
-    fitVideo();
   });
 
   /* ---------- TARGET FOUND ---------- */
   anchor.onTargetFound = async () => {
-    anchor.group.visible = true;
-    targetOpacity = 1;
+    if (locked) return;
 
-    locked = false;
-    stableFrames = 0;
-
-    lastPos.copy(anchor.group.position);
-    lastQuat.copy(anchor.group.quaternion);
+    // SNAP ONCE
+    content.position.copy(anchor.group.position);
+    content.quaternion.copy(anchor.group.quaternion);
+    content.scale.copy(anchor.group.scale);
 
     fitVideo();
+
+    content.visible = true;
+    locked = true;
+
     await video.play();
 
     overlay.classList.add("ui-hidden");
@@ -115,10 +98,8 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   /* ---------- TARGET LOST ---------- */
   anchor.onTargetLost = () => {
-    anchor.group.visible = false;
-    targetOpacity = 0;
     locked = false;
-
+    content.visible = false;
     video.pause();
 
     overlay.classList.remove("ui-hidden");
@@ -139,39 +120,9 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   /* ---------- RENDER LOOP ---------- */
   renderer.setAnimationLoop(() => {
-    const delta = clock.getDelta();
-
     if (!video.paused && video.readyState >= 2) {
       texture.needsUpdate = true;
     }
-
-    material.opacity +=
-      (targetOpacity - material.opacity) *
-      (1 - Math.exp(-FADE_SPEED * delta));
-
-    if (anchor.group.visible && !locked) {
-      const posDelta = anchor.group.position.distanceTo(lastPos);
-      const rotDelta =
-        1 - Math.abs(anchor.group.quaternion.dot(lastQuat));
-
-      if (
-        posDelta < POS_THRESHOLD &&
-        rotDelta < ROT_THRESHOLD
-      ) {
-        stableFrames++;
-      } else {
-        stableFrames = 0;
-      }
-
-      if (stableFrames >= STABLE_FRAMES_REQUIRED) {
-        // 🔒 LOCK (stop updating, but stay in anchor)
-        locked = true;
-      }
-
-      lastPos.copy(anchor.group.position);
-      lastQuat.copy(anchor.group.quaternion);
-    }
-
     renderer.render(scene, camera);
   });
 });
