@@ -6,8 +6,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   startBtn.classList.add("ui-hidden");
 
-  // Target aspect (354 x 472)
-  const TARGET_ASPECT = 0.75;
+  const TARGET_ASPECT = 0.75; // 354 / 472
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
@@ -18,62 +17,55 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const { renderer, scene, camera } = mindarThree;
 
-  /* ---------- VIDEO ---------- */
-  await video.play();   // only to read dimensions
-  video.pause();
+  /* ---------- VIDEO PREP ---------- */
+  // Ensure metadata is loaded for dimensions
+  if (video.readyState < 1) {
+    await new Promise((resolve) => {
+      video.onloadedmetadata = () => resolve();
+    });
+  }
 
   const videoAspect = video.videoWidth / video.videoHeight;
-
   const texture = new THREE.VideoTexture(video);
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-
+  
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
     opacity: 0,
   });
 
-  /* ---------- VIDEO SIZE & PLACEMENT (FIXED & CLEAN) ---------- */
-
-  // Target size in AR units
+  // Calculate Plane Size
   const TARGET_WIDTH = 1;
   const TARGET_HEIGHT = TARGET_WIDTH / TARGET_ASPECT;
-
   let planeWidth, planeHeight;
 
-  // Contain video inside target
   if (videoAspect > TARGET_ASPECT) {
-    // video wider → limit by width
     planeWidth = TARGET_WIDTH;
     planeHeight = TARGET_WIDTH / videoAspect;
   } else {
-    // video taller → limit by height
     planeHeight = TARGET_HEIGHT;
     planeWidth = TARGET_HEIGHT * videoAspect;
   }
 
   const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
   const plane = new THREE.Mesh(geometry, material);
-
-  // Centered on target, slightly forward
   plane.position.set(0, 0, 0.01);
+  plane.visible = false; // Start hidden
 
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
-  let visible = false;
+  let isTracking = false;
 
   anchor.onTargetFound = () => {
-    visible = true;
-    video.currentTime = 0;
-    video.play();
+    isTracking = true;
+    video.play().catch(e => console.warn("Autoplay prevented", e));
     overlay.classList.add("ui-hidden");
     muteBtn.classList.remove("ui-hidden");
   };
 
   anchor.onTargetLost = () => {
-    visible = false;
+    isTracking = false;
     video.pause();
     overlay.classList.remove("ui-hidden");
     muteBtn.classList.add("ui-hidden");
@@ -87,12 +79,13 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   await mindarThree.start();
 
   renderer.setAnimationLoop(() => {
-    // Fade only — NO resizing
-    material.opacity = THREE.MathUtils.lerp(
-      material.opacity,
-      visible ? 1 : 0,
-      0.1
-    );
+    // Smooth Fade Logic
+    const targetOpacity = isTracking ? 1 : 0;
+    material.opacity = THREE.MathUtils.lerp(material.opacity, targetOpacity, 0.1);
+    
+    // Toggle visibility to save GPU/Depth resources
+    plane.visible = material.opacity > 0.005;
+
     renderer.render(scene, camera);
   });
 });

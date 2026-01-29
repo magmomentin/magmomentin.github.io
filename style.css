@@ -4,6 +4,18 @@ html, body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  background-color: #000;
+}
+
+/* Fix for Mind-AR's injected camera feed */
+video {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  z-index: 0 !important;
+  object-fit: cover;
+  width: 100vw !important;
+  height: 100vh !important;
 }
 
 canvas {
@@ -22,6 +34,7 @@ canvas {
   color: white;
   border: none;
   font-size: 1.2rem;
+  cursor: pointer;
 }
 
 #ui-overlay {
@@ -34,12 +47,13 @@ canvas {
   justify-content: center;
   pointer-events: none;
   color: white;
+  transition: opacity 0.3s ease;
 }
 
 .scan-frame {
   width: 260px;
   height: 347px;
-  border: 3px solid white;
+  border: 3px solid rgba(255, 255, 255, 0.8);
   border-radius: 12px;
   box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);
 }
@@ -55,6 +69,8 @@ canvas {
   border: none;
   background: rgba(0,0,0,0.6);
   color: white;
+  cursor: pointer;
+  font-size: 1.5rem;
 }
 
 .ui-hidden {
