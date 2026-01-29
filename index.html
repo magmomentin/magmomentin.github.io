@@ -2,26 +2,39 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no"
+  />
   <title>MagMoment AR | 3:4 Perfect Fit</title>
-  <link rel="stylesheet" href="style.css">
-  
+
+  <link rel="stylesheet" href="style.css" />
+
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 </head>
-<body>
 
+<body>
   <button id="start-btn">Tap to Start AR</button>
 
-  <div id="ui-overlay" class="ui-hidden">
+  <div id="ui-overlay">
     <div class="scan-frame"></div>
-    <p>Align the 3:4 card within the frame</p>
+    <p>Align the 3:4 card inside the frame</p>
   </div>
 
   <button id="mute-btn" class="ui-hidden">🔇</button>
 
-  <video id="ar-video" muted playsinline loop crossorigin="anonymous" style="display:none">
-    <source src="assets/demo.mp4" type="video/mp4">
+  <!-- AR Video -->
+  <video
+    id="ar-video"
+    muted
+    playsinline
+    loop
+    crossorigin="anonymous"
+    preload="auto"
+    style="display:none"
+  >
+    <source src="assets/demo.mp4" type="video/mp4" />
   </video>
 
   <script src="tracker.js"></script>

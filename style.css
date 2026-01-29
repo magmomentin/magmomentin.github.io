@@ -4,45 +4,74 @@ html, body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: #000 !important;
+  background: transparent;
 }
 
-/* Force Camera Feed and 3D Canvas to align perfectly */
-canvas, body > video {
+/* Camera feed + WebGL canvas MUST match projection */
+canvas,
+body > video {
   position: fixed !important;
   inset: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  object-fit: cover !important;
+  object-fit: contain !important; /* 🔴 DO NOT USE cover */
+  z-index: 1 !important;
 }
 
-canvas { z-index: 1 !important; }
-body > video { z-index: -1 !important; }
+body > video {
+  z-index: -1 !important;
+}
 
+/* Start Button */
 #start-btn {
-  position: fixed; inset: 0; z-index: 999;
-  background: #111; color: #fff; border: none; font-size: 1.2rem; cursor: pointer;
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: black;
+  color: white;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
 }
 
+/* Overlay UI */
 #ui-overlay {
-  position: fixed; inset: 0; z-index: 100;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  pointer-events: none; color: white; text-align: center;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: white;
+  text-align: center;
 }
 
-/* 3:4 Scanning Guide */
+/* 3:4 Scan Frame */
 .scan-frame {
   width: 260px;
-  height: 347px; /* Matches 1.333 ratio */
-  border: 2px solid #fff;
+  height: 347px; /* 260 × 4 / 3 */
+  border: 3px solid #ffffff;
   border-radius: 12px;
   box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);
 }
 
+/* Mute Button */
 #mute-btn {
-  position: fixed; bottom: 30px; right: 30px; z-index: 101;
-  width: 50px; height: 50px; border-radius: 50%; border: none;
-  background: rgba(0,0,0,0.6); color: white;
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  z-index: 101;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  font-size: 1.1rem;
 }
 
-.ui-hidden { display: none !important; }
+.ui-hidden {
+  display: none !important;
+}

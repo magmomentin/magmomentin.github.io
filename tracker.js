@@ -1,62 +1,59 @@
-document.getElementById("start-btn").addEventListener("click", async function() {
-  const startBtn = this;
+document.getElementById("start-btn").addEventListener("click", async () => {
+  const startBtn = document.getElementById("start-btn");
   const video = document.getElementById("ar-video");
   const overlay = document.getElementById("ui-overlay");
   const muteBtn = document.getElementById("mute-btn");
-
-  // --- HARDCODED 3:4 DIMENSIONS ---
-  const RATIO = 1.333; // 4 divided by 3
-  const SCALE = 1.0;   // 1.0 matches target width exactly
-  // --------------------------------
 
   startBtn.classList.add("ui-hidden");
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
     imageTargetSrc: "assets/targets.mind",
-    filterMinCF: 0.0001, // Jitter reduction
+    filterMinCF: 0.0001,
     filterBeta: 0.001,
   });
 
   const { renderer, scene, camera } = mindarThree;
 
-  // Setup Video Content
+  /* ---------- VIDEO TEXTURE ---------- */
   const texture = new THREE.VideoTexture(video);
-  const material = new THREE.MeshBasicMaterial({ 
-    map: texture, 
-    transparent: true, 
-    opacity: 0 
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.format = THREE.RGBAFormat;
+
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    opacity: 0,
   });
 
-  // Create geometry using the hardcoded ratio
-  const geometry = new THREE.PlaneGeometry(1 * SCALE, RATIO * SCALE);
+  /* ---------- PERFECT 3:4 PLANE ---------- */
+  const CARD_WIDTH = 1;
+  const CARD_HEIGHT = 4 / 3; // 3:4 portrait
+
+  const geometry = new THREE.PlaneGeometry(
+    CARD_WIDTH,
+    CARD_HEIGHT
+  );
+
   const plane = new THREE.Mesh(geometry, material);
-  
-  // LOCK TO CENTER: Origin (0,0,0) is target center
-  plane.position.set(0, 0, 0.01); // Z-offset prevents flickering
-  plane.rotation.set(0, 0, 0);   // Forces video to stay flat
+  plane.position.set(0, 0, 0.01);
+  plane.rotation.set(0, 0, 0);
 
   const anchor = mindarThree.addAnchor(0);
-  anchor.group.add(plane); 
+  anchor.group.add(plane);
 
-  // PERSPECTIVE FIX: Prevents tilting on mobile UI changes
-  window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-  });
-
-  let isVisible = false;
+  let visible = false;
 
   anchor.onTargetFound = () => {
-    isVisible = true;
+    visible = true;
     video.play();
     overlay.classList.add("ui-hidden");
     muteBtn.classList.remove("ui-hidden");
   };
 
   anchor.onTargetLost = () => {
-    isVisible = false;
+    visible = false;
     video.pause();
     overlay.classList.remove("ui-hidden");
     muteBtn.classList.add("ui-hidden");
@@ -64,14 +61,17 @@ document.getElementById("start-btn").addEventListener("click", async function() 
 
   muteBtn.onclick = () => {
     video.muted = !video.muted;
-    muteBtn.innerText = video.muted ? "🔇" : "🔊";
+    muteBtn.textContent = video.muted ? "🔇" : "🔊";
   };
 
   await mindarThree.start();
 
   renderer.setAnimationLoop(() => {
-    // Smooth alpha fade transition
-    material.opacity = THREE.MathUtils.lerp(material.opacity, isVisible ? 1 : 0, 0.1);
+    material.opacity = THREE.MathUtils.lerp(
+      material.opacity,
+      visible ? 1 : 0,
+      0.1
+    );
     renderer.render(scene, camera);
   });
 });
