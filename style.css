@@ -36,10 +36,8 @@ html, body {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
-/* Correctly layers the AR engine elements */
 canvas, video {
   position: fixed !important;
   inset: 0;
