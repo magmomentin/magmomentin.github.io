@@ -11,15 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const initAR = async () => {
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
-      imageTargetSrc: "assets/targets.mind",
-      filterMinCF: 0.0001, 
+      imageTargetSrc: "assets/targets.mind", // Uses your uploaded file
+      filterMinCF: 0.0001,
       filterBeta: 0.001,
     });
 
     const { renderer, scene, camera } = mindarThree;
-
-    // Fixed: High-performance renderer settings
-    renderer.outputEncoding = THREE.sRGBEncoding;
 
     if (video.readyState < 1) {
       await new Promise(res => video.onloadedmetadata = res);
@@ -27,10 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const videoAspect = video.videoWidth / video.videoHeight;
     const texture = new THREE.VideoTexture(video);
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
 
-    // Dynamic UV Mapping
+    // Dynamic "Cover" Fit
     if (videoAspect > TARGET_ASPECT) {
       const ratio = TARGET_ASPECT / videoAspect;
       texture.repeat.set(ratio, 1);
@@ -45,14 +40,12 @@ document.addEventListener("DOMContentLoaded", () => {
       map: texture, 
       transparent: true, 
       opacity: 0,
-      depthWrite: false // Fix: Prevents "glittering" or flickering against the background
+      depthWrite: false // Prevents glittering
     });
 
     const geometry = new THREE.PlaneGeometry(1, 1 / TARGET_ASPECT);
     const plane = new THREE.Mesh(geometry, material);
-    
-    // Fix: Move plane slightly further forward (0.1 instead of 0.01) to stop flickering
-    plane.position.set(0, 0, 0.1);
+    plane.position.set(0, 0, 0.1); // Stronger offset to prevent Z-fighting
     
     const anchor = mindarThree.addAnchor(0);
     anchor.group.add(plane);
