@@ -1,60 +1,22 @@
-* {
-  box-sizing: border-box;
-}
-
-body {
+html, body {
   margin: 0;
+  padding: 0;
   overflow: hidden;
   background: black;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
 }
 
-/* Scan hint */
-#hint {
+#camera {
   position: fixed;
-  bottom: 24px;
-  width: 100%;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 16px;
-  letter-spacing: 0.3px;
-  pointer-events: none;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
 }
 
-/* Controls */
-#controls {
+#arVideo {
   position: fixed;
-  bottom: 80px;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-}
-
-#controls button {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  border: none;
-  font-size: 20px;
-  background: rgba(0, 0, 0, 0.55);
-  color: white;
-  backdrop-filter: blur(6px);
-}
-
-/* Brand watermark */
-#brand {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  opacity: 0.3;
-}
-
-#brand img {
-  height: 28px;
-}
-
-/* Helpers */
-.hidden {
   display: none;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  transform-origin: center center;
 }
