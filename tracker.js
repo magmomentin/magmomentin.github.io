@@ -4,11 +4,11 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const overlay = document.getElementById("ui-overlay");
   const muteBtn = document.getElementById("mute-btn");
 
-  /* ---------- 🔓 VIDEO UNLOCK (CRITICAL FIX) ---------- */
+  /* ---------- 🔓 VIDEO UNLOCK (MOBILE FIX) ---------- */
   video.muted = true;
   try {
-    await video.play();   // user gesture context
-    video.pause();        // keep it unlocked
+    await video.play();
+    video.pause();
     video.currentTime = 0;
   } catch (e) {
     console.warn("Video unlock failed", e);
@@ -39,6 +39,8 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const texture = new THREE.VideoTexture(video);
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
 
   /* ---------- PLANE ---------- */
   const geometry = new THREE.PlaneGeometry(1, 1);
@@ -66,7 +68,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const clock = new THREE.Clock();
 
-  /* ---------- FIT VIDEO ---------- */
+  /* ---------- FIT VIDEO TO TARGET ---------- */
   function fitVideoToTarget() {
     if (!targetVisible || !videoReady) return;
 
@@ -102,7 +104,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     fitVideoToTarget();
 
     try {
-      await video.play(); // now ALWAYS works
+      await video.play();
     } catch (e) {
       console.warn("Play blocked", e);
     }
@@ -159,6 +161,11 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   /* ---------- RENDER LOOP ---------- */
   renderer.setAnimationLoop(() => {
     const delta = clock.getDelta();
+
+    /* ✅ FORCE VIDEO FRAME UPDATE (CRITICAL) */
+    if (!video.paused && video.readyState >= 2) {
+      texture.needsUpdate = true;
+    }
 
     material.opacity +=
       (targetOpacity - material.opacity) *
