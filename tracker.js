@@ -9,12 +9,14 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const TARGET_ASPECT = 354 / 472;
 
-  const CENTER_THRESHOLD = 0.15;   // how close to center
-  const DWELL_TIME = 1000;         // 1 second
+  const CENTER_THRESHOLD = 0.15;   // how centered
+  const DWELL_TIME = 1000;         // 1s before play
+  const LOSS_GRACE = 1500;         // 1.5s forgiveness
 
-  let visible = false;
+  let targetVisible = false;
   let centeredSince = null;
-  let isPlaying = false;
+  let playbackLocked = false;
+  let lastSeenTime = null;
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
@@ -62,23 +64,14 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   anchor.group.add(plane);
 
   anchor.onTargetFound = () => {
-    visible = true;
-    centeredSince = null;
-    hintText.textContent = "Hold steady…";
+    targetVisible = true;
+    lastSeenTime = performance.now();
+    hintText.textContent = playbackLocked ? "" : "Hold steady…";
   };
 
   anchor.onTargetLost = () => {
-    visible = false;
-    centeredSince = null;
-
-    if (isPlaying) {
-      video.pause();
-      isPlaying = false;
-    }
-
-    overlay.classList.remove("ui-hidden");
-    muteBtn.classList.add("ui-hidden");
-    hintText.textContent = "Align card to the center";
+    targetVisible = false;
+    lastSeenTime = performance.now();
   };
 
   muteBtn.onclick = () => {
@@ -89,41 +82,44 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   await mindarThree.start();
 
   renderer.setAnimationLoop(() => {
-    if (visible) {
-      const pos = anchor.group.position;
+    const now = performance.now();
 
-      const isCentered =
-        Math.abs(pos.x) < CENTER_THRESHOLD &&
-        Math.abs(pos.y) < CENTER_THRESHOLD;
+    if (!playbackLocked) {
+      if (targetVisible) {
+        const pos = anchor.group.position;
+        const centered =
+          Math.abs(pos.x) < CENTER_THRESHOLD &&
+          Math.abs(pos.y) < CENTER_THRESHOLD;
 
-      if (isCentered) {
-        if (!centeredSince) centeredSince = performance.now();
+        if (centered) {
+          if (!centeredSince) centeredSince = now;
 
-        if (
-          performance.now() - centeredSince >= DWELL_TIME &&
-          !isPlaying
-        ) {
-          video.play();
-          isPlaying = true;
-          overlay.classList.add("ui-hidden");
-          muteBtn.classList.remove("ui-hidden");
+          if (now - centeredSince >= DWELL_TIME) {
+            video.play();
+            playbackLocked = true;
+            overlay.classList.add("ui-hidden");
+            muteBtn.classList.remove("ui-hidden");
+          }
+        } else {
+          centeredSince = null;
+          hintText.textContent = "Align card to the center";
         }
-      } else {
+      }
+    } else {
+      // SOFT LOCK ACTIVE
+      if (!targetVisible && now - lastSeenTime > LOSS_GRACE) {
+        video.pause();
+        playbackLocked = false;
         centeredSince = null;
-
-        if (isPlaying) {
-          video.pause();
-          isPlaying = false;
-          overlay.classList.remove("ui-hidden");
-          muteBtn.classList.add("ui-hidden");
-          hintText.textContent = "Hold steady…";
-        }
+        overlay.classList.remove("ui-hidden");
+        muteBtn.classList.add("ui-hidden");
+        hintText.textContent = "Hold steady…";
       }
     }
 
     material.opacity = THREE.MathUtils.lerp(
       material.opacity,
-      isPlaying ? 1 : 0,
+      playbackLocked ? 1 : 0,
       0.12
     );
 
