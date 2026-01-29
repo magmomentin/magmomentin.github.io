@@ -5,7 +5,7 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: #000;
-  font-family: sans-serif;
+  font-family: -apple-system, system-ui, sans-serif;
 }
 
 #ui-overlay {
@@ -15,24 +15,26 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.85);
 }
 
 #start {
-  padding: 16px 32px;
+  padding: 18px 36px;
   font-size: 18px;
   font-weight: bold;
   color: #fff;
-  background: #007AFF;
+  background: #007AFF; /* Modern iOS Blue */
   border: none;
-  border-radius: 30px;
+  border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 
+/* MindAR canvas styling */
 canvas {
   position: fixed !important;
   inset: 0;
   width: 100% !important;
   height: 100% !important;
+  object-fit: cover;
 }
