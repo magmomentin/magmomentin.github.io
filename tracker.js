@@ -6,8 +6,8 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   startBtn.classList.add("ui-hidden");
 
-  /* 🔴 CHANGE THIS PER TARGET */
-  const TARGET_ASPECT = 3 / 4; // width / height
+  // MUST match scan-frame exactly
+  const TARGET_ASPECT = 260 / 347;
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
@@ -18,9 +18,14 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const { renderer, scene, camera } = mindarThree;
 
-  /* ---------- VIDEO ---------- */
-  await video.play(); // needed to read dimensions
-  video.pause();
+  // ✅ Wait for real video dimensions
+  await new Promise((resolve) => {
+    if (video.readyState >= 1) resolve();
+    else video.onloadedmetadata = () => resolve();
+  });
+
+  video.muted = true;
+  muteBtn.textContent = "🔇";
 
   const videoAspect = video.videoWidth / video.videoHeight;
 
@@ -34,24 +39,22 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     opacity: 0,
   });
 
-  /* ---------- FIT VIDEO INSIDE TARGET ---------- */
-  let planeWidth = 1;
-  let planeHeight = 1 / TARGET_ASPECT;
+  // ✅ Perfect contain logic
+  const targetWidth = 1;
+  const targetHeight = targetWidth / TARGET_ASPECT;
 
-  // contain logic
+  let planeWidth, planeHeight;
+
   if (videoAspect > TARGET_ASPECT) {
-    // video is wider → limit width
-    planeWidth = 1;
-    planeHeight = 1 / videoAspect;
+    planeWidth = targetWidth;
+    planeHeight = targetWidth / videoAspect;
   } else {
-    // video is taller → limit height
-    planeHeight = 1 / TARGET_ASPECT;
-    planeWidth = planeHeight * videoAspect;
+    planeHeight = targetHeight;
+    planeWidth = targetHeight * videoAspect;
   }
 
   const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
   const plane = new THREE.Mesh(geometry, material);
-
   plane.position.set(0, 0, 0.01);
 
   const anchor = mindarThree.addAnchor(0);
@@ -84,7 +87,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     material.opacity = THREE.MathUtils.lerp(
       material.opacity,
       visible ? 1 : 0,
-      0.1
+      0.12
     );
     renderer.render(scene, camera);
   });
