@@ -6,7 +6,8 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   startBtn.classList.add("ui-hidden");
 
-  const TARGET_ASPECT = 0.75; // 354 / 472
+  // The aspect ratio of your physical card/scan-frame
+  const TARGET_ASPECT = 354 / 472; 
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
@@ -17,8 +18,9 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const { renderer, scene, camera } = mindarThree;
 
-  /* ---------- VIDEO PREP ---------- */
-  // Ensure metadata is loaded for dimensions
+  /* ---------- DYNAMIC VIDEO HANDLING ---------- */
+  
+  // Wait for video dimensions to be available
   if (video.readyState < 1) {
     await new Promise((resolve) => {
       video.onloadedmetadata = () => resolve();
@@ -27,45 +29,46 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const videoAspect = video.videoWidth / video.videoHeight;
   const texture = new THREE.VideoTexture(video);
-  
+
+  // Dynamic UV mapping to simulate "background-size: cover"
+  if (videoAspect > TARGET_ASPECT) {
+    // Video is wider than the target box: Crop sides
+    const ratio = TARGET_ASPECT / videoAspect;
+    texture.repeat.set(ratio, 1);
+    texture.offset.set((1 - ratio) / 2, 0);
+  } else {
+    // Video is taller than the target box: Crop top/bottom
+    const ratio = videoAspect / TARGET_ASPECT;
+    texture.repeat.set(1, ratio);
+    texture.offset.set(0, (1 - ratio) / 2);
+  }
+
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
     opacity: 0,
   });
 
-  // Calculate Plane Size
-  const TARGET_WIDTH = 1;
-  const TARGET_HEIGHT = TARGET_WIDTH / TARGET_ASPECT;
-  let planeWidth, planeHeight;
-
-  if (videoAspect > TARGET_ASPECT) {
-    planeWidth = TARGET_WIDTH;
-    planeHeight = TARGET_WIDTH / videoAspect;
-  } else {
-    planeHeight = TARGET_HEIGHT;
-    planeWidth = TARGET_HEIGHT * videoAspect;
-  }
-
-  const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+  // Create plane that matches the TARGET_ASPECT (Height = Width / Aspect)
+  const geometry = new THREE.PlaneGeometry(1, 1 / TARGET_ASPECT);
   const plane = new THREE.Mesh(geometry, material);
   plane.position.set(0, 0, 0.01);
-  plane.visible = false; // Start hidden
+  plane.visible = false;
 
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
-  let isTracking = false;
+  let isVisible = false;
 
   anchor.onTargetFound = () => {
-    isTracking = true;
-    video.play().catch(e => console.warn("Autoplay prevented", e));
+    isVisible = true;
+    video.play();
     overlay.classList.add("ui-hidden");
     muteBtn.classList.remove("ui-hidden");
   };
 
   anchor.onTargetLost = () => {
-    isTracking = false;
+    isVisible = false;
     video.pause();
     overlay.classList.remove("ui-hidden");
     muteBtn.classList.add("ui-hidden");
@@ -79,13 +82,16 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   await mindarThree.start();
 
   renderer.setAnimationLoop(() => {
-    // Smooth Fade Logic
-    const targetOpacity = isTracking ? 1 : 0;
-    material.opacity = THREE.MathUtils.lerp(material.opacity, targetOpacity, 0.1);
+    // Smooth transition
+    material.opacity = THREE.MathUtils.lerp(
+      material.opacity,
+      isVisible ? 1 : 0,
+      0.1
+    );
     
-    // Toggle visibility to save GPU/Depth resources
-    plane.visible = material.opacity > 0.005;
-
+    // Hide mesh when fully faded out to save performance
+    plane.visible = material.opacity > 0.001;
+    
     renderer.render(scene, camera);
   });
 });

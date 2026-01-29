@@ -7,8 +7,8 @@ html, body {
   background-color: #000;
 }
 
-/* Fix for Mind-AR's injected camera feed */
-video {
+/* Ensure the camera feed stays at the bottom */
+video:not(#ar-video) {
   position: fixed !important;
   top: 0;
   left: 0;
@@ -47,15 +47,18 @@ canvas {
   justify-content: center;
   pointer-events: none;
   color: white;
-  transition: opacity 0.3s ease;
+  font-family: sans-serif;
 }
 
 .scan-frame {
-  width: 260px;
-  height: 347px;
-  border: 3px solid rgba(255, 255, 255, 0.8);
+  width: 60vw;
+  max-width: 280px;
+  /* Matches 354x472 target ratio (0.75) */
+  aspect-ratio: 354 / 472; 
+  border: 3px solid white;
   border-radius: 12px;
   box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);
+  margin-bottom: 20px;
 }
 
 #mute-btn {
@@ -69,8 +72,8 @@ canvas {
   border: none;
   background: rgba(0,0,0,0.6);
   color: white;
-  cursor: pointer;
   font-size: 1.5rem;
+  cursor: pointer;
 }
 
 .ui-hidden {
