@@ -1,12 +1,13 @@
-const startBtn = document.getElementById("start");
-const loader = document.getElementById("loader");
+const start = document.getElementById("start");
 const video = document.getElementById("video");
 
-const VIDEO_ASPECT = 2 / 3;
-const FADE_SPEED = 0.08;
+const FRAME_ASPECT = 2 / 3; // 3:4 portrait video
 
-startBtn.onclick = async () => {
-  loader.classList.add("hidden");
+start.onclick = async () => {
+  start.remove();
+
+  // unlock video
+  await video.play();
 
   const mindar = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
@@ -19,45 +20,34 @@ startBtn.onclick = async () => {
   const anchor = mindar.addAnchor(0);
 
   const texture = new THREE.VideoTexture(video);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
 
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: true,
-    opacity: 0
-  });
-
+  // ✅ FIX: unit geometry (no double scaling)
   const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(VIDEO_ASPECT, 1),
-    material
+    new THREE.PlaneGeometry(FRAME_ASPECT, 1),
+    new THREE.MeshBasicMaterial({
+      map: texture,
+      side: THREE.DoubleSide,
+      transparent: true
+    })
   );
 
   plane.visible = false;
   anchor.group.add(plane);
 
-  let visible = false;
-
-  anchor.onTargetFound = async () => {
-    visible = true;
+  // ✅ FIX: no scaling math here
+  anchor.onTargetFound = () => {
     plane.visible = true;
-    await video.play();
   };
 
   anchor.onTargetLost = () => {
-    visible = false;
-    video.pause();
+    plane.visible = false;
   };
 
   await mindar.start();
 
   renderer.setAnimationLoop(() => {
-    if (visible && material.opacity < 1) {
-      material.opacity += FADE_SPEED;
-    }
-    if (!visible && material.opacity > 0) {
-      material.opacity -= FADE_SPEED;
-      if (material.opacity <= 0) plane.visible = false;
-    }
-
     texture.needsUpdate = true;
     renderer.render(scene, camera);
   });
