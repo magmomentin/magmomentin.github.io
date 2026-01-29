@@ -7,7 +7,7 @@ html, body {
   background: black;
 }
 
-/* Camera canvas */
+/* ✅ ONLY canvas should be fullscreen */
 canvas {
   position: fixed !important;
   inset: 0 !important;
@@ -16,7 +16,9 @@ canvas {
   z-index: 1 !important;
 }
 
-/* Start button */
+/* ❌ DO NOT style body > video at all */
+/* MindAR controls camera video internally */
+
 #start-btn {
   position: fixed;
   inset: 0;
@@ -27,7 +29,6 @@ canvas {
   font-size: 1.2rem;
 }
 
-/* Scan overlay */
 #ui-overlay {
   position: fixed;
   inset: 0;
@@ -38,31 +39,27 @@ canvas {
   justify-content: center;
   pointer-events: none;
   color: white;
-  text-align: center;
 }
 
 .scan-frame {
   width: 260px;
   height: 347px;
-  border: 2px solid rgba(255,255,255,0.8);
-  border-radius: 14px;
-  box-shadow: 0 0 0 2000px rgba(0,0,0,0.45);
-  margin-bottom: 12px;
+  border: 3px solid white;
+  border-radius: 12px;
+  box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);
 }
 
-/* Mute button */
 #mute-btn {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 25px;
+  right: 25px;
   z-index: 101;
-  width: 52px;
-  height: 52px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   border: none;
   background: rgba(0,0,0,0.6);
   color: white;
-  font-size: 1.2rem;
 }
 
 .ui-hidden {
