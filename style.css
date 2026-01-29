@@ -19,18 +19,18 @@ html, body {
 }
 
 #start {
-  padding: 18px 36px;
-  font-size: 18px;
+  padding: 20px 40px;
+  font-size: 1.1rem;
   font-weight: bold;
   color: #fff;
-  background: #007AFF; /* Modern iOS Blue */
+  background: #007AFF;
   border: none;
-  border-radius: 12px;
+  border-radius: 50px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
 }
 
-/* MindAR canvas styling */
+/* Fixes for the MindAR canvas */
 canvas {
   position: fixed !important;
   inset: 0;
