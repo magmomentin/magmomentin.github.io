@@ -6,6 +6,9 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   startBtn.classList.add("ui-hidden");
 
+  /* 🔴 CHANGE THIS PER TARGET */
+  const TARGET_ASPECT = 3 / 4; // width / height
+
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
     imageTargetSrc: "assets/targets.mind",
@@ -15,11 +18,15 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   const { renderer, scene, camera } = mindarThree;
 
-  /* ---------- VIDEO TEXTURE ---------- */
+  /* ---------- VIDEO ---------- */
+  await video.play(); // needed to read dimensions
+  video.pause();
+
+  const videoAspect = video.videoWidth / video.videoHeight;
+
   const texture = new THREE.VideoTexture(video);
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
-  texture.format = THREE.RGBAFormat;
 
   const material = new THREE.MeshBasicMaterial({
     map: texture,
@@ -27,18 +34,25 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     opacity: 0,
   });
 
-  /* ---------- PERFECT 3:4 PLANE ---------- */
-  const CARD_WIDTH = 1;
-  const CARD_HEIGHT = 4 / 3; // 3:4 portrait
+  /* ---------- FIT VIDEO INSIDE TARGET ---------- */
+  let planeWidth = 1;
+  let planeHeight = 1 / TARGET_ASPECT;
 
-  const geometry = new THREE.PlaneGeometry(
-    CARD_WIDTH,
-    CARD_HEIGHT
-  );
+  // contain logic
+  if (videoAspect > TARGET_ASPECT) {
+    // video is wider → limit width
+    planeWidth = 1;
+    planeHeight = 1 / videoAspect;
+  } else {
+    // video is taller → limit height
+    planeHeight = 1 / TARGET_ASPECT;
+    planeWidth = planeHeight * videoAspect;
+  }
 
+  const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
   const plane = new THREE.Mesh(geometry, material);
+
   plane.position.set(0, 0, 0.01);
-  plane.rotation.set(0, 0, 0);
 
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);

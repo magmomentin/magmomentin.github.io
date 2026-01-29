@@ -1,20 +1,18 @@
 html, body {
-  margin: 0 !important;
-  padding: 0 !important;
+  margin: 0;
+  padding: 0;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: transparent;
 }
 
-/* Camera feed + WebGL canvas MUST match projection */
 canvas,
 body > video {
   position: fixed !important;
   inset: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  object-fit: contain !important; /* 🔴 DO NOT USE cover */
+  object-fit: contain !important;
   z-index: 1 !important;
 }
 
@@ -22,7 +20,6 @@ body > video {
   z-index: -1 !important;
 }
 
-/* Start Button */
 #start-btn {
   position: fixed;
   inset: 0;
@@ -31,10 +28,8 @@ body > video {
   color: white;
   border: none;
   font-size: 1.2rem;
-  cursor: pointer;
 }
 
-/* Overlay UI */
 #ui-overlay {
   position: fixed;
   inset: 0;
@@ -45,19 +40,16 @@ body > video {
   justify-content: center;
   pointer-events: none;
   color: white;
-  text-align: center;
 }
 
-/* 3:4 Scan Frame */
 .scan-frame {
   width: 260px;
-  height: 347px; /* 260 × 4 / 3 */
-  border: 3px solid #ffffff;
+  height: 347px; /* purely visual */
+  border: 3px solid white;
   border-radius: 12px;
   box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);
 }
 
-/* Mute Button */
 #mute-btn {
   position: fixed;
   bottom: 25px;
@@ -69,7 +61,6 @@ body > video {
   border: none;
   background: rgba(0,0,0,0.6);
   color: white;
-  font-size: 1.1rem;
 }
 
 .ui-hidden {
