@@ -1,66 +1,66 @@
-import * as THREE from 'three';
-import { MindARThree } from 'mindar-image-three';
-
 const start = document.getElementById("start");
-const overlay = document.getElementById("ui-overlay");
 const video = document.getElementById("video");
+const scanningOverlay = document.getElementById("scanning-overlay");
+const muteToggle = document.getElementById("mute-toggle");
 
 start.onclick = async () => {
-  overlay.style.opacity = "0";
-  setTimeout(() => { overlay.style.display = "none"; }, 500);
+  start.remove();
+  scanningOverlay.classList.remove("hidden");
 
-  const mindarThree = new MindARThree({
+  const mindar = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
     imageTargetSrc: "assets/targets.mind",
-    uiScanning: "yes", // Built-in scanning guide for customers
-    uiLoading: "no"
+    filterMinCF: 0.0001,
+    filterBeta: 0.001,
   });
 
-  const { renderer, scene, camera } = mindarThree;
-
+  const { renderer, scene, camera } = mindar;
   const texture = new THREE.VideoTexture(video);
-  texture.minFilter = THREE.LinearFilter; // Keeps video sharp
-  
-  const material = new THREE.MeshBasicMaterial({ 
-    map: texture, 
-    transparent: true, 
-    opacity: 0 
-  });
-  
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
-  const anchor = mindarThree.addAnchor(0);
+  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0 });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1.5), material);
+  const anchor = mindar.addAnchor(0);
   anchor.group.add(plane);
 
-  // AUTO-SCALE: Matches plane to video dimensions perfectly
-  video.onloadedmetadata = () => {
-    const videoAspect = video.videoWidth / video.videoHeight;
-    plane.geometry = new THREE.PlaneGeometry(1, 1 / videoAspect);
-    plane.scale.set(1.02, 1.02, 1); // Slight over-scale for a "flush" look
-  };
-
   let isTargetVisible = false;
+
   anchor.onTargetFound = () => {
     isTargetVisible = true;
     video.play();
+    scanningOverlay.classList.add("hidden");
+    muteToggle.classList.remove("hidden");
   };
 
   anchor.onTargetLost = () => {
     isTargetVisible = false;
     video.pause();
+    scanningOverlay.classList.remove("hidden");
+    muteToggle.classList.add("hidden");
   };
 
-  try {
-    await mindarThree.start(); // Initiates camera
-    
-    renderer.setAnimationLoop(() => {
-      // Holographic fade transition
-      if (isTargetVisible && material.opacity < 1) material.opacity += 0.05;
-      if (!isTargetVisible && material.opacity > 0) material.opacity -= 0.1;
-      
-      renderer.render(scene, camera);
-    });
-  } catch (err) {
-    console.error("AR Start Error:", err);
-    alert("Please ensure you are using HTTPS and have granted camera access.");
-  }
+  muteToggle.onclick = (e) => {
+    e.stopPropagation();
+    video.muted = !video.muted;
+    muteToggle.innerText = video.muted ? "🔇" : "🔊";
+  };
+
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+
+  window.addEventListener('click', (e) => {
+    if (!isTargetVisible || e.target.id === 'mute-toggle') return;
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObject(plane);
+    if (intersects.length > 0) {
+      if (video.requestFullscreen) video.requestFullscreen();
+      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+    }
+  });
+
+  await mindar.start();
+  renderer.setAnimationLoop(() => {
+    material.opacity = THREE.MathUtils.lerp(material.opacity, isTargetVisible ? 1 : 0, 0.1);
+    renderer.render(scene, camera);
+  });
 };
