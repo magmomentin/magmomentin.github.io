@@ -1,58 +1,50 @@
+import * as THREE from 'three';
+import { MindARThree } from 'mindar-image-three';
+
 const start = document.getElementById("start");
 const overlay = document.getElementById("ui-overlay");
 const video = document.getElementById("video");
 
 start.onclick = async () => {
-  // Hide UI
   overlay.style.display = "none";
 
-  // Initialize MindAR with Three.js
-  const mindar = new window.MINDAR.IMAGE.MindARThree({
+  const mindarThree = new MindARThree({
     container: document.body,
-    imageTargetSrc: "assets/targets.mind"
+    imageTargetSrc: "assets/targets.mind",
   });
 
-  const { renderer, scene, camera } = mindar;
+  const { renderer, scene, camera } = mindarThree;
 
-  // Create Video Texture
+  // Setup Video Texture
   const texture = new THREE.VideoTexture(video);
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.format = THREE.RGBAFormat;
-
-  // Standard geometry (Width 1, Height 1.5 for a 2:3 vertical photo)
-  // Adjust to 1.5, 1 if your target is horizontal.
-  const geometry = new THREE.PlaneGeometry(1, 1.5);
   const material = new THREE.MeshBasicMaterial({ 
     map: texture,
-    transparent: true,
-    side: THREE.DoubleSide 
+    transparent: true 
   });
-
+  
+  // Using 1 unit width and 1.5 height (for a 2:3 vertical aspect ratio)
+  const geometry = new THREE.PlaneGeometry(1, 1.5);
   const plane = new THREE.Mesh(geometry, material);
   plane.visible = false;
 
-  // Add anchor for the first target in the .mind file
-  const anchor = mindar.addAnchor(0);
+  const anchor = mindarThree.addAnchor(0);
   anchor.group.add(plane);
 
-  // Interaction logic
   anchor.onTargetFound = () => {
-    plane.visible = true;
     video.play();
-    console.log("Target detected");
+    plane.visible = true;
   };
 
   anchor.onTargetLost = () => {
-    plane.visible = false;
     video.pause();
-    console.log("Target lost");
+    plane.visible = false;
   };
 
-  // Start the engine
-  await mindar.start();
+  await mindarThree.start();
 
   renderer.setAnimationLoop(() => {
+    // Standard Three.js VideoTexture handles updates automatically, 
+    // but we call render here for the MindAR loop.
     renderer.render(scene, camera);
   });
 };

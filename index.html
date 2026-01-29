@@ -6,9 +6,16 @@
   <title>MagMoment AR</title>
   <link rel="stylesheet" href="style.css">
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
+  <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.1/dist/es-module-shims.js"></script>
 
-  <script src="https://cdn.npmmirror.com/package/mind-ar/1.1.4/dist/mindar-image-three.prod.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.147.0/build/three.module.js",
+        "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"
+      }
+    }
+  </script>
 </head>
 <body>
 
@@ -16,17 +23,17 @@
     <button id="start">Tap to Start AR</button>
   </div>
 
-  <video
-    id="video"
-    muted
-    playsinline
-    loop
-    crossorigin="anonymous"
+  <video 
+    id="video" 
+    muted 
+    playsinline 
+    loop 
+    crossorigin="anonymous" 
     style="display:none"
   >
     <source src="assets/demo.mp4" type="video/mp4">
   </video>
 
-  <script src="tracker.js"></script>
+  <script type="module" src="tracker.js"></script>
 </body>
 </html>

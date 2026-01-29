@@ -5,36 +5,34 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: #000;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: sans-serif;
 }
 
 #ui-overlay {
   position: fixed;
   inset: 0;
-  z-index: 999;
+  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
 }
 
 #start {
-  padding: 15px 30px;
-  font-size: 1.2rem;
+  padding: 16px 32px;
+  font-size: 18px;
   font-weight: bold;
-  color: white;
+  color: #fff;
   background: #007AFF;
   border: none;
-  border-radius: 50px;
+  border-radius: 30px;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 
-/* MindAR canvas usually injects here */
 canvas {
   position: fixed !important;
   inset: 0;
-  width: 100vw !important;
-  height: 100vh !important;
-  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
 }
