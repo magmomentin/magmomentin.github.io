@@ -5,7 +5,7 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: #000;
-  font-family: -apple-system, system-ui, sans-serif;
+  font-family: sans-serif;
 }
 
 #ui-overlay {
@@ -15,26 +15,21 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.8);
 }
 
 #start {
-  padding: 20px 40px;
-  font-size: 1.1rem;
+  padding: 16px 32px;
+  font-size: 18px;
   font-weight: bold;
   color: #fff;
   background: #007AFF;
   border: none;
-  border-radius: 50px;
+  border-radius: 30px;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
 }
 
-/* Fixes for the MindAR canvas */
 canvas {
   position: fixed !important;
   inset: 0;
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover;
 }
