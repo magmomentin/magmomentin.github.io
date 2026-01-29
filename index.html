@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>MagMoment AR</title>
 
-  <!-- THREE.JS -->
-  <!-- <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script> -->
-
-  <!-- MINDAR -->
+  <!-- MindAR includes THREE internally -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
 
   <style>
@@ -26,10 +23,8 @@
       inset: 0;
       width: 100vw !important;
       height: 100vh !important;
-      object-fit: cover;
     }
 
-    /* MagMoment Loader */
     #loader {
       position: fixed;
       inset: 0;
@@ -51,7 +46,6 @@
     #brand {
       font-size: 22px;
       font-weight: 600;
-      letter-spacing: 0.4px;
     }
 
     #tagline {
@@ -64,10 +58,8 @@
       margin-top: 28px;
       padding: 10px 18px;
       font-size: 14px;
-      background: #fff;
-      color: #000;
-      border: none;
       border-radius: 20px;
+      border: none;
     }
   </style>
 </head>
@@ -90,6 +82,7 @@
     <source src="assets/demo.mp4" type="video/mp4">
   </video>
 
+  <!-- tracker.js MUST be last -->
   <script src="tracker.js"></script>
 </body>
 </html>
