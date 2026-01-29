@@ -6,20 +6,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const scanFrame = document.querySelector(".scan-frame");
   const muteBtn = document.getElementById("mute-btn");
 
-  // YOUR MAGNET RATIO: 354 (width) / 472 (height)
-  const TARGET_ASPECT = 354 / 472; 
+  const TARGET_ASPECT = 354 / 472; // Exact magnet ratio
 
   const initAR = async () => {
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
       imageTargetSrc: "assets/targets.mind",
-      filterMinCF: 0.0001, 
-      filterBeta: 0.001,
     });
 
     const { renderer, scene, camera } = mindarThree;
 
-    // FIX: Match 3D math to the actual pixels on the screen
+    // FIX: Match 3D coordinates to the actual phone screen
     const handleResize = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(window.devicePixelRatio);
@@ -34,33 +31,18 @@ document.addEventListener("DOMContentLoaded", () => {
       await new Promise(res => video.onloadedmetadata = res);
     }
 
-    const videoAspect = video.videoWidth / video.videoHeight;
     const texture = new THREE.VideoTexture(video);
-
-    // FIX: Center-crop video (Object-Fit: Cover) for the 3:4 magnet
-    if (videoAspect > TARGET_ASPECT) {
-      const ratio = TARGET_ASPECT / videoAspect;
-      texture.repeat.set(ratio, 1);
-      texture.offset.set((1 - ratio) / 2, 0);
-    } else {
-      const ratio = videoAspect / TARGET_ASPECT;
-      texture.repeat.set(1, ratio);
-      texture.offset.set(0, (1 - ratio) / 2);
-    }
-
     const material = new THREE.MeshBasicMaterial({ 
       map: texture, 
       transparent: true, 
       opacity: 0,
-      depthWrite: false // Prevents the 'glittering' flickering
+      depthWrite: false // FIX: Stops video glittering/flickering
     });
 
-    // FIX: Plane matches your target height ratio (1.333)
+    // FIX: Plane matches target height ratio (1.333)
     const geometry = new THREE.PlaneGeometry(1, 1 / TARGET_ASPECT);
     const plane = new THREE.Mesh(geometry, material);
-    
-    // Offset forward to avoid flickering
-    plane.position.set(0, 0, 0.1); 
+    plane.position.set(0, 0, 0.15); // Offset to sit in front of the magnet
     
     const anchor = mindarThree.addAnchor(0);
     anchor.group.add(plane);
@@ -86,7 +68,6 @@ document.addEventListener("DOMContentLoaded", () => {
     startBtn.classList.remove("ui-hidden");
 
     renderer.setAnimationLoop(() => {
-      // Smooth fade transition
       material.opacity = THREE.MathUtils.lerp(material.opacity, isTracking ? 1 : 0, 0.1);
       plane.visible = material.opacity > 0.005;
       renderer.render(scene, camera);
@@ -101,8 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
   startBtn.onclick = () => {
     startBtn.classList.add("ui-hidden");
     overlay.classList.remove("ui-hidden");
-    // Trigger resize to fix alignment on start
-    window.dispatchEvent(new Event('resize')); 
+    window.dispatchEvent(new Event('resize')); // Recalculate logic
     video.play().then(() => video.pause()); 
   };
 
