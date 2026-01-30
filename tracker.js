@@ -25,25 +25,52 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   const { renderer, scene, camera } = mindarThree;
 
   /* ---------- VIDEO TEXTURE ---------- */
-  const texture = new THREE.VideoTexture(video);
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.colorSpace = THREE.SRGBColorSpace;
+  const videoTexture = new THREE.VideoTexture(video);
+  videoTexture.minFilter = THREE.LinearFilter;
+  videoTexture.magFilter = THREE.LinearFilter;
+  videoTexture.colorSpace = THREE.SRGBColorSpace;
 
-  /* ---------- PLANE (MUST STAY IN ANCHOR) ---------- */
+  /* ---------- ROUNDED CORNER MASK (CANVAS) ---------- */
+  function createRoundedMask(size = 512, radius = 60) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0, 0, size, size);
+    ctx.fillStyle = "white";
+
+    ctx.beginPath();
+    ctx.moveTo(radius, 0);
+    ctx.lineTo(size - radius, 0);
+    ctx.quadraticCurveTo(size, 0, size, radius);
+    ctx.lineTo(size, size - radius);
+    ctx.quadraticCurveTo(size, size, size - radius, size);
+    ctx.lineTo(radius, size);
+    ctx.quadraticCurveTo(0, size, 0, size - radius);
+    ctx.lineTo(0, radius);
+    ctx.quadraticCurveTo(0, 0, radius, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    return texture;
+  }
+
+  const alphaMask = createRoundedMask(512, 70);
+
+  /* ---------- PLANE (INSIDE ANCHOR — SAFE) ---------- */
   const plane = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({
-      map: texture,
+      map: videoTexture,
+      alphaMap: alphaMask,
       transparent: true,
     })
   );
 
-  // baseline depth
   plane.position.z = 0.01;
-
-  // tiny local damping state (SAFE)
-  const smoothZ = { value: 0.01 };
 
   /* ---------- ANCHOR ---------- */
   const anchor = mindarThree.addAnchor(0);
@@ -77,15 +104,9 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 
   /* ---------- RENDER LOOP ---------- */
   renderer.setAnimationLoop(() => {
-    // keep video texture updating
     if (!video.paused && video.readyState >= 2) {
-      texture.needsUpdate = true;
+      videoTexture.needsUpdate = true;
     }
-
-    // ultra-light, safe damping (does NOT affect tracking)
-    smoothZ.value += (0.01 - smoothZ.value) * 0.08;
-    plane.position.z = smoothZ.value;
-
     renderer.render(scene, camera);
   });
 });
