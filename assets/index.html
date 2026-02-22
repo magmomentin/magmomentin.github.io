@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MagMoment™ | Crafting Magical Memories</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Theme colors extracted from the MagMoment logo */
+            --brand-dark: #2c2a29;   /* Deep charcoal from logo text */
+            --brand-gold: #c5a059;   /* Warm gold from the logo sun/sparkles */
+            --brand-pink: #fdf1f2;   /* Soft pink glow from the logo background */
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            /* Gradient reflecting the shimmering light in your reel/logo */
+            background: radial-gradient(circle at center, #ffffff 0%, var(--brand-pink) 100%);
+            color: var(--brand-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow: hidden;
+        }
+        .container {
+            max-width: 700px;
+            padding: 40px;
+            z-index: 2;
+        }
+        .logo-container {
+            margin-bottom: 2rem;
+        }
+        .logo-image {
+            width: 140px; /* Sized to showcase the detailed logo */
+            height: auto;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.05));
+        }
+        .logo-text {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            margin-bottom: 0.2rem;
+            letter-spacing: 4px;
+            font-weight: 700;
+            color: var(--brand-dark);
+        }
+        .tagline {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: var(--brand-gold);
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            margin-bottom: 3rem;
+            letter-spacing: 1px;
+        }
+        .message {
+            line-height: 1.8;
+            font-size: 1.15rem;
+            margin-bottom: 2.5rem;
+            color: #444;
+            font-weight: 300;
+        }
+        .signature {
+            font-weight: 400;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 3rem;
+            color: var(--brand-dark);
+        }
+        .cta-button {
+            display: inline-block;
+            padding: 18px 45px;
+            border: 1px solid var(--brand-dark);
+            color: var(--brand-dark);
+            text-decoration: none;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.5s ease;
+            background: transparent;
+        }
+        .cta-button:hover {
+            background-color: var(--brand-dark);
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .footer {
+            position: absolute;
+            bottom: 40px;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            opacity: 0.5;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="logo-container">
+            <img src="assets/logo.png" alt="MagMoment™ Logo" class="logo-image">
+        </div>
+
+        <div class="logo-text">MagMoment™</div>
+        <div class="tagline">Crafting Magical Memories</div>
+
+        <p class="message">
+            Your memories have lived in your phone long enough. <br>
+            We’re busy turning "once upon a time" into something you can finally hold.
+        </p>
+
+        <div class="signature">Crafted with love by C & S</div>
+
+        <a href="https://www.instagram.com/magmoment.in" class="cta-button">Experience the Reveal</a>
+
+        <div class="footer">
+            © 2026 MAGMOMENT™ | HYDERABAD
+        </div>
+    </div>
+
+</body>
+</html>
