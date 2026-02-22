@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>MagMoment | Crafting Magical Memories</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -21,6 +21,9 @@
     margin:0;
     padding:0;
     box-sizing:border-box;
+}
+
+html {
     scroll-behavior:smooth;
 }
 
@@ -28,7 +31,8 @@ body {
     font-family: 'Inter', sans-serif;
     background: linear-gradient(135deg, #0a142b 0%, #0e1a36 40%, #1a274d 100%);
     color: var(--white);
-    line-height: 1.7;
+    line-height: 1.6;
+    overflow-x:hidden;
 }
 
 /* TRADEMARK */
@@ -39,23 +43,17 @@ body {
     font-weight: 500;
 }
 
-@media (min-width: 1024px) {
-    .tm {
-        font-size: 0.4em;
-    }
-}
-
 /* NAVBAR */
 .navbar {
     position: fixed;
     width: 100%;
     top: 0;
-    padding: 18px 40px;
+    padding: 14px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(10,20,43,0.75);
-    backdrop-filter: blur(12px);
+    background: rgba(10,20,43,0.85);
+    backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(202,166,75,0.2);
     z-index: 999;
 }
@@ -64,19 +62,16 @@ body {
     font-weight: 600;
     letter-spacing: 1px;
     color: var(--brand-cream);
+    font-size: 0.95rem;
 }
 
 .navbar a {
     text-decoration: none;
     color: var(--brand-cream);
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     letter-spacing: 1px;
-    margin-left: 30px;
+    margin-left: 18px;
     font-weight: 500;
-}
-
-.navbar a:hover {
-    color: var(--brand-gold-soft);
 }
 
 /* HERO */
@@ -86,68 +81,60 @@ body {
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 140px 20px 80px;
+    padding: 110px 20px 60px;
     background:
-        radial-gradient(circle at center, rgba(202,166,75,0.25) 0%, transparent 50%),
+        radial-gradient(circle at center, rgba(202,166,75,0.25) 0%, transparent 55%),
         linear-gradient(135deg, #0a142b 0%, #0e1a36 100%);
 }
 
 .logo-image {
-    width: 170px;
-    margin-bottom: 30px;
-    filter: drop-shadow(0 10px 25px rgba(0,0,0,0.4));
+    width: 140px;
+    margin-bottom: 25px;
+    max-width: 70%;
 }
 
 .brand-name {
     font-family: 'Playfair Display', serif;
-    font-size: clamp(3rem, 8vw, 4.5rem);
+    font-size: clamp(2.2rem, 8vw, 4.5rem);
     font-weight: 700;
-    letter-spacing: -1px;
-    color: var(--white);
+    letter-spacing: -0.5px;
 }
 
 .tagline {
     font-family: 'Playfair Display', serif;
     font-style: italic;
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     color: var(--brand-gold-soft);
-    margin: 15px 0 25px;
+    margin: 10px 0 20px;
 }
 
 .coming-soon {
-    font-size: 0.85rem;
-    letter-spacing: 3px;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
     text-transform: uppercase;
-    opacity: 0.7;
-    margin-bottom: 40px;
+    opacity: 0.8;
+    margin-bottom: 28px;
     color: var(--brand-cream);
 }
 
-/* CTA */
 .cta-btn {
     display: inline-block;
-    padding: 16px 40px;
+    padding: 14px 32px;
     background: var(--brand-gold);
     color: var(--brand-navy-deep);
     text-decoration: none;
-    letter-spacing: 2px;
-    font-size: 0.8rem;
+    letter-spacing: 1.5px;
+    font-size: 0.75rem;
     text-transform: uppercase;
     border-radius: 50px;
     transition: 0.3s ease;
     font-weight: 600;
 }
 
-.cta-btn:hover {
-    background: var(--brand-gold-soft);
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(202,166,75,0.3);
-}
-
-/* ABOUT SECTION */
+/* ABOUT */
 .about-section {
     background: var(--brand-cream);
-    padding: 120px 20px;
+    padding: 80px 20px;
     display: flex;
     justify-content: center;
     color: var(--brand-navy);
@@ -156,46 +143,43 @@ body {
 .about-container {
     max-width: 1100px;
     display: grid;
-    grid-template-columns: 1fr 1.4fr;
-    gap: 80px;
+    grid-template-columns: 1fr;
+    gap: 40px;
     align-items: center;
+    text-align: center;
 }
 
 .about-title {
     font-family: 'Playfair Display', serif;
-    font-size: 2.8rem;
-    line-height: 1.2;
+    font-size: 2rem;
+    line-height: 1.3;
+    padding-bottom: 18px;
     position: relative;
-    padding-bottom: 20px;
 }
 
 .about-title::after {
     content: "";
     position: absolute;
     bottom: 0;
-    left: 0;
-    width: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
     height: 2px;
     background: var(--brand-gold);
 }
 
 .about-text p {
-    font-size: 1.15rem;
-    line-height: 1.9;
-    color: #333;
-    margin-bottom: 28px;
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-bottom: 20px;
     font-weight: 300;
-}
-
-.about-text strong {
-    color: var(--brand-navy);
-    font-weight: 600;
+    color:#333;
 }
 
 .signature-block {
-    margin-top: 50px;
-    font-size: 0.85rem;
-    letter-spacing: 4px;
+    margin-top: 35px;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
     text-transform: uppercase;
     color: var(--brand-gold);
     font-weight: 600;
@@ -204,21 +188,19 @@ body {
 /* SOCIAL */
 .social-proof {
     background: var(--brand-navy);
-    color: white;
-    padding: 100px 20px;
+    padding: 70px 20px;
     text-align: center;
 }
 
 .social-proof h2 {
     font-family:'Playfair Display', serif;
-    font-size: 2rem;
-    margin-bottom: 20px;
+    font-size: 1.6rem;
+    margin-bottom: 15px;
 }
 
 .instagram-handle {
-    margin-top: 18px;
+    margin-top: 15px;
     font-weight: 600;
-    letter-spacing: 1px;
 }
 
 .instagram-handle a {
@@ -226,35 +208,41 @@ body {
     text-decoration: none;
 }
 
-.instagram-handle a:hover {
-    color: var(--white);
-}
-
 /* FOOTER */
 footer {
-    padding: 30px;
+    padding: 20px;
     text-align: center;
-    font-size: 0.7rem;
-    letter-spacing: 2px;
+    font-size: 0.65rem;
+    letter-spacing: 1.5px;
     background: var(--brand-navy-deep);
     color: var(--brand-cream);
 }
 
-/* MOBILE */
-@media (max-width: 768px) {
+/* DESKTOP ENHANCEMENT */
+@media (min-width: 900px) {
+
     .navbar {
-        padding: 15px 20px;
+        padding: 18px 40px;
+    }
+
+    .navbar a {
+        font-size: 0.85rem;
+        margin-left: 30px;
     }
 
     .about-container {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 50px;
+        grid-template-columns: 1fr 1.4fr;
+        text-align: left;
+        gap: 80px;
     }
 
     .about-title::after {
-        left: 50%;
-        transform: translateX(-50%);
+        left: 0;
+        transform: none;
+    }
+
+    .hero {
+        padding: 140px 20px 80px;
     }
 }
 </style>
@@ -284,25 +272,20 @@ footer {
 
 <section id="about" class="about-section">
     <div class="about-container">
-        
         <div class="about-title">
             The Heart Behind <br> MagMoment
         </div>
 
         <div class="about-text">
-            <p>We are <strong>C & S</strong>—a corporate couple who spent years chasing deadlines, navigating spreadsheets, and living through digital screens.</p>
+            <p>We are <strong>C & S</strong>—a corporate couple who spent years chasing deadlines and living through digital screens.</p>
+            <p>One evening, while scrolling through thousands of photos, we realized something: our most meaningful memories were sitting in storage—rarely revisited.</p>
+            <p>We didn’t want memories to exist as files. We wanted them to live in our homes—seen, held, and felt daily. That vision became MagMoment<span class="tm">™</span>.</p>
+            <p>From Hyderabad, we transform digital captures into timeless keepsakes. Because <strong>every memory deserves magic.</strong></p>
 
-            <p>One evening, while scrolling through thousands of photos on our phones, we felt something unsettling: our most meaningful memories were quietly sitting in storage—rarely revisited, slowly fading into the background of everyday life.</p>
-
-            <p>That moment changed everything. We didn’t want memories to exist only as files. We wanted them to live in our homes—where they can be held, seen, and felt every single day. That vision became MagMoment<span class="tm">™</span>.</p>
-
-            <p>From the heart of Hyderabad, we use professional-grade technology and thoughtful craftsmanship to transform fleeting digital captures into timeless physical keepsakes. Because in the end, <strong>every memory deserves magic.</strong></p>
-                
             <div class="signature-block">
                 Crafted with love by C & S
             </div>
         </div>
-
     </div>
 </section>
 
@@ -310,14 +293,12 @@ footer {
     <h2>Something Magical Is Coming</h2>
     <p>Follow us on Instagram to be the first to experience the reveal.</p>
     <div class="instagram-handle">
-        <a href="https://www.instagram.com/magmoment.in" target="_blank">
-            @magmoment.in
-        </a>
+        <a href="https://www.instagram.com/magmoment.in" target="_blank">@magmoment.in</a>
     </div>
 </section>
 
 <footer>
-    © 2026 MAGMOMENT<span class="tm">™</span> | HYDERABAD | EST. 2026
+    © 2026 MAGMOMENT™ | HYDERABAD | EST. 2026
 </footer>
 
 </body>
