@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Camera Body -->
+  <rect x="150" y="120" width="300" height="180" rx="25" fill="#0B2A5B"/>
+  <rect x="190" y="95" width="120" height="40" rx="12" fill="#0B2A5B"/>
+
+  <!-- Lens Outer Ring -->
+  <circle cx="300" cy="210" r="70" fill="#ffffff"/>
+  <circle cx="300" cy="210" r="60" fill="#D4AF37"/>
+
+  <!-- Sunburst -->
+  <g fill="#ffffff">
+    <circle cx="300" cy="210" r="20"/>
+    <polygon points="300,145 308,175 292,175"/>
+    <polygon points="300,275 308,245 292,245"/>
+    <polygon points="235,210 265,218 265,202"/>
+    <polygon points="365,210 335,218 335,202"/>
+    <polygon points="250,160 270,185 255,195"/>
+    <polygon points="350,160 345,195 330,185"/>
+    <polygon points="250,260 255,225 270,235"/>
+    <polygon points="350,260 330,235 345,225"/>
+  </g>
+
+  <!-- Magnet -->
+  <path d="M280 280 
+           a40 40 0 0 0 80 0 
+           v50 
+           a20 20 0 0 1 -40 0 
+           v-50 
+           a20 20 0 0 0 -40 0 z" 
+        fill="#0B2A5B"/>
+  <rect x="280" y="320" width="20" height="20" fill="#D4AF37"/>
+  <rect x="340" y="320" width="20" height="20" fill="#D4AF37"/>
+
+  <!-- Sparkles -->
+  <polygon points="230,290 240,305 220,305" fill="#D4AF37"/>
+  <polygon points="380,290 390,305 370,305" fill="#D4AF37"/>
+
+  <!-- Small Photo Frames -->
+  <rect x="360" y="300" width="35" height="35" fill="#D4AF37"/>
+  <rect x="365" y="305" width="25" height="25" fill="#ffffff"/>
+
+  <rect x="410" y="320" width="35" height="35" fill="#D4AF37"/>
+  <rect x="415" y="325" width="25" height="25" fill="#ffffff"/>
+
+  <!-- Brand Name -->
+  <text x="300" y="420" text-anchor="middle" 
+        font-family="Poppins, sans-serif" 
+        font-size="48" fill="#0B2A5B">
+    Mag<tspan font-weight="700">MOMENT</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="300" y="470" text-anchor="middle" 
+        font-family="Georgia, serif" 
+        font-size="26" fill="#D4AF37">
+    Crafting Magical Memories
+  </text>
+
+</svg>
