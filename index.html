@@ -24,6 +24,31 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        .cart-empty {
+            text-align: center;
+            padding: 40px 10px;
+            color: #777;
+        }
+
+        #continue-shopping-btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .clear-btn {
+            background: transparent;
+            border: none;
+            color: #999;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+
         .cart-summary {
             padding: 16px 0;
         }
@@ -1173,7 +1198,15 @@
                         <line x1="6" y1="6" x2="18" y2="18" />
                     </svg></div>
             </div>
-            <div class="cart-body" id="cart-items-list"></div>
+            <div class="cart-body">
+                <div id="cart-items-list"></div>
+
+                <!-- ✅ EMPTY STATE -->
+                <div id="cart-empty-state" class="cart-empty hidden">
+                    <p>Your bag is empty</p>
+                    <button id="continue-shopping-btn">Continue Shopping</button>
+                </div>
+            </div>
             <div class="cart-footer">
                 <div class="cart-summary">
 
@@ -1201,6 +1234,10 @@
                     <div class="row total-row">
                         <span>Total</span>
                         <span id="total">₹0</span>
+                    </div>
+
+                    <div style="text-align:right; margin-top:10px;">
+                        <button id="clear-cart-btn" class="clear-btn">Clear Cart</button>
                     </div>
 
                 </div>
@@ -1484,6 +1521,14 @@
             renderCart();
         }
         function renderCart() {
+
+            const summary = document.querySelector(".cart-summary");
+
+            if (state.cart.length === 0) {
+                summary.style.display = "none";
+            } else {
+                summary.style.display = "block";
+            }
             const list = document.getElementById('cart-items-list');
 
             const t = calculateTotals(state.cart);
@@ -1499,20 +1544,26 @@
 
             totalEl.innerText = `₹${t.total}`;
 
-            // items
-            list.innerHTML = state.cart.length
-                ? state.cart.map(i => `
-            <div class="cart-item">
-                <img src="${i.photos[0]}-/resize/120x150/">
-                <div class="cart-item-info">
-                    <h4>${i.name}</h4>
-                    <p>${i.bundleLabel || i.bundle} • ${i.finish}</p>
-                    <b>₹${i.price}</b><br>
-                    <span class="remove-btn" onclick="removeFromCart(${i.cartId})">Remove</span>
-                </div>
+            const emptyState = document.getElementById("cart-empty-state");
+
+            if (state.cart.length === 0) {
+                list.innerHTML = "";
+                emptyState.classList.remove("hidden");
+            } else {
+                emptyState.classList.add("hidden");
+
+                list.innerHTML = state.cart.map(i => `
+        <div class="cart-item">
+            <img src="${i.photos[0]}-/resize/120x150/">
+            <div class="cart-item-info">
+                <h4>${i.name}</h4>
+                <p>${i.bundleLabel || i.bundle} • ${i.finish}</p>
+                <b>₹${i.price}</b><br>
+                <span class="remove-btn" onclick="removeFromCart(${i.cartId})">Remove</span>
             </div>
-        `).join('')
-                : "<p style='text-align:center; padding-top:40px; color:#aaa;'>Your bag is empty.</p>";
+        </div>
+    `).join('');
+            }
 
             // ✅ PROGRESS BAR
             const threshold = 999;
@@ -1571,7 +1622,10 @@
         function setFinish(f, el) { state.finish = f; el.parentElement.querySelectorAll('.option-card').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
         function toggleAccordion(el) { el.classList.toggle('active'); }
 
-        window.onload = () => { loadProducts(); updateCartCount(); navigate('home'); };
+        window.onload = () => {
+            loadProducts(); updateCartCount(); navigate('home'); document.getElementById("clear-cart-btn").onclick = clearCart;
+            document.getElementById("continue-shopping-btn").onclick = goToGallery;
+        };
 
         function calculateTotals(cart) {
             const subtotal = cart.reduce((sum, i) => sum + i.price, 0);
@@ -1587,6 +1641,17 @@
                 shipping,
                 total: subtotal + shipping
             };
+        }
+        function clearCart() {
+            state.cart = [];
+            localStorage.setItem('magmoment_v2', '[]');
+            renderCart();
+            updateCartCount();
+        }
+
+        function goToGallery() {
+            toggleCart();
+            navigate('home'); // your gallery = home view
         }
     </script>
 </body>
