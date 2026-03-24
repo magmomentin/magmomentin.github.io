@@ -24,6 +24,82 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        .cart-summary {
+            padding: 16px 0;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .total-row {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .shipping-progress-wrap {
+            margin: 10px 0 12px;
+        }
+
+        .shipping-progress-msg {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .shipping-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .shipping-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #16a34a, #22c55e);
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+
+        /* 🔥 bounce animation */
+        .shipping-progress-fill.bounce {
+            animation: progressBounce 0.6s ease;
+        }
+
+        @keyframes progressBounce {
+            0% {
+                transform: scaleX(1);
+            }
+
+            30% {
+                transform: scaleX(1.08);
+            }
+
+            60% {
+                transform: scaleX(0.95);
+            }
+
+            100% {
+                transform: scaleX(1);
+            }
+        }
+
+        /* 🔥 glow effect */
+        .shipping-progress-fill.glow {
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #eee;
+            margin: 10px 0;
+        }
+
         /* Premium Order Card Style */
         .order-card {
             background: var(--white);
@@ -839,7 +915,7 @@
 
 <body>
 
-    <div class="announcement-bar">Free Express Shipping on Orders Above ₹1,200</div>
+    <div class="announcement-bar">Free Express Shipping on Orders Above ₹999</div>
 
     <div id="cart-overlay" onclick="toggleCart()"></div>
     <div id="toast"></div>
@@ -1099,12 +1175,37 @@
             </div>
             <div class="cart-body" id="cart-items-list"></div>
             <div class="cart-footer">
-                <div
-                    style="display:flex; justify-content:space-between; margin-bottom:24px; font-weight:800; font-size:1.2rem;">
-                    <span>Total</span>
-                    <span id="cart-total-price">₹0</span>
+                <div class="cart-summary">
+
+                    <div class="row">
+                        <span>Subtotal</span>
+                        <span id="subtotal">₹0</span>
+                    </div>
+
+                    <div class="row">
+                        <span>Shipping</span>
+                        <span id="shipping">₹0</span>
+                    </div>
+
+                    <!-- ✅ PROGRESS BAR -->
+                    <div id="shipping-progress-wrap" class="shipping-progress-wrap">
+                        <div id="shipping-progress-msg" class="shipping-progress-msg"></div>
+
+                        <div class="shipping-progress-bar">
+                            <div id="shipping-progress-fill" class="shipping-progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="row total-row">
+                        <span>Total</span>
+                        <span id="total">₹0</span>
+                    </div>
+
                 </div>
-                <button class="btn" onclick="showShipping()">Continue to Shipping</button>
+
+                <button id="checkout-btn" class="btn" onclick="showShipping()">Continue to Shipping</button>
             </div>
         </div>
 
@@ -1145,16 +1246,20 @@
 
     <script>
 
+        const subtotalEl = document.getElementById("subtotal");
+        const shippingEl = document.getElementById("shipping");
+        const totalEl = document.getElementById("total");
+
         let cachedKey;
 
         async function getRazorpayKey() {
-        if (cachedKey) return cachedKey;
+            if (cachedKey) return cachedKey;
 
-        const res = await fetch(`${API_BASE}/get-config`);
-        const data = await res.json();
+            const res = await fetch(`${API_BASE}/get-config`);
+            const data = await res.json();
 
-        cachedKey = data.razorpayKey;
-        return cachedKey;
+            cachedKey = data.razorpayKey;
+            return cachedKey;
         }
         const API_BASE = "https://phxhhzwuamdoclklvccb.supabase.co/functions/v1";
 
@@ -1378,17 +1483,86 @@
             document.getElementById('cart-overlay').classList.toggle('active');
             renderCart();
         }
-
         function renderCart() {
             const list = document.getElementById('cart-items-list');
-            let total = 0;
-            list.innerHTML = state.cart.length ? state.cart.map(i => {
-                total += i.price;
-                return `<div class="cart-item"><img src="${i.photos[0]}-/resize/120x150/"><div class="cart-item-info"><h4>${i.name}</h4><p>${i.bundle} • ${i.finish}</p><b>₹${i.price}</b><br><span class="remove-btn" onclick="removeFromCart(${i.cartId})">Remove</span></div></div>`;
-            }).join('') : "<p style='text-align:center; padding-top:40px; color:#aaa;'>Your bag is empty.</p>";
-            document.getElementById('cart-total-price').innerText = `₹${total}`;
-        }
 
+            const t = calculateTotals(state.cart);
+
+            // totals
+            subtotalEl.innerText = `₹${t.subtotal}`;
+
+            if (t.subtotal === 0) {
+                shippingEl.innerText = "-";
+            } else {
+                shippingEl.innerText = t.shipping === 0 ? "FREE" : `₹${t.shipping}`;
+            }
+
+            totalEl.innerText = `₹${t.total}`;
+
+            // items
+            list.innerHTML = state.cart.length
+                ? state.cart.map(i => `
+            <div class="cart-item">
+                <img src="${i.photos[0]}-/resize/120x150/">
+                <div class="cart-item-info">
+                    <h4>${i.name}</h4>
+                    <p>${i.bundleLabel || i.bundle} • ${i.finish}</p>
+                    <b>₹${i.price}</b><br>
+                    <span class="remove-btn" onclick="removeFromCart(${i.cartId})">Remove</span>
+                </div>
+            </div>
+        `).join('')
+                : "<p style='text-align:center; padding-top:40px; color:#aaa;'>Your bag is empty.</p>";
+
+            // ✅ PROGRESS BAR
+            const threshold = 999;
+            const progressMsg = document.getElementById("shipping-progress-msg");
+            const progressFill = document.getElementById("shipping-progress-fill");
+            const progressWrap = document.getElementById("shipping-progress-wrap");
+
+            if (t.subtotal === 0) {
+                progressWrap.style.display = "none";
+            } else {
+                progressWrap.style.display = "block";
+
+                const percent = Math.min((t.subtotal / threshold) * 100, 100);
+                progressFill.style.width = percent + "%";
+
+                // reset animation classes
+                progressFill.classList.remove("bounce", "glow");
+
+                // 🔥 bounce + glow near 90%
+                if (percent >= 90 && percent < 100) {
+                    progressFill.classList.add("glow");
+
+                    // force reflow to restart animation
+                    void progressFill.offsetWidth;
+                    progressFill.classList.add("bounce");
+                }
+
+                // 🎉 full unlock
+                if (percent >= 100) {
+                    progressFill.classList.add("glow");
+                    progressMsg.innerHTML = `<span style="color:#16a34a;">✔ You unlocked FREE shipping</span>`;
+                } else {
+                    const remaining = threshold - t.subtotal;
+                    progressMsg.innerHTML = `Add <b>₹${remaining}</b> more to unlock FREE shipping`;
+                }
+            }
+
+            // ✅ disable checkout
+            const checkoutBtn = document.getElementById("checkout-btn");
+
+            if (state.cart.length === 0) {
+                checkoutBtn.disabled = true;
+                checkoutBtn.style.opacity = "0.5";
+                checkoutBtn.style.cursor = "not-allowed";
+            } else {
+                checkoutBtn.disabled = false;
+                checkoutBtn.style.opacity = "1";
+                checkoutBtn.style.cursor = "pointer";
+            }
+        }
         function removeFromCart(id) { state.cart = state.cart.filter(i => i.cartId !== id); localStorage.setItem('magmoment_v2', JSON.stringify(state.cart)); renderCart(); updateCartCount(); }
         function updateCartCount() { document.getElementById('cart-count').innerText = state.cart.length; }
         function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
@@ -1398,6 +1572,22 @@
         function toggleAccordion(el) { el.classList.toggle('active'); }
 
         window.onload = () => { loadProducts(); updateCartCount(); navigate('home'); };
+
+        function calculateTotals(cart) {
+            const subtotal = cart.reduce((sum, i) => sum + i.price, 0);
+
+            if (subtotal === 0) {
+                return { subtotal: 0, shipping: 0, total: 0 };
+            }
+
+            const shipping = subtotal >= 999 ? 0 : 79;
+
+            return {
+                subtotal,
+                shipping,
+                total: subtotal + shipping
+            };
+        }
     </script>
 </body>
 
