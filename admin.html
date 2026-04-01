@@ -1,48 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin+</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MagMoment Admin</title>
 
 <style>
-body { font-family: Arial; padding:20px; background:#f5f5f5; }
+:root {
+  --bg: #f6f5f2;
+  --card: #ffffff;
+  --text: #1a1a1a;
+  --muted: #777;
+  --border: #eaeaea;
+  --primary: #111;
+  --accent: #f0f0f0;
+}
 
-.top { display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; }
+* { box-sizing: border-box; }
+
+body {
+  margin:0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* HEADER */
+.header {
+  padding: 20px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* TOP BAR */
+.top {
+  display:flex;
+  gap:10px;
+  padding:0 20px 15px;
+  flex-wrap:wrap;
+}
 
 input, select {
-  padding:10px;
-  border:1px solid #ddd;
-  border-radius:6px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:white;
 }
 
+button {
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:500;
+}
+
+.primary {
+  background: var(--primary);
+  color:white;
+}
+
+/* GRID */
+.container {
+  padding: 0 20px 30px;
+}
+
+/* CARD */
 .card {
-  background:#fff;
-  padding:16px;
-  border-radius:12px;
+  background: var(--card);
+  border-radius:16px;
+  padding:18px;
   margin-bottom:14px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+  border:1px solid var(--border);
+  transition:0.2s;
 }
 
-.header {
+.card:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+}
+
+/* HEADER ROW */
+.card-top {
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
 
+.order-id {
+  font-size:14px;
+  color:var(--muted);
+}
+
 .status {
-  font-weight:bold;
-  padding:4px 8px;
-  border-radius:6px;
-  background:#eee;
-}
-
-.meta {
   font-size:12px;
-  color:#777;
+  padding:4px 10px;
+  border-radius:20px;
+  background: var(--accent);
+  font-weight:600;
 }
 
-.section { margin-top:10px; }
+/* DETAILS */
+.meta {
+  font-size:13px;
+  color:var(--muted);
+  margin-top:4px;
+}
 
+.section {
+  margin-top:12px;
+}
+
+/* ITEMS */
 .items {
   display:flex;
   gap:10px;
@@ -50,43 +118,46 @@ input, select {
 }
 
 .item {
-  width:130px;
-  border:1px solid #eee;
-  border-radius:8px;
-  padding:8px;
+  width:110px;
   background:#fafafa;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:8px;
+  text-align:center;
 }
 
-img {
+.item img {
   width:100%;
-  border-radius:6px;
-  cursor:pointer;
-  transition:0.2s;
+  border-radius:8px;
 }
 
-img:hover { transform:scale(1.05); }
-
-button {
-  padding:6px 10px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  margin:3px;
+/* ACTIONS */
+.actions {
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:10px;
 }
 
-.primary { background:#111; color:#fff; }
-.small { background:#eee; font-size:12px; }
+.small {
+  background:#eee;
+  font-size:12px;
+}
+
+.status-buttons button {
+  background:#eee;
+}
 
 .active {
-  background:#111 !important;
-  color:#fff;
+  background:var(--primary) !important;
+  color:white;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Admin+ Dashboard</h2>
+<div class="header">MagMoment Admin</div>
 
 <div class="top">
   <input id="search" placeholder="Search name / phone / order id">
@@ -100,7 +171,7 @@ button {
   <button class="primary" onclick="load()">Refresh</button>
 </div>
 
-<div id="orders"></div>
+<div class="container" id="orders"></div>
 
 <script>
 const API = "https://phxhhzwuamdoclklvccb.supabase.co/functions/v1";
@@ -118,12 +189,8 @@ async function load() {
 
   let orders = await res.json();
 
-  // ✅ Filter
-  if (filter) {
-    orders = orders.filter(o => o.status === filter);
-  }
+  if (filter) orders = orders.filter(o => o.status === filter);
 
-  // ✅ Search
   if (search) {
     orders = orders.filter(o =>
       o.customer_name?.toLowerCase().includes(search) ||
@@ -141,77 +208,49 @@ function render(list) {
   box.innerHTML = list.map(o => `
     <div class="card">
 
-      <!-- HEADER -->
-      <div class="header">
+      <div class="card-top">
         <div>
-          <b>Order: ${o.razorpay_order_id || o.id}</b>
+          <div><b>${o.customer_name}</b></div>
+          <div class="order-id">${o.razorpay_order_id}</div>
           <div class="meta">${new Date(o.created_at).toLocaleString()}</div>
         </div>
         <div class="status">${o.status}</div>
       </div>
 
-      <!-- CUSTOMER -->
       <div class="section">
-        <b>${o.customer_name}</b><br>
-        ${o.phone}<br>
-        <div class="meta">${o.address}</div>
+        ${o.phone} <br>
+        <span class="meta">${o.address}</span>
       </div>
 
-      <!-- TOTAL -->
       <div class="section">
         <b>Total: ₹${o.grand_total}</b>
       </div>
 
-      <!-- ACTIONS -->
-      <div class="section">
-        <button class="small" onclick="copyOrder('${o.razorpay_order_id}')">
-          Copy Order ID
-        </button>
-
-        <button class="small" onclick='downloadAll(${JSON.stringify(o.order_items)})'>
-          Download All Images
-        </button>
-
-        <a href="https://wa.me/91${o.phone}" target="_blank">
-          <button class="small">WhatsApp</button>
-        </a>
-      </div>
-
-      <!-- ITEMS -->
       <div class="section items">
         ${o.order_items.map(i => {
           const img = i.photos?.[0] || "";
           return `
             <div class="item">
-
-              ${img ? `<a href="${img}" target="_blank"><img src="${img}"></a>` : ""}
-
-              <div style="font-size:12px;margin-top:6px;">
-                ${i.bundle_id}
-              </div>
-
-              <div style="font-size:12px;">
-                ₹${i.price}
-              </div>
-
-              ${img ? `
-                <button class="small" onclick="downloadImage('${img}')">
-                  ⬇ Download
-                </button>
-              ` : ""}
-
+              ${img ? `<img src="${img}" onclick="window.open('${img}')">` : ""}
+              <div style="font-size:11px;">${i.bundle_id}</div>
+              <div style="font-size:11px;">₹${i.price}</div>
             </div>
           `;
         }).join('')}
       </div>
 
-      <!-- STATUS -->
-      <div class="section">
+      <div class="actions">
+        <button class="small" onclick="copyOrder('${o.razorpay_order_id}')">Copy ID</button>
+        <button class="small" onclick='downloadAll(${JSON.stringify(o.order_items)})'>Download</button>
+        <a href="https://wa.me/91${o.phone}" target="_blank">
+          <button class="small">WhatsApp</button>
+        </a>
+      </div>
+
+      <div class="actions status-buttons">
         ${statuses.map(s => `
           <button class="${o.status===s?'active':''}"
-            onclick="update('${o.id}','${s}')">
-            ${s}
-          </button>
+            onclick="update('${o.id}','${s}')">${s}</button>
         `).join('')}
       </div>
 
@@ -232,27 +271,22 @@ async function update(id, status) {
   load();
 }
 
-// COPY ORDER ID
 function copyOrder(id) {
   navigator.clipboard.writeText(id);
-  alert("Order ID copied");
+  alert("Copied");
 }
 
-// DOWNLOAD SINGLE IMAGE
-async function downloadImage(url) {
-  const res = await fetch(url);
-  const blob = await res.blob();
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "image.jpg";
-  link.click();
-}
-
-// DOWNLOAD ALL IMAGES
 async function downloadAll(items) {
   for (const i of items) {
     const img = i.photos?.[0];
-    if (img) await downloadImage(img);
+    if (img) {
+      const res = await fetch(img);
+      const blob = await res.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "image.jpg";
+      link.click();
+    }
   }
 }
 
