@@ -1,182 +1,228 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>MagMoment Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin+</title>
 
   <style>
-    body { font-family: Arial; background:#faf9f6; padding:20px; }
-    .hidden { display:none; }
+    body { font-family: Arial; padding:20px; background:#f5f5f5; }
 
-    input {
+    .top { display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; }
+
+    input, select {
       padding:10px;
       border:1px solid #ddd;
-      border-radius:8px;
-      margin:5px;
-    }
-
-    button {
-      padding:10px 14px;
-      border:none;
-      border-radius:8px;
-      cursor:pointer;
-      font-weight:600;
-      background:#111;
-      color:#fff;
+      border-radius:6px;
     }
 
     .card {
       background:#fff;
+      padding:16px;
+      border-radius:10px;
+      margin-bottom:12px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .row {
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    .items {
+      margin-top:10px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .item {
       border:1px solid #eee;
-      border-radius:12px;
-      padding:20px;
-      margin-bottom:15px;
+      padding:8px;
+      border-radius:8px;
+      width:120px;
+      background:#fafafa;
     }
 
-    .actions button {
+    img {
+      width:100%;
+      border-radius:6px;
+      cursor:pointer;
+      transition:0.2s;
+    }
+
+    img:hover {
+      transform:scale(1.05);
+    }
+
+    button {
+      padding:6px 10px;
+      margin-right:6px;
+      margin-top:4px;
+      cursor:pointer;
+      border:none;
+      border-radius:6px;
+    }
+
+    .status { font-weight:bold; }
+
+    .small-btn {
       background:#eee;
-      color:#000;
-      margin:3px;
+      font-size:12px;
     }
 
-    .active {
-      background:#111 !important;
-      color:#fff !important;
-    }
+    .primary { background:#111; color:#fff; }
+
   </style>
 </head>
 
 <body>
 
-<!-- 🔐 LOGIN -->
-<div id="login">
-  <h2>Admin Access</h2>
-  <input id="adminKeyInput" placeholder="Enter Admin Key" />
-  <button onclick="login()">Enter</button>
+<h2>Admin+ Dashboard</h2>
+
+<div class="top">
+  <input id="search" placeholder="Search name / phone / order id" />
+  
+  <select id="filter">
+    <option value="">All</option>
+    <option>PAID</option>
+    <option>PENDING</option>
+    <option>FAILED</option>
+    <option>SHIPPED</option>
+    <option>DELIVERED</option>
+  </select>
+
+  <button class="primary" onclick="load()">Refresh</button>
 </div>
 
-<!-- 📦 ADMIN PANEL -->
-<div id="panel" class="hidden">
-
-  <h1>Orders</h1>
-
-  <input id="search" placeholder="Search Order ID / Phone">
-  <button onclick="loadOrders()">Search</button>
-
-  <div id="orders"></div>
-
-</div>
+<div id="orders"></div>
 
 <script>
 const API = "https://phxhhzwuamdoclklvccb.supabase.co/functions/v1";
+const ADMIN_KEY = "Sathis@2026"; // 🔴 keep secret
 
-let ADMIN_KEY = localStorage.getItem("ADMIN_KEY") || "";
+async function load() {
+  const q = document.getElementById("search").value;
+  const f = document.getElementById("filter").value;
 
-const statuses = [
-  "Order Placed",
-  "Payment Confirmed",
-  "In the Studio",
-  "On its way to you",
-  "Delivered"
-];
-
-// 🔐 LOGIN FUNCTION
-function login() {
-  const key = document.getElementById("adminKeyInput").value.trim();
-
-  if (!key) return alert("Enter key");
-
-  ADMIN_KEY = key;
-  localStorage.setItem("ADMIN_KEY", key);
-
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("panel").classList.remove("hidden");
-
-  loadOrders();
-}
-
-// 🔄 AUTO LOGIN IF STORED
-if (ADMIN_KEY) {
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("panel").classList.remove("hidden");
-  loadOrders();
-}
-
-// 📦 LOAD ORDERS
-async function loadOrders() {
-  const search = document.getElementById("search").value.trim();
-
-  const res = await fetch(`${API}/get-orders`, {
+  const res = await fetch(`${API}/admin-orders?q=${encodeURIComponent(q)}&status=${f}`, {
     headers: { "x-admin-key": ADMIN_KEY }
   });
 
-  if (res.status === 401) {
-    alert("Invalid Admin Key");
-    localStorage.removeItem("ADMIN_KEY");
-    location.reload();
-    return;
-  }
+  const data = await res.json();
+  render(data);
+}
 
-  let orders = await res.json();
+function render(list) {
+  const box = document.getElementById("orders");
 
-  if (search) {
-    orders = orders.filter(o =>
-      o.razorpay_order_id?.includes(search) ||
-      o.customer_phone?.includes(search)
-    );
-  }
-
-  document.getElementById("orders").innerHTML = orders.map(o => `
+  box.innerHTML = list.map(o => `
     <div class="card">
 
-      <b>${o.status}</b><br>
-      ${o.razorpay_order_id}<br>
-      ${o.customer_name} • ${o.customer_phone}<br>
-      ₹${o.total}<br>
-
-      <div style="font-size:12px;color:#888;">
-        ${new Date(o.created_at).toLocaleString()}
+      <div class="row">
+        <div>
+          <b>${o.customer_name}</b><br>
+          ${o.phone}
+        </div>
+        <div class="status">${o.status}</div>
       </div>
 
-      <div style="margin:10px 0;">
-        ${o.order_items?.map(i => `
-          <div>${i.name} • ${i.finish}</div>
-        `).join("")}
+      <div class="row" style="margin-top:6px;">
+        <div>₹${o.grand_total}</div>
+        <div>${new Date(o.created_at).toLocaleString()}</div>
       </div>
 
-      <div class="actions">
-        ${statuses.map(s => `
-          <button class="${o.status === s ? 'active' : ''}"
-            onclick="updateStatus('${o.id}','${s}')">
-            ${s}
-          </button>
-        `).join("")}
+      <div style="margin-top:6px;">${o.address}</div>
+
+      <div style="margin-top:10px;">
+        <button class="small-btn" onclick='downloadAll(${JSON.stringify(o.order_items)})'>
+          ⬇ Download All
+        </button>
+      </div>
+
+      <div class="items">
+        ${o.order_items.map(i => {
+          const img = i.photos?.[0] || "";
+
+          return `
+            <div class="item">
+
+              ${img ? `
+                <a href="${img}" target="_blank">
+                  <img src="${img}">
+                </a>
+
+                <button class="small-btn" onclick="downloadImage('${img}')">
+                  ⬇ Download
+                </button>
+              ` : `
+                <div style="font-size:12px;color:#aaa;">No Image</div>
+              `}
+
+              <div>${i.bundle_id}</div>
+              <div>₹${i.price}</div>
+
+            </div>
+          `;
+        }).join('')}
       </div>
 
       <div style="margin-top:10px;">
-        <a href="https://wa.me/91${o.customer_phone}" target="_blank">
-          WhatsApp
-        </a>
+        <button onclick="update('${o.id}','SHIPPED')">Ship</button>
+        <button onclick="update('${o.id}','DELIVERED')">Deliver</button>
       </div>
 
     </div>
-  `).join("");
+  `).join('');
 }
 
-// 🔄 UPDATE STATUS
-async function updateStatus(orderId, status) {
-  await fetch(`${API}/update-status`, {
+async function update(id, status) {
+  await fetch(`${API}/admin-update`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type":"application/json",
       "x-admin-key": ADMIN_KEY
     },
-    body: JSON.stringify({ orderId, status })
+    body: JSON.stringify({ id, status })
   });
 
-  loadOrders();
+  load();
 }
+
+// ✅ DOWNLOAD SINGLE IMAGE
+async function downloadImage(url) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+
+    const blobUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = "image.jpg";
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(blobUrl);
+
+  } catch {
+    alert("Download failed");
+  }
+}
+
+// ✅ DOWNLOAD ALL IMAGES
+async function downloadAll(items) {
+  for (const i of items) {
+    const img = i.photos?.[0];
+    if (img) {
+      await downloadImage(img);
+    }
+  }
+}
+
+load();
 </script>
 
 </body>
