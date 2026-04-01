@@ -65,7 +65,7 @@
 
         .cart-trigger { position: relative; cursor: pointer; padding: 10px 18px; background: var(--bg-linen); border-radius: 50px; transition: var(--transition); display: flex; align-items: center; gap: 10px; border: 1px solid transparent; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
         .cart-trigger:hover { border-color: var(--accent); transform: translateY(-2px); }
-        .cart-count { background: var(--accent); color: #fff; font-size: 0.65rem; font-weight: 800; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .cart-count { background: var(--accent); color: #fff; font-size: 0.65rem; font-weight: 800; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
         /* Hero */
         .hero { padding: 120px 0 100px; text-align: center; background: var(--bg-linen); border-bottom: 1px solid var(--border); }
@@ -300,7 +300,7 @@
             <h2 class="serif" style="font-size: 3rem; margin-bottom: 15px;">Order Tracking</h2>
             <p style="color:var(--text-muted); margin-bottom:40px;">Check the artisanal progress of your custom memories.</p>
             <div style="display:grid; gap:15px; text-align: left;">
-                <input type="tel" id="t-phone" style="width:100%; padding:20px; border:1.5px solid var(--border); border-radius:15px;" placeholder="Registered Phone">
+                <input type="tel" id="t-phone" style="width:100%; padding:20px; border:1.5px solid var(--border); border-radius:15px;" placeholder="Registered Phone" oninput="this.value = this.value.replace(/[^0-9+]/g, '')">
                 <input type="text" id="t-id" style="width:100%; padding:20px; border:1.5px solid var(--border); border-radius:15px;" placeholder="Order ID (order_...)">
                 <button class="btn btn-primary" id="track-btn" onclick="App.trackOrder()">Lookup Status</button>
             </div>
@@ -335,13 +335,13 @@
                     </div>
                     <input type="text" id="c-name" style="width:100%; padding:18px; border:1px solid var(--border); border-radius:12px;" placeholder="Full Name">
                     <input type="email" id="c-email" style="width:100%; padding:18px; border:1px solid var(--border); border-radius:12px;" placeholder="Email Address">
-                    <input type="tel" id="c-phone" style="width:100%; padding:18px; border:1px solid var(--border); border-radius:12px;" placeholder="10-Digit Mobile">
+                    <input type="tel" id="c-phone" style="width:100%; padding:18px; border:1px solid var(--border); border-radius:12px;" placeholder="10-Digit Mobile" oninput="this.value = this.value.replace(/[^0-9+]/g, '')">
                     <input type="text" id="c-addr" style="width:100%; padding:18px; border:1px solid var(--border); border-radius:12px;" placeholder="Full Address with Landmark">
                     <div style="display:flex; gap:15px;"><input type="text" id="c-city" style="flex:1; padding:18px; border:1px solid var(--border); border-radius:12px;" placeholder="City"><input type="number" id="c-pin" style="flex:1; padding:18px; border:1px solid var(--border); border-radius:12px;" placeholder="Pincode"></div>
                 </div>
             </div>
             <div style="padding:40px; border-top:1px solid var(--border);">
-                <!-- Polished Dynamic Checkout Button -->
+                <!-- Dynamic Checkout Button -->
                 <button class="btn btn-primary" id="pay-btn" onclick="App.state.pendingOrder ? App.retryPayment() : App.checkout()">Confirm & Pay Securely</button>
             </div>
         </div>
@@ -660,7 +660,11 @@
                 if (cartCountEl) cartCountEl.innerText = this.state.cart.length;
 
                 if (!this.state.cart.length) {
-                    if (box) box.innerHTML = `<div style="text-align:center; padding:60px 0;"><p style="color:#aaa;">Your bag is currently empty.</p></div>`;
+                    if (box) box.innerHTML = `
+                        <div style="text-align:center; padding:80px 20px;">
+                            <p style="color:#aaa; margin-bottom:30px;">Your bag is currently empty.</p>
+                            <button class="btn btn-outline" style="width:auto; padding:12px 30px; font-size:0.7rem;" onclick="App.toggleCart(); App.scrollToCatalog();">Start Shopping</button>
+                        </div>`;
                     const inject = document.getElementById('cart-price-inject');
                     if(inject) inject.innerHTML = '';
                     const nBtn = document.getElementById('next-to-ship');
@@ -701,7 +705,7 @@
 
             async checkout() {
                 if (this.state.cart.length === 0) return this.toast("Your bag is empty.");
-                if (this.state.pendingOrder) return; // Prevent duplicate handshake
+                if (this.state.pendingOrder) return; // Prevent duplicate creation handshake
 
                 const c = { 
                     name: document.getElementById('c-name').value.trim(), 
@@ -712,8 +716,13 @@
                     pin: document.getElementById('c-pin').value.trim() 
                 };
 
+                // Normalize phone for internal validation matching Razorpay behavior
+                let normalizedPhone = c.phone.replace(/\D/g, '');
+                if (normalizedPhone.length === 12 && normalizedPhone.startsWith('91')) normalizedPhone = normalizedPhone.slice(2);
+                if (normalizedPhone.length === 11 && normalizedPhone.startsWith('0')) normalizedPhone = normalizedPhone.slice(1);
+
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!c.name || !emailRegex.test(c.email) || !/^[6-9]\d{9}$/.test(c.phone) || !c.address || c.pin.length !== 6) 
+                if (!c.name || !emailRegex.test(c.email) || !/^[6-9]\d{9}$/.test(normalizedPhone) || !c.address || c.pin.length !== 6) 
                     return this.toast("Verify all delivery details.");
 
                 const btn = document.getElementById('pay-btn'); 
@@ -726,14 +735,14 @@
                     const res = await fetch(`${API_BASE}/create-order`, { 
                         method: 'POST', 
                         headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ items: this.state.cart, customer: c }) 
+                        body: JSON.stringify({ items: this.state.cart, customer: { ...c, phone: normalizedPhone } }) 
                     });
 
                     if (!res.ok) throw new Error("Order creation failed");
                     const order = await res.json();
 
                     this.state.pendingOrder = order;
-                    this.state.lastCustomer = c;
+                    this.state.lastCustomer = { ...c, phone: normalizedPhone };
 
                     const cfg = await (await fetch(`${API_BASE}/get-config`)).json();
                     this.openRazorpay(order, cfg, btn);
@@ -761,12 +770,7 @@
                             const verifyRes = await fetch(`${API_BASE}/verify-payment`, {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
-                               body: JSON.stringify({
-  ...r,
-  customer: this.state.lastCustomer,
-  items: this.state.cart,
-  amount: order.amount
-})
+                                body: JSON.stringify(r)
                             });
                             if (!verifyRes.ok) throw new Error("Verification failed");
                             this.finalizeOrder(r.razorpay_order_id, this.state.lastCustomer);
@@ -811,13 +815,14 @@
                 const sub = this.state.cart.reduce((s, i) => s + Number(i.price), 0);
                 const ship = sub >= 999 ? 0 : 79;
                 const total = sub + ship;
+                const orderItems = [...this.state.cart];
 
-                // Render Detailed Receipt for Success Page & PDF using hardcoded codes for html2canvas reliability
+                // Render Detailed Receipt for Success Page & PDF (using hardcoded colors for PDF engine compatibility)
                 document.getElementById('receipt-mount').innerHTML = `
-                    <div class="receipt-card" id="printable-receipt" style="background:#ffffff; color:#1a1a1a; padding:40px; border:1px solid #eeeeee;">
+                    <div class="receipt-card" id="printable-receipt" style="background:#ffffff; color:#1a1a1a; padding:40px; border:1px solid #eeeeee; font-family: sans-serif;">
                         <div style="border-bottom: 2px solid #faf9f6; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <h3 style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 24px; color: #1a1a1a; margin: 0;">MagMoment™</h3>
+                                <h3 style="font-family: serif; font-style: italic; font-size: 24px; color: #1a1a1a; margin: 0;">MagMoment™</h3>
                                 <p style="font-size: 11px; color: #666666; text-transform: uppercase; letter-spacing: 1px; margin: 5px 0 0 0;">Studio Receipt</p>
                             </div>
                             <div style="text-align: right;">
@@ -834,7 +839,7 @@
                         </div>
 
                         <div style="margin-bottom: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Items:</div>
-                        ${this.state.cart.map(item => `
+                        ${orderItems.map(item => `
                             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f9f9f9;">
                                 <div>
                                     <p style="font-weight: 600; margin: 0;">${item.name}</p>
@@ -888,6 +893,60 @@
                 this.navigate('success');
             },
 
+            async trackOrder() {
+                let p = document.getElementById('t-phone').value.trim();
+                const id = document.getElementById('t-id').value.trim();
+                const btn = document.getElementById('track-btn');
+                const el = document.getElementById('t-result');
+
+                if (!p || !id) return this.toast("Enter phone and Order ID");
+
+                // Normalize phone input (remove non-digits and leading country codes)
+                p = p.replace(/\D/g, '');
+                if (p.length === 12 && p.startsWith('91')) {
+                    p = p.slice(2);
+                } else if (p.length === 11 && p.startsWith('0')) {
+                    p = p.slice(1);
+                }
+                
+                btn.disabled = true;
+                btn.innerText = "Looking up...";
+
+                const statusEmoji = {
+                    "Order Placed": "📝",
+                    "Payment Confirmed": "✅",
+                    "In the Studio": "⚙️",
+                    "On its way to you": "🚚",
+                    "Delivered": "📦"
+                };
+
+                try {
+                    const res = await fetch(`${API_BASE}/track-order?phone=${p}&order_id=${id}`);
+                    const d = await res.json();
+                    el.classList.remove('hidden');
+
+                    if (!res.ok || d.error) {
+                        el.innerHTML = `<p style="color:red; font-weight:600;">Order not found. Please check details and try again.</p>`;
+                        return;
+                    }
+
+                    el.innerHTML = `
+                        <h3 class="serif">${statusEmoji[d.status] || "✨"} ${d.status}</h3>
+                        <p style="margin-top:10px;">Hi ${d.name}, your memories are currently in the <strong>${d.status}</strong> stage.</p>
+                        <p style="font-size:12px; color:#888; margin-top:15px;">Order ID: ${id}</p>
+                        <button class="btn btn-outline" style="margin-top:25px; width:auto; padding: 12px 30px; font-size: 0.7rem;" onclick="App.navigate('home')">
+                            Create Another Memory
+                        </button>
+                    `;
+                } catch (e) {
+                    el.classList.remove('hidden');
+                    el.innerHTML = `<p style="color:red; font-weight:600;">System busy. Please try again later.</p>`;
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = "Lookup Status";
+                }
+            },
+
             downloadPDF() {
                 const element = document.getElementById('printable-receipt');
                 if (!element) return this.toast("Receipt not found.");
@@ -897,10 +956,11 @@
                     filename: 'MagMoment-Order-Receipt.pdf',
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { 
-                        scale: 2, 
+                        scale: 3, 
                         useCORS: true, 
                         letterRendering: true,
-                        scrollY: 0
+                        scrollY: 0,
+                        backgroundColor: '#ffffff'
                     },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
@@ -909,19 +969,6 @@
                     console.error('PDF generation error:', err);
                     this.toast("Download failed. Try again.");
                 });
-            },
-
-            async trackOrder() {
-                const p = document.getElementById('t-phone').value.trim(); const id = document.getElementById('t-id').value.trim();
-                const btn = document.getElementById('track-btn');
-                if (btn) { btn.disabled = true; btn.innerText = "Looking up..."; }
-                try {
-                    const res = await fetch(`${API_BASE}/track-order?phone=${p}&order_id=${id}`);
-                    if (!res.ok) throw new Error();
-                    const d = await res.json(); const el = document.getElementById('t-result'); el.classList.remove('hidden');
-                    el.innerHTML = `<h3 class="serif">Status: ${d.status}</h3><p>Hi ${d.name}, our Hyderabad studio is handcrafting your memories.</p>`;
-                } catch (e) { this.toast("Order not found."); }
-                finally { if (btn) { btn.disabled = false; btn.innerText = "Lookup Status"; } }
             },
 
             showPolicy(type) { document.getElementById('policy-mount').innerHTML = this.policies[type]; this.navigate('policy'); },
