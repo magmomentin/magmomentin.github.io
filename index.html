@@ -761,7 +761,12 @@
                             const verifyRes = await fetch(`${API_BASE}/verify-payment`, {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify(r)
+                               body: JSON.stringify({
+  ...r,
+  customer: this.state.lastCustomer,
+  items: this.state.cart,
+  amount: order.amount
+})
                             });
                             if (!verifyRes.ok) throw new Error("Verification failed");
                             this.finalizeOrder(r.razorpay_order_id, this.state.lastCustomer);
