@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MagMoment Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body { font-family: Arial; background:#faf9f6; padding:20px; }
+    .hidden { display:none; }
+
+    input {
+      padding:10px;
+      border:1px solid #ddd;
+      border-radius:8px;
+      margin:5px;
+    }
+
+    button {
+      padding:10px 14px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      background:#111;
+      color:#fff;
+    }
+
+    .card {
+      background:#fff;
+      border:1px solid #eee;
+      border-radius:12px;
+      padding:20px;
+      margin-bottom:15px;
+    }
+
+    .actions button {
+      background:#eee;
+      color:#000;
+      margin:3px;
+    }
+
+    .active {
+      background:#111 !important;
+      color:#fff !important;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- 🔐 LOGIN -->
+<div id="login">
+  <h2>Admin Access</h2>
+  <input id="adminKeyInput" placeholder="Enter Admin Key" />
+  <button onclick="login()">Enter</button>
+</div>
+
+<!-- 📦 ADMIN PANEL -->
+<div id="panel" class="hidden">
+
+  <h1>Orders</h1>
+
+  <input id="search" placeholder="Search Order ID / Phone">
+  <button onclick="loadOrders()">Search</button>
+
+  <div id="orders"></div>
+
+</div>
+
+<script>
+const API = "https://phxhhzwuamdoclklvccb.supabase.co/functions/v1";
+
+let ADMIN_KEY = localStorage.getItem("ADMIN_KEY") || "";
+
+const statuses = [
+  "Order Placed",
+  "Payment Confirmed",
+  "In the Studio",
+  "On its way to you",
+  "Delivered"
+];
+
+// 🔐 LOGIN FUNCTION
+function login() {
+  const key = document.getElementById("adminKeyInput").value.trim();
+
+  if (!key) return alert("Enter key");
+
+  ADMIN_KEY = key;
+  localStorage.setItem("ADMIN_KEY", key);
+
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("panel").classList.remove("hidden");
+
+  loadOrders();
+}
+
+// 🔄 AUTO LOGIN IF STORED
+if (ADMIN_KEY) {
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("panel").classList.remove("hidden");
+  loadOrders();
+}
+
+// 📦 LOAD ORDERS
+async function loadOrders() {
+  const search = document.getElementById("search").value.trim();
+
+  const res = await fetch(`${API}/get-orders`, {
+    headers: { "x-admin-key": ADMIN_KEY }
+  });
+
+  if (res.status === 401) {
+    alert("Invalid Admin Key");
+    localStorage.removeItem("ADMIN_KEY");
+    location.reload();
+    return;
+  }
+
+  let orders = await res.json();
+
+  if (search) {
+    orders = orders.filter(o =>
+      o.razorpay_order_id?.includes(search) ||
+      o.customer_phone?.includes(search)
+    );
+  }
+
+  document.getElementById("orders").innerHTML = orders.map(o => `
+    <div class="card">
+
+      <b>${o.status}</b><br>
+      ${o.razorpay_order_id}<br>
+      ${o.customer_name} • ${o.customer_phone}<br>
+      ₹${o.total}<br>
+
+      <div style="font-size:12px;color:#888;">
+        ${new Date(o.created_at).toLocaleString()}
+      </div>
+
+      <div style="margin:10px 0;">
+        ${o.order_items?.map(i => `
+          <div>${i.name} • ${i.finish}</div>
+        `).join("")}
+      </div>
+
+      <div class="actions">
+        ${statuses.map(s => `
+          <button class="${o.status === s ? 'active' : ''}"
+            onclick="updateStatus('${o.id}','${s}')">
+            ${s}
+          </button>
+        `).join("")}
+      </div>
+
+      <div style="margin-top:10px;">
+        <a href="https://wa.me/91${o.customer_phone}" target="_blank">
+          WhatsApp
+        </a>
+      </div>
+
+    </div>
+  `).join("");
+}
+
+// 🔄 UPDATE STATUS
+async function updateStatus(orderId, status) {
+  await fetch(`${API}/update-status`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-key": ADMIN_KEY
+    },
+    body: JSON.stringify({ orderId, status })
+  });
+
+  loadOrders();
+}
+</script>
+
+</body>
+</html>
