@@ -25,14 +25,12 @@ body {
   color: var(--text);
 }
 
-/* HEADER */
 .header {
   padding: 20px;
   font-size: 22px;
   font-weight: 600;
 }
 
-/* TOP BAR */
 .top {
   display:flex;
   gap:10px;
@@ -60,26 +58,18 @@ button {
   color:white;
 }
 
-/* GRID */
 .container {
   padding: 0 20px 30px;
 }
 
-/* CARD */
 .card {
   background: var(--card);
   border-radius:16px;
   padding:18px;
   margin-bottom:14px;
   border:1px solid var(--border);
-  transition:0.2s;
 }
 
-.card:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,0.05);
-}
-
-/* HEADER ROW */
 .card-top {
   display:flex;
   justify-content:space-between;
@@ -99,7 +89,6 @@ button {
   font-weight:600;
 }
 
-/* DETAILS */
 .meta {
   font-size:13px;
   color:var(--muted);
@@ -110,7 +99,6 @@ button {
   margin-top:12px;
 }
 
-/* ITEMS */
 .items {
   display:flex;
   gap:10px;
@@ -118,7 +106,7 @@ button {
 }
 
 .item {
-  width:110px;
+  width:120px;
   background:#fafafa;
   border:1px solid var(--border);
   border-radius:10px;
@@ -131,21 +119,9 @@ button {
   border-radius:8px;
 }
 
-/* ACTIONS */
-.actions {
-  display:flex;
-  gap:6px;
-  flex-wrap:wrap;
-  margin-top:10px;
-}
-
 .small {
   background:#eee;
   font-size:12px;
-}
-
-.status-buttons button {
-  background:#eee;
 }
 
 .active {
@@ -160,7 +136,7 @@ button {
 <div class="header">MagMoment Admin</div>
 
 <div class="top">
-  <input id="search" placeholder="Search name / phone / order id">
+  <input id="search" placeholder="Search">
   <select id="filter">
     <option value="">All</option>
     <option>PAID</option>
@@ -180,14 +156,14 @@ const ADMIN_KEY = "Sathis@2026";
 const statuses = ["PAID","PROCESSING","SHIPPED","DELIVERED"];
 
 async function load() {
-  const search = document.getElementById("search").value.toLowerCase();
-  const filter = document.getElementById("filter").value;
-
   const res = await fetch(`${API}/admin-orders`, {
     headers: { "x-admin-key": ADMIN_KEY }
   });
 
   let orders = await res.json();
+
+  const search = document.getElementById("search").value.toLowerCase();
+  const filter = document.getElementById("filter").value;
 
   if (filter) orders = orders.filter(o => o.status === filter);
 
@@ -218,76 +194,34 @@ function render(list) {
       </div>
 
       <div class="section">
-        ${o.phone} <br>
+        ${o.phone}<br>
         <span class="meta">${o.address}</span>
       </div>
 
       <div class="section">
-        <b>Total: ₹${o.grand_total}</b>
+        <b>Total: ₹${o.grand_total}</b><br>
+        <span class="meta">
+          Items: ${o.order_items.reduce((s,i)=>s+(i.quantity||1),0)}
+        </span>
       </div>
 
       <div class="section items">
         ${o.order_items.map(i => {
           const img = i.photos?.[0] || "";
+          const qty = i.quantity || 1;
           return `
             <div class="item">
               ${img ? `<img src="${img}" onclick="window.open('${img}')">` : ""}
               <div style="font-size:11px;">${i.bundle_id}</div>
-              <div style="font-size:11px;">₹${i.price}</div>
+              <div style="font-size:11px;">₹${i.price} × ${qty}</div>
+              <div style="font-size:11px;font-weight:600;">₹${i.price * qty}</div>
             </div>
           `;
         }).join('')}
       </div>
 
-      <div class="actions">
-        <button class="small" onclick="copyOrder('${o.razorpay_order_id}')">Copy ID</button>
-        <button class="small" onclick='downloadAll(${JSON.stringify(o.order_items)})'>Download</button>
-        <a href="https://wa.me/91${o.phone}" target="_blank">
-          <button class="small">WhatsApp</button>
-        </a>
-      </div>
-
-      <div class="actions status-buttons">
-        ${statuses.map(s => `
-          <button class="${o.status===s?'active':''}"
-            onclick="update('${o.id}','${s}')">${s}</button>
-        `).join('')}
-      </div>
-
     </div>
   `).join('');
-}
-
-async function update(id, status) {
-  await fetch(`${API}/admin-update`, {
-    method: "POST",
-    headers: {
-      "Content-Type":"application/json",
-      "x-admin-key": ADMIN_KEY
-    },
-    body: JSON.stringify({ id, status })
-  });
-
-  load();
-}
-
-function copyOrder(id) {
-  navigator.clipboard.writeText(id);
-  alert("Copied");
-}
-
-async function downloadAll(items) {
-  for (const i of items) {
-    const img = i.photos?.[0];
-    if (img) {
-      const res = await fetch(img);
-      const blob = await res.blob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "image.jpg";
-      link.click();
-    }
-  }
 }
 
 load();
