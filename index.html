@@ -122,6 +122,13 @@
         .opt-item small { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
         .opt-item.active::after { content: '✓'; position: absolute; right: 20px; top: 20px; color: var(--accent); font-weight: 900; font-size: 1.2rem; }
 
+        /* Quantity Control */
+        .qty-control { display: flex; align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 100px; padding: 5px; width: fit-content; margin-bottom: 45px; box-shadow: var(--shadow-soft); }
+        .qty-btn { width: 45px; height: 45px; border: none; background: transparent; color: var(--primary); font-size: 1.2rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: var(--transition); }
+        .qty-btn:hover:not(:disabled) { background: var(--bg-linen); color: var(--accent); }
+        .qty-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+        .qty-val { width: 50px; text-align: center; font-family: 'Inter'; font-weight: 800; font-size: 1rem; color: var(--primary); }
+
         .upload-area { border: 2.5px dashed var(--border); padding: 60px 30px; border-radius: 16px; text-align: center; cursor: pointer; transition: var(--transition); background: var(--bg-linen); margin-bottom: 50px; }
         .upload-area:hover { border-color: var(--accent); background: #fff; }
         .upload-area.loading { opacity: 0.5; cursor: wait; }
@@ -440,7 +447,7 @@
                 productMap: {},
                 config: {},
                 cart: JSON.parse(localStorage.getItem('magmoment_v5') || '[]'),
-                current: JSON.parse(localStorage.getItem('magmoment_draft') || '{"p":null,"b":null,"finish":"Glossy","photos":[]}'),
+                current: JSON.parse(localStorage.getItem('magmoment_draft') || '{"p":null,"b":null,"qty":1,"finish":"Glossy","photos":[]}'),
                 activeCategory: 'all',
                 editCartId: null,
                 pendingOrder: null,
@@ -505,9 +512,11 @@
                 const existingDraft = JSON.parse(localStorage.getItem('magmoment_draft'));
                 if (existingDraft && existingDraft.p && existingDraft.p.id === id) {
                     this.state.current = existingDraft;
+                    // Ensure qty exists in older drafts
+                    if (!this.state.current.qty) this.state.current.qty = 1;
                 } else {
                     this.state.editCartId = null; 
-                    this.state.current = { p, b: { ...p.bundles[0] }, finish: 'Glossy', photos: [] };
+                    this.state.current = { p, b: { ...p.bundles[0] }, qty: 1, finish: 'Glossy', photos: [] };
                 }
                 this.syncDraft(); this.renderDetail(); this.navigate('detail');
             },
@@ -517,7 +526,6 @@
                 if (!p) return;
                 const imgs = p.images?.length ? p.images : [p.img];
                 
-                // Studio Preview Logic - Injected into two places for responsive switching
                 const studioPreviewHTML = (id) => `
                     <div class="studio-preview-card ${id}">
                         <span class="step-tag">Studio Simulation</span>
@@ -542,18 +550,26 @@
                             <span class="step-tag">01 — Pack Format</span>
                             <span class="config-label">Select your quantity pack</span>
                             <div class="opt-grid" id="bundle-inject"></div>
+
+                            <span class="step-tag">02 — Studio Quantity</span>
+                            <span class="config-label">How many sets do you need?</span>
+                            <div class="qty-control">
+                                <button class="qty-btn" id="qty-minus" onclick="App.updateQty(-1)" ${this.state.current.qty === 1 ? 'disabled' : ''}>−</button>
+                                <span class="qty-val" id="qty-val-display">${this.state.current.qty}</span>
+                                <button class="qty-btn" onclick="App.updateQty(1)">+</button>
+                            </div>
                             
-                            <span class="step-tag">02 — Aesthetic Finish</span>
+                            <span class="step-tag">03 — Aesthetic Finish</span>
                             <span class="config-label">Pick your surface texture</span>
                             <div class="opt-grid">
                                 <div class="opt-item ${this.state.current.finish === 'Glossy' ? 'active' : ''}" onclick="App.setFinish('Glossy', this)"><b>Crystal Glossy</b><small>High Shine</small></div>
                                 <div class="opt-item ${this.state.current.finish === 'Matte' ? 'active' : ''}" onclick="App.setFinish('Matte', this)"><b>Silk Matte</b><small>Satin Touch</small></div>
                             </div>
 
-                            <span class="step-tag">03 — Studio Sync</span>
+                            <span class="step-tag">04 — Studio Sync</span>
                             <span class="config-label">Hand-pick your captures</span>
                             <div class="upload-area" id="up-area" onclick="App.upload()">
-                                <span id="up-label" style="font-weight:900; letter-spacing:1px; text-transform:uppercase;">Upload ${this.state.current.b.count} Photos</span>
+                                <span id="up-label" style="font-weight:900; letter-spacing:1px; text-transform:uppercase;">Upload ${this.state.current.b.count * this.state.current.qty} Photos</span>
                                 <div id="slot-mount" style="margin-top:20px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center;"></div>
                             </div>
 
@@ -562,7 +578,7 @@
                             <div class="order-summary-panel">
                                 <div class="summary-header">
                                     <span class="summary-label">Total Investment</span>
-                                    <span class="summary-price" id="p-price-val">₹${this.state.current.b.price}</span>
+                                    <span class="summary-price" id="p-price-val">₹${this.state.current.b.price * this.state.current.qty}</span>
                                 </div>
                                 <button class="btn btn-gold" id="add-btn" disabled onclick="App.addToBag()">Commit to Bag</button>
                             </div>
@@ -582,12 +598,42 @@
 
             setBundle(idx) {
                 this.state.current.b = { ...this.state.current.p.bundles[idx] };
-                if (this.state.current.photos.length > this.state.current.b.count) {
-                    this.state.current.photos = this.state.current.photos.slice(0, this.state.current.b.count);
-                }
-                document.getElementById('p-price-val').innerText = `₹${this.state.current.b.price}`;
-                document.getElementById('up-label').innerText = `Upload ${this.state.current.b.count} Photos`;
+                this.syncQtyAndPhotos();
                 this.syncDraft(); this.renderBundles(); this.renderThumbnails(); this.validateAdd();
+            },
+
+            updateQty(delta) {
+                const newVal = Math.max(1, this.state.current.qty + delta);
+                if (newVal === this.state.current.qty) return;
+                
+                this.state.current.qty = newVal;
+                
+                // Update UI Display
+                const display = document.getElementById('qty-val-display');
+                if (display) display.innerText = newVal;
+                
+                const minusBtn = document.getElementById('qty-minus');
+                if (minusBtn) minusBtn.disabled = newVal === 1;
+
+                this.syncQtyAndPhotos();
+                this.syncDraft(); this.renderThumbnails(); this.validateAdd();
+            },
+
+            syncQtyAndPhotos() {
+                const required = this.state.current.b.count * this.state.current.qty;
+                const price = this.state.current.b.price * this.state.current.qty;
+                
+                // Photo Trimming (Constraint 3)
+                if (this.state.current.photos.length > required) {
+                    this.state.current.photos = this.state.current.photos.slice(0, required);
+                }
+
+                // Update Labels
+                const priceEl = document.getElementById('p-price-val');
+                if (priceEl) priceEl.innerText = `₹${price}`;
+                
+                const upLabel = document.getElementById('up-label');
+                if (upLabel) upLabel.innerText = `Upload ${required} Photos`;
             },
 
             setFinish(f, el) {
@@ -599,20 +645,20 @@
 
             upload() {
                 if (typeof uploadcare === 'undefined') return this.toast("Studio Sync Offline");
-                const count = this.state.current.b.count;
+                const requiredCount = this.state.current.b.count * this.state.current.qty;
                 const upArea = document.getElementById('up-area');
                 
                 const existingFiles = this.state.current.photos.map(url => uploadcare.fileFrom('url', url));
-                const dialogTarget = count > 1 ? (existingFiles.length > 0 ? existingFiles : null) : (existingFiles[0] || null);
+                const dialogTarget = requiredCount > 1 ? (existingFiles.length > 0 ? existingFiles : null) : (existingFiles[0] || null);
 
                 uploadcare.openDialog(dialogTarget, { 
-                    imagesOnly: true, multiple: count > 1, multipleMax: count,
+                    imagesOnly: true, multiple: requiredCount > 1, multipleMax: requiredCount,
                     crop: this.getShapeClass() === 'shape-polaroid' ? "4:5" : (this.getShapeClass() === 'shape-strip' ? null : "1:1"),
                     imageEditorEffects: 'crop, rotate, mirror'
                 }).done(group => {
                     if (!group) return; 
                     if (upArea) upArea.classList.add('loading');
-                    const files = count > 1 ? group.files() : [group];
+                    const files = requiredCount > 1 ? group.files() : [group];
                     Promise.all(files.map(f => new Promise(r => f.done(r)))).then(res => {
                         this.state.current.photos = res.map(r => r.cdnUrl);
                         this.syncDraft(); this.renderThumbnails(); this.validateAdd();
@@ -626,7 +672,6 @@
 
             renderThumbnails() {
                 const slotEl = document.getElementById('slot-mount');
-                const upLabel = document.getElementById('up-label');
                 if (slotEl) slotEl.innerHTML = this.state.current.photos.map(u => `<img src="${u}" style="width:40px; height:40px; border-radius:4px; object-fit:cover; border:1px solid var(--border);" alt="Upload thumbnail">`).join('');
                 
                 const mounts = document.querySelectorAll('.preview-mount');
@@ -654,10 +699,15 @@
             validateAdd() {
                 const btn = document.getElementById('add-btn');
                 if (!btn) return;
-                const needed = this.state.current.b.count;
+                const required = this.state.current.b.count * this.state.current.qty;
                 const uploaded = this.state.current.photos.length;
-                btn.disabled = uploaded !== needed;
-                btn.innerText = uploaded === needed ? (this.state.editCartId ? "Update Bag" : "Commit to Bag") : `Select ${needed - uploaded} more`;
+                
+                btn.disabled = uploaded !== required;
+                if (uploaded === required) {
+                    btn.innerText = this.state.editCartId ? "Update Bag" : "Commit to Bag";
+                } else {
+                    btn.innerText = `Select ${required - uploaded} more`;
+                }
             },
 
             addToBag() {
@@ -666,7 +716,20 @@
                 if (btn) btn.disabled = true;
 
                 const isUpdate = !!this.state.editCartId;
-                const item = { ...this.state.current.b, bundleId: this.state.current.b.id, productId: this.state.current.p.id, name: this.state.current.p.name, finish: this.state.current.finish, photos: this.state.current.photos, cartId: isUpdate ? this.state.editCartId : Date.now() };
+                const totalItemPrice = this.state.current.b.price * this.state.current.qty;
+                
+                const item = { 
+                    ...this.state.current.b, 
+                    price: totalItemPrice, // Store actual total price
+                    unitPrice: this.state.current.b.price,
+                    bundleId: this.state.current.b.id, 
+                    productId: this.state.current.p.id, 
+                    name: this.state.current.p.name, 
+                    qty: this.state.current.qty,
+                    finish: this.state.current.finish, 
+                    photos: this.state.current.photos, 
+                    cartId: isUpdate ? this.state.editCartId : Date.now() 
+                };
                 
                 this.state.pendingOrder = null;
                 this.goToBag(); 
@@ -680,6 +743,7 @@
 
                 localStorage.removeItem('magmoment_draft');
                 this.state.current.photos = [];
+                this.state.current.qty = 1;
                 this.sync(); this.updateCartUI(); this.toggleCart();
                 this.toast(isUpdate ? "Selection updated ✨" : "Memories Added ✨");
                 this.navigate('home');
@@ -691,7 +755,7 @@
                 const p = this.state.productMap[item.productId];
                 const b = p.bundles.find(b => b.id === item.bundleId);
                 
-                this.state.current = { p, b, finish: item.finish, photos: [...item.photos] };
+                this.state.current = { p, b, qty: item.qty || 1, finish: item.finish, photos: [...item.photos] };
                 this.state.editCartId = cartId;
                 this.state.pendingOrder = null;
                 
@@ -729,7 +793,7 @@
                             <img src="${i.photos[0]}" style="width:80px; height:100px; border-radius:8px; object-fit:cover; border:1px solid #eee; box-shadow:var(--shadow-subtle);" alt="Cart item thumbnail">
                             <div style="flex:1;">
                                 <h4 style="font-weight:700; font-size:1.1rem; color:var(--primary);">${i.name}</h4>
-                                <p style="font-size:0.75rem; color:#888; font-weight:700; text-transform:uppercase; letter-spacing:1px;">${i.label} • ${i.finish}</p>
+                                <p style="font-size:0.75rem; color:#888; font-weight:700; text-transform:uppercase; letter-spacing:1px;">${i.label} ${i.qty > 1 ? ' x ' + i.qty : ''} • ${i.finish}</p>
                                 <b style="font-size:1.2rem; display:block; margin-top:8px;">₹${i.price}</b>
                                 <div style="display:flex; gap:20px; margin-top:15px;">
                                     <span style="color:var(--accent); font-size:0.65rem; font-weight:900; cursor:pointer;" onclick="App.editCartItem(${i.cartId})">Edit</span>
@@ -742,7 +806,7 @@
                     document.getElementById('cart-price-inject').innerHTML = `
                         <div style="margin-bottom:30px;">
                             <div style="font-size:11px; font-weight:800; color:#555; letter-spacing:1px; margin-bottom:8px;">${sub >= 999 ? '🎉 FREE EXPRESS SHIPPING' : 'ADD ₹' + (999-sub) + ' FOR FREE SHIPPING'}</div>
-                            <div class="bar-outer" style="height:4px; background:#f0f0f0;"><div class="bar-inner" style="width:${prg}%"></div></div>
+                            <div class="bar-outer" style="height:4px; background:#f0f0f0; border-radius:10px; overflow:hidden;"><div class="bar-inner" style="width:${prg}%; height:100%; background:var(--accent); transition:0.5s;"></div></div>
                         </div>
                         <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid #eee; padding-top:25px;">
                             <div style="display:flex; justify-content:space-between; font-size:1rem; color:#666;"><span>Subtotal</span><span>₹${sub}</span></div>
@@ -866,11 +930,6 @@
                                 throw new Error("Verification failed");
                             }
 
-                            if (!this.state.lastCustomer) {
-                                this.toast("Session expired. Please retry.");
-                                return;
-                            }
-
                             this.state.isPaying = false;
                             this.toast("Finalizing your order...");
                             
@@ -931,7 +990,7 @@
                             <p style="font-size: 14px; color: #717171; margin: 5px 0;">${c.address}, ${c.city} - ${c.pin}</p>
                             <p style="font-size: 13px; color: #717171;">${c.phone} | ${c.email}</p>
                         </div>
-                        ${orderItems.map(item => `<div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f5f5f5;"><div><p style="font-weight: 700; margin: 0; font-size: 15px;">${item.name}</p><p style="font-size: 12px; color: #717171; margin: 3px 0 0 0;">${item.label} • ${item.finish} Finish</p></div><p style="font-weight: 700; margin: 0;">₹${item.price}</p></div>`).join('')}
+                        ${orderItems.map(item => `<div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f5f5f5;"><div><p style="font-weight: 700; margin: 0; font-size: 15px;">${item.name} ${item.qty > 1 ? '(x' + item.qty + ')' : ''}</p><p style="font-size: 12px; color: #717171; margin: 3px 0 0 0;">${item.label} • ${item.finish} Finish</p></div><p style="font-weight: 700; margin: 0;">₹${item.price}</p></div>`).join('')}
                         <div style="margin-top: 25px;">
                             <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 15px;"><p style="margin:0;">Subtotal</p><p style="margin:0;">₹${sub}</p></div>
                             <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 15px;"><p style="margin:0;">Shipping</p><p style="margin:0;">${sub >= 999 ? 'FREE' : '₹79'}</p></div>
