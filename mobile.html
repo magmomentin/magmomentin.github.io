@@ -72,9 +72,9 @@
         .cart-count { background: var(--accent); color: #fff; font-size: 0.65rem; font-weight: 800; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
         /* Hero */
-        .hero { padding: 80px 0; background: var(--bg-linen); border-bottom: 1px solid var(--border); }
+        .hero { padding: 100px 0; background: var(--bg-linen); border-bottom: 1px solid var(--border); }
         .hero-split { display: grid; grid-template-columns: 1.1fr 0.9fr; align-items: center; gap: 80px; text-align: left; }
-        .hero h1 { font-size: clamp(2.8rem, 6vw, 5.5rem); line-height: 1; margin-bottom: 25px; letter-spacing: -1.5px; }
+        .hero h1 { font-size: clamp(3.2rem, 7vw, 5.5rem); line-height: 1; margin-bottom: 25px; letter-spacing: -1.5px; }
         .hero p { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 45px; max-width: 500px; line-height: 1.8; }
         .hero-visual img { width: 100%; border-radius: var(--radius-lg); box-shadow: var(--shadow-float); transform: rotate(-1.5deg); transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
         .hero-visual:hover img { transform: rotate(0) scale(1.02); }
@@ -84,7 +84,7 @@
         .cat-item { padding: 12px 28px; background: #fff; border: 1px solid var(--border); border-radius: 50px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; transition: var(--transition); white-space: nowrap; color: var(--text-muted); }
         .cat-item.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: var(--shadow-soft); }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 40px; padding: 20px 0 100px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 60px; padding: 40px 0 120px; }
         .product-card { cursor: pointer; transition: var(--transition); text-align: left; }
         .img-wrap { aspect-ratio: 1; border-radius: var(--radius-md); overflow: hidden; background: #f9f9f9; margin-bottom: 25px; position: relative; border: 1px solid var(--border); box-shadow: var(--shadow-soft); transition: var(--transition); }
         .img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -105,7 +105,7 @@
         .trust-item span { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; max-width: 160px; font-weight: 400; }
 
         /* Detail View */
-        .detail-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 80px; padding: 60px 0; align-items: start; }
+        .detail-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 100px; padding: 60px 0; align-items: start; }
         .stage-wrap { position: sticky; top: 140px; }
         .stage { width: 100%; aspect-ratio: 1/1; border-radius: var(--radius-lg); overflow: hidden; background: #fff; box-shadow: var(--shadow-float); position: relative; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
         .stage-img { width: 100%; height: 100%; object-fit: cover; }
@@ -196,16 +196,17 @@
             .hero-visual { display: none; }
             .grid, .detail-grid, .trust-grid { grid-template-columns: 1fr; gap: 60px; }
             
-            /* Logic: Disable sticky positioning on mobile to fix floating image issue */
+            /* Disable sticky on mobile to fix floating image issue */
             .stage-wrap { position: relative; top: 0; margin-bottom: 40px; }
             .stage { aspect-ratio: 1; height: auto; width: 100%; max-width: 400px; margin: 0 auto; }
+            .stage-img { object-fit: contain; } /* Safe for all image shapes */
             
             .opt-grid { grid-template-columns: 1fr; gap: 10px; }
 
-            /* Re-order Mobile Header to [Toggle] [Brand] [Cart] */
+            /* Header Structure optimization for mobile */
             .menu-toggle { display: block; order: 1; }
             .nav-brand { order: 2; font-size: 1.5rem; flex: 1; text-align: center; }
-            .cart-trigger { order: 3; padding: 8px 14px; }
+            .cart-trigger { order: 3; padding: 10px 14px; }
             
             .nav-links { 
                 position: fixed; top: 113px; left: 0; width: 100%; background: #fff; 
@@ -216,7 +217,7 @@
             .nav-links.active { transform: translateY(0); }
 
             #cart-drawer { width: 100%; }
-            .summary-price { font-size: 2rem; }
+            .summary-price { font-size: 1.8rem; }
             .order-summary-panel { padding: 25px; }
             .summary-header { margin-bottom: 15px; }
 
@@ -362,7 +363,7 @@
                 <input type="text" id="t-id" style="width:100%; padding:22px; border:1px solid var(--border); border-radius:15px;" placeholder="Order ID">
                 <button class="btn btn-primary" id="track-btn" onclick="App.trackOrder()">Lookup Status</button>
             </div>
-            <div id="t-result" class="hidden" style="margin-top:50px; text-align:left; background:var(--bg-linen); padding:40px; border-radius:var(--radius-lg); border: 1px solid var(--border);"></div>
+            <div id="t-result" class="hidden" style="margin-top:40px; text-align:left; background:var(--bg-linen); padding:40px; border-radius:var(--radius-lg); border: 1px solid var(--border);"></div>
         </div>
     </main>
 
@@ -530,7 +531,7 @@
                     <div class="detail-grid">
                         <div class="stage-wrap">
                             <div class="stage"><img id="stage-view" src="${imgs[0]}" class="stage-img" alt="${p.name} perspective"></div>
-                            <div class="thumb-nav">${imgs.map((s, i) => `<img src="${s}" class="thumb ${i === 0 ? 'active' : ''}" onclick="App.swapGallery('${s}', this)" alt="Thumbnail view">`).join('')}</div>
+                            <div class="thumb-nav">${imgs.map((s, i) => `<img src="${s}" class="thumb ${i === 0 ? 'active' : ''}" onclick="App.swapGallery('${s}', this)" alt="Alternate thumbnail view">`).join('')}</div>
                             ${!isMobile ? livePreviewHTML : ''}
                         </div>
                         <div>
@@ -658,7 +659,7 @@
                 const needed = this.state.current.b.count;
                 const uploaded = this.state.current.photos.length;
                 btn.disabled = uploaded !== needed;
-                btn.innerText = uploaded === needed ? (this.state.editCartId ? "Update Selection" : "Commit to Bag") : `Select ${needed - uploaded} more`;
+                btn.innerText = uploaded === needed ? (this.state.editCartId ? "Update Bag" : "Commit to Bag") : `Select ${needed - uploaded} more`;
             },
 
             addToBag() {
@@ -1008,12 +1009,12 @@
             },
 
             swapGallery(s, el) { const img = document.getElementById('stage-view'); if (img) { img.style.opacity = '0'; setTimeout(() => { img.src = s; img.style.opacity = '1'; }, 200); } document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active')); if(el) el.classList.add('active'); },
-            scrollToCatalog() { this.navigate('home'); this.toggleMenu(false); setTimeout(() => { const el = document.getElementById('catalog-anchor'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 150); },
-            scrollToAbout() { this.navigate('home'); this.toggleMenu(false); setTimeout(() => { const el = document.getElementById('about'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 150); },
+            scrollToCatalog() { this.navigate('home'); setTimeout(() => { const el = document.getElementById('catalog-anchor'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 150); },
+            scrollToAbout() { this.navigate('home'); setTimeout(() => { const el = document.getElementById('about'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 150); },
             
             showPolicy(type) {
                 const policies = {
-                    privacy: `<h1>Privacy Policy</h1><p>We handle your data with atelier-level care.</p><h2>Information Collected</h2><ul><li>Name, email, phone number, address: For delivery purposes.</li><li>Order captures: Strictly for handcrafting your order.</li></ul><h2>Usage</h2><p>Your information is used only to process orders, provide support, and improve experience. We never sell or share your memories with third parties.</p><h2>Security</h2><p>Your images are stored in secure studio servers and are only accessible by our production staff during the process.</p>`,
+                    privacy: `<h1>Privacy Policy</h1><p>We handle your data with atelier-level care.</p><h2>Information Collected</h2><ul><li>Name, email, phone number, address: For delivery purposes.</li><li>Order captures: Strictly for handcrafting your order.</li></ul><h2>Usage</h2><p>Your information is used only to process orders, provide support, and improve experience. We never sell or share your memories with third parties.</p><h2>Security</h2><p>Your images are stored in secure studio servers and are only accessible by our production staff during the handcrafting process.</p>`,
                     terms: `<h1>Terms of Service</h1><p>By using MagMoment, you agree to the following terms and conditions.</p><h2>Custom Products</h2><p>All items are made-to-order using customer-uploaded images. Once artisan production begins, orders cannot be cancelled, modified, or returned.</p><h2>User Responsibility</h2><ul><li>You must own the rights to the images you upload.</li><li>You agree not to upload offensive, illegal, or copyrighted content you do not own.</li></ul><h2>Liability</h2><p>We are not responsible for delays caused by external shipping partners or incorrect address details provided by the customer.</p>`,
                     shipping: `<h1>Shipping Policy</h1><h2>Processing Time</h2><p>All orders are handcrafted and processed within 2–4 studio days in our Hyderabad workspace.</p><h2>Delivery Estimates</h2><p>Express delivery typically takes 3–7 business days across India depending on your location.</p><h2>Charges</h2><ul><li>Free Express Shipping on all orders above ₹999.</li><li>₹79 flat shipping for orders below the threshold.</li></ul>`,
                     refunds: `<h1>Refund Policy</h1><h2>Personalized Orders</h2><p>Personalized products are non-refundable and non-returnable due to their bespoke nature.</p><h2>Transit Damage</h2><p>If your order arrives damaged, contact us within 48 hours of delivery with photo proof of the packaging and the item. We will provide a free replacement.</p><h2>Exclusions</h2><p>Refunds are not provided for minor color variations from your screen or for low-quality original images uploaded by the customer.</p>`,
