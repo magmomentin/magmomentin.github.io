@@ -181,7 +181,13 @@ function logout(){
 
 function formatIST(d){
   const text=String(d || "");
-  const x=new Date(text.endsWith("Z") ? text : `${text}Z`);
+  const x=new Date(text);
+  if(Number.isNaN(x.getTime())){
+    const fallback=new Date(text.endsWith("Z") ? text : `${text}Z`);
+    return Number.isNaN(fallback.getTime())
+      ? text
+      : fallback.toLocaleString("en-IN",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit",day:"2-digit",month:"short"});
+  }
   return x.toLocaleString("en-IN",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit",day:"2-digit",month:"short"});
 }
 
@@ -254,8 +260,9 @@ async function updateStatus(id,status){
 function openWhatsAppById(orderId){
   const order=ALL.find(o=>o.id===orderId);
   if(!order) return;
-  const phone=String(order.phone || "").replace(/\D/g,"");
-  if(!phone){
+  let phone=String(order.phone || "").replace(/\D/g,"");
+  if(phone.startsWith("91") && phone.length>10) phone=phone.slice(-10);
+  if(phone.length!==10){
     setStatus("Customer phone number is missing.", "error");
     return;
   }

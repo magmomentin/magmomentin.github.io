@@ -401,7 +401,7 @@
     <!-- VIEW: DETAIL -->
     <main id="detail-view" class="view hidden container">
         <div style="padding: 30px 0;">
-            <a onclick="App.navigate('home')" style="cursor:pointer; font-weight:800; font-size:0.8rem; color:var(--accent); text-transform:uppercase; letter-spacing:2px;">← Back to All Products</a>
+            <button type="button" onclick="App.navigate('home')" class="text-link-btn view-link">&#8592; Back to All Products</button>
         </div>
         <div id="product-canvas"></div>
     </main>
@@ -421,7 +421,7 @@
         <div style="margin-top:50px; display:flex; flex-direction:column; gap:15px; max-width:450px; margin:0 auto;">
             <button id="pdf-btn" class="btn btn-primary" onclick="App.downloadPDF()">Download Receipt (PDF)</button>
             <button class="btn btn-primary" style="background:#25D366; border:none;" onclick="window.open('https://wa.me/919014291445', '_blank')">WhatsApp Support</button>
-            <a onclick="App.navigate('home')" class="btn btn-outline">Back to Home</a>
+            <button type="button" onclick="App.navigate('home')" class="btn btn-outline">Back to Home</button>
         </div>
     </main>
 
@@ -448,7 +448,7 @@
     <!-- VIEW: POLICY -->
     <main id="policy-view" class="view hidden container" style="padding: 80px 0;">
         <div style="max-width: 850px; margin: 0 auto;">
-            <a onclick="App.navigate('home')" style="cursor:pointer; font-weight:800; font-size:0.8rem; color:var(--accent); text-transform:uppercase; letter-spacing:2px; margin-bottom: 40px; display: block;">← Back Home</a>
+            <button type="button" onclick="App.navigate('home')" class="text-link-btn view-link" style="margin-bottom: 40px;">&#8592; Back Home</button>
             <div id="policy-mount" class="policy-content"></div>
         </div>
     </main>
@@ -469,7 +469,7 @@
         </div>
         <div id="cart-stage-2" class="hidden" style="height:100%; display:flex; flex-direction:column;">
             <div style="padding:40px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-                <div onclick="App.goToBag()" style="cursor:pointer; font-weight:900; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--accent);">← Back to Bag</div>
+                <button type="button" onclick="App.goToBag()" class="text-link-btn drawer-back">&#8592; Back to Bag</button>
                 <h3 class="serif" style="font-size: 1.8rem;">Shipping Detail</h3>
             </div>
             <div style="padding:40px; flex:1; overflow-y:auto;">
