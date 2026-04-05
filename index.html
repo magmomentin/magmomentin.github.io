@@ -86,6 +86,29 @@
         .cart-empty-state p { color:#aaa; font-size:1.1rem; margin-bottom: 30px; }
         .shipping-note { font-size:11px; font-weight:800; color:#555; margin-bottom:8px; text-transform: uppercase; letter-spacing: 1px; }
         .drawer-actions { display:flex; flex-direction:column; gap:10px; border-top:1px solid #f5f5f5; padding-top:25px; }
+        .view-link { display:inline-flex; align-items:center; gap:10px; font-weight:800; font-size:0.8rem; color:var(--accent); text-transform:uppercase; letter-spacing:2px; }
+        .draft-banner { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:24px 28px; margin:0 0 32px; border:1px solid var(--border); border-radius:24px; background:linear-gradient(135deg, #fff 0%, #f8f5ef 100%); box-shadow:var(--shadow-soft); }
+        .draft-banner-copy strong { display:block; font-size:0.78rem; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+        .draft-banner-copy p { color:var(--text-muted); font-size:0.98rem; line-height:1.7; }
+        .draft-banner-actions { display:flex; gap:14px; flex-wrap:wrap; }
+        .draft-banner-actions .btn { width:auto; padding:16px 26px; }
+        .success-shell { max-width:860px; margin:0 auto; }
+        .success-grid { display:grid; gap:26px; margin-top:36px; text-align:left; }
+        .success-card { padding:30px 32px; border:1px solid var(--border); border-radius:28px; background:#fff; box-shadow:var(--shadow-soft); }
+        .success-card h3 { font-size:1.4rem; margin-bottom:14px; }
+        .next-steps { display:grid; gap:16px; }
+        .next-step { display:flex; gap:16px; align-items:flex-start; }
+        .next-step-index { width:34px; height:34px; border-radius:50%; background:var(--bg-linen); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:900; flex-shrink:0; }
+        .next-step p { color:var(--text-muted); }
+        .timeline { display:grid; gap:18px; margin-top:24px; }
+        .timeline-step { display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:flex-start; }
+        .timeline-marker { width:18px; height:18px; border-radius:50%; border:2px solid var(--border); background:#fff; margin-top:4px; box-shadow:0 0 0 6px #fff; }
+        .timeline-step.active .timeline-marker, .timeline-step.complete .timeline-marker { border-color:var(--accent); background:var(--accent); }
+        .timeline-step.complete .timeline-label, .timeline-step.active .timeline-label { color:var(--primary); }
+        .timeline-label { font-size:0.85rem; font-weight:900; letter-spacing:1.5px; text-transform:uppercase; color:#a8a8a8; margin-bottom:4px; }
+        .timeline-copy { color:var(--text-muted); font-size:0.98rem; line-height:1.7; }
+        .tracking-meta { display:grid; gap:10px; margin-top:24px; padding-top:22px; border-top:1px solid var(--border); }
+        .tracking-meta-row { display:flex; justify-content:space-between; gap:20px; color:var(--text-muted); font-size:0.92rem; }
 
         /* Hero */
         .hero { padding: 100px 0; background: var(--bg-linen); border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
@@ -220,6 +243,9 @@
             .container { padding: 0 25px; }
             .hero-split { grid-template-columns: 1fr; text-align: center; gap: 50px; }
             .hero-visual { display: none; }
+            .draft-banner { flex-direction:column; align-items:flex-start; }
+            .draft-banner-actions { width:100%; }
+            .draft-banner-actions .btn { width:100%; }
             .catalog-shell { padding: 70px 0 90px; }
             .catalog-head { grid-template-columns: 1fr; display: grid; align-items: start; }
             .catalog-meta { min-width: 0; }
@@ -246,6 +272,8 @@
             .card-price { white-space: normal; }
             .card-title { font-size: 1.3rem; }
             .card-copy { max-width: none; }
+            .success-card { padding:24px; }
+            .tracking-meta-row { flex-direction:column; gap:4px; }
         }
     </style>
 </head>
@@ -306,6 +334,16 @@
         </section>
 
         <div class="container catalog-shell" id="catalog-anchor">
+            <div id="draft-banner" class="draft-banner hidden" aria-live="polite">
+                <div class="draft-banner-copy">
+                    <strong>Saved customization</strong>
+                    <p id="draft-banner-text">You still have a product draft ready to continue.</p>
+                </div>
+                <div class="draft-banner-actions">
+                    <button type="button" class="btn btn-primary" onclick="App.resumeDraft()">Resume Draft</button>
+                    <button type="button" class="btn btn-outline" onclick="App.clearDraft()">Dismiss</button>
+                </div>
+            </div>
             <div class="catalog-head">
                 <div>
                     <span class="step-tag">The Collection</span>
@@ -374,6 +412,12 @@
         <h2 class="serif" style="font-size: 3.5rem; line-height: 1.1; margin-bottom: 20px;">Order Received!</h2>
         <p style="color:var(--text-muted); margin-bottom:50px; font-size:1.2rem; max-width:600px; margin-left:auto; margin-right:auto;">C & S and our team in Hyderabad have received your order. We are starting to prepare your memories now.</p>
         <div id="receipt-mount"></div>
+        <div class="success-grid">
+            <div class="success-card">
+                <h3 class="serif">What happens next</h3>
+                <div id="success-next-steps" class="next-steps"></div>
+            </div>
+        </div>
         <div style="margin-top:50px; display:flex; flex-direction:column; gap:15px; max-width:450px; margin:0 auto;">
             <button id="pdf-btn" class="btn btn-primary" onclick="App.downloadPDF()">Download Receipt (PDF)</button>
             <button class="btn btn-primary" style="background:#25D366; border:none;" onclick="window.open('https://wa.me/919014291445', '_blank')">WhatsApp Support</button>
@@ -481,7 +525,8 @@
                 isLoading: false,
                 isMenuOpen: false,
                 isPaying: false,
-                currentPolicy: null
+                currentPolicy: null,
+                orderStatusSteps: ['Paid', 'Processing', 'Shipped', 'Delivered']
             },
 
             async init() {
@@ -497,6 +542,8 @@
                     products.forEach(p => this.state.productMap[p.id] = p);
                     this.renderCatalog();
                     this.updateCartUI();
+                    this.renderDraftBanner();
+                    this.enhanceStaticUI();
                     this.applyRouteFromLocation({ replace: true });
                 } catch (e) { this.toast("Error connecting to shop."); }
                 finally { this.setLoading(false); }
@@ -561,6 +608,84 @@
                     .replace(/\s+/g, ' ')
                     .trim()
                     .replace(/\b\w/g, ch => ch.toUpperCase());
+            },
+
+            getSafeDraft() {
+                try {
+                    const draft = JSON.parse(localStorage.getItem('magmoment_draft') || 'null');
+                    if (!draft || !draft.p || !draft.b) return null;
+                    return draft;
+                } catch (e) {
+                    return null;
+                }
+            },
+
+            renderDraftBanner() {
+                const banner = document.getElementById('draft-banner');
+                const text = document.getElementById('draft-banner-text');
+                if (!banner || !text) return;
+                const draft = this.getSafeDraft();
+                if (!draft) {
+                    banner.classList.add('hidden');
+                    return;
+                }
+                const productName = draft.p?.name || 'your product';
+                const photoCount = Array.isArray(draft.photos) ? draft.photos.length : 0;
+                const required = Number(draft.b?.count || 0) * Number(draft.qty || 1);
+                text.textContent = `${productName} is still saved with ${photoCount} of ${required} photos ready.`;
+                banner.classList.remove('hidden');
+            },
+
+            resumeDraft() {
+                const draft = this.getSafeDraft();
+                if (!draft?.p?.id) {
+                    this.clearDraft();
+                    return;
+                }
+                this.openDetail(draft.p.id);
+            },
+
+            clearDraft() {
+                localStorage.removeItem('magmoment_draft');
+                this.state.editCartId = null;
+                this.renderDraftBanner();
+                this.toast('Saved draft cleared.');
+            },
+
+            enhanceStaticUI() {
+                document.title = 'MagMoment | Memories for your home';
+                const ogTitle = document.querySelector('meta[property="og:title"]');
+                if (ogTitle) ogTitle.setAttribute('content', 'MagMoment | Memories that Stick');
+                const announcement = document.querySelector('.announcement');
+                if (announcement) announcement.innerHTML = 'Free shipping on all orders above &#8377;999';
+                const aboutCopy = document.querySelector('#about .container');
+                this.cleanRenderedMarkup(aboutCopy);
+                const footer = document.querySelector('footer');
+                this.cleanRenderedMarkup(footer);
+
+                const interactiveFallbacks = [
+                    document.querySelector('#detail-view a[onclick]'),
+                    document.querySelector('#policy-view a[onclick]'),
+                    document.querySelector('#success-view a[onclick]'),
+                    document.querySelector('#cart-stage-2 div[onclick="App.goToBag()"]')
+                ].filter(Boolean);
+
+                interactiveFallbacks.forEach(el => {
+                    if (el.tagName.toLowerCase() === 'a' && !el.getAttribute('href')) el.setAttribute('href', '#');
+                    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+                    if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+                    if (!el.classList.contains('view-link') && !el.classList.contains('drawer-back') && !el.classList.contains('btn')) {
+                        el.classList.add('view-link');
+                    }
+                    if (el.dataset.enhanced === 'true') return;
+                    el.dataset.enhanced = 'true';
+                    el.addEventListener('keydown', event => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            el.click();
+                        }
+                    });
+                });
             },
 
             getProductTeaser(product) {
@@ -648,7 +773,9 @@
                     this.state.editCartId = null; 
                     this.state.current = { p, b: { ...p.bundles[0] }, qty: 1, finish: 'Glossy', photos: [] };
                 }
-                this.syncDraft(); this.renderDetail();
+                this.syncDraft();
+                this.renderDraftBanner();
+                this.renderDetail();
                 if (opts.skipNavigation) this.navigate('detail', { params: { product: id }, replaceHistory: true });
                 else this.navigate('detail', { params: { product: id } });
             },
@@ -717,6 +844,7 @@
                             </div>
                         </div>
                     </div>`;
+                this.cleanRenderedMarkup(document.getElementById('product-canvas'));
                 this.renderBundles(); this.renderThumbnails(); this.validateAdd();
             },
 
@@ -732,7 +860,9 @@
             setBundle(idx) {
                 this.state.current.b = { ...this.state.current.p.bundles[idx] };
                 this.syncQtyAndPhotos();
-                this.syncDraft(); this.renderBundles(); this.renderThumbnails(); this.validateAdd();
+                this.syncDraft();
+                this.renderDraftBanner();
+                this.renderBundles(); this.renderThumbnails(); this.validateAdd();
             },
 
             updateQty(delta) {
@@ -744,7 +874,9 @@
                 const minusBtn = document.getElementById('qty-minus');
                 if (minusBtn) minusBtn.disabled = newVal === 1;
                 this.syncQtyAndPhotos();
-                this.syncDraft(); this.renderThumbnails(); this.validateAdd();
+                this.syncDraft();
+                this.renderDraftBanner();
+                this.renderThumbnails(); this.validateAdd();
             },
 
             syncQtyAndPhotos() {
@@ -763,7 +895,9 @@
                 this.state.current.finish = f;
                 el.parentElement.querySelectorAll('.opt-item').forEach(c => c.classList.remove('active'));
                 el.classList.add('active');
-                this.syncDraft(); this.renderThumbnails();
+                this.syncDraft();
+                this.renderDraftBanner();
+                this.renderThumbnails();
             },
 
             upload() {
@@ -783,7 +917,9 @@
                     const files = requiredCount > 1 ? group.files() : [group];
                     Promise.all(files.map(f => new Promise(r => f.done(r)))).then(res => {
                         this.state.current.photos = res.map(r => r.cdnUrl);
-                        this.syncDraft(); this.renderThumbnails(); this.validateAdd();
+                        this.syncDraft();
+                        this.renderDraftBanner();
+                        this.renderThumbnails(); this.validateAdd();
                         if (upArea) upArea.classList.remove('loading');
                     }).catch(() => {
                         this.toast("Upload failed. Try again.");
@@ -859,6 +995,7 @@
                 localStorage.removeItem('magmoment_draft');
                 this.state.current.photos = [];
                 this.state.current.qty = 1;
+                this.renderDraftBanner();
                 this.sync(); this.updateCartUI();
                 this.toast(isUpdate ? "Changes saved ✨" : "Added to bag ✨");
                 this.navigate('home');
@@ -930,6 +1067,8 @@
                             </div>`;
                     }
                 }
+                this.cleanRenderedMarkup(box);
+                this.cleanRenderedMarkup(document.getElementById('cart-price-inject'));
                 this.refreshPayButton();
             },
 
@@ -1068,6 +1207,85 @@
                     .replace(/'/g, "&#39;");
             },
 
+            getTimelineState(status) {
+                const normalized = String(status || '').toLowerCase();
+                if (normalized.includes('deliver')) return 3;
+                if (normalized.includes('ship') || normalized.includes('dispatch') || normalized.includes('out for')) return 2;
+                if (normalized.includes('process') || normalized.includes('print') || normalized.includes('pack')) return 1;
+                return 0;
+            },
+
+            renderTimeline(status) {
+                const activeIndex = this.getTimelineState(status);
+                const steps = [
+                    { label: 'Paid', copy: 'Your payment is confirmed and your order is safely in our queue.' },
+                    { label: 'Processing', copy: 'We are preparing, printing, and finishing your memories by hand.' },
+                    { label: 'Shipped', copy: 'Your package is on the way and moving through the delivery network.' },
+                    { label: 'Delivered', copy: 'Your order has reached you. If anything looks off, contact us right away.' }
+                ];
+                return `
+                    <div class="timeline">
+                        ${steps.map((step, index) => {
+                            const state = index < activeIndex ? 'complete' : (index === activeIndex ? 'active' : '');
+                            return `
+                                <div class="timeline-step ${state}">
+                                    <div class="timeline-marker" aria-hidden="true"></div>
+                                    <div>
+                                        <div class="timeline-label">${step.label}</div>
+                                        <div class="timeline-copy">${step.copy}</div>
+                                    </div>
+                                </div>`;
+                        }).join('')}
+                    </div>`;
+            },
+
+            renderSuccessNextSteps(customer) {
+                const mount = document.getElementById('success-next-steps');
+                if (!mount) return;
+                const safeName = this.escapeHtml(customer?.name || 'there');
+                mount.innerHTML = `
+                    <div class="next-step">
+                        <div class="next-step-index">1</div>
+                        <div>
+                            <strong>Order review starts now</strong>
+                            <p>We check your uploaded photos and production details before printing so everything is clean and aligned.</p>
+                        </div>
+                    </div>
+                    <div class="next-step">
+                        <div class="next-step-index">2</div>
+                        <div>
+                            <strong>Handmade in Hyderabad</strong>
+                            <p>Your custom keepsakes are prepared by our studio team and packed carefully for shipping.</p>
+                        </div>
+                    </div>
+                    <div class="next-step">
+                        <div class="next-step-index">3</div>
+                        <div>
+                            <strong>Tracking stays simple</strong>
+                            <p>${safeName}, you can use the Track Order page anytime with your mobile number and order ID to see live status updates.</p>
+                        </div>
+                    </div>`;
+            },
+
+            cleanRenderedMarkup(target) {
+                if (!target || typeof target.innerHTML !== 'string') return;
+                const replacements = [
+                    ['\u00e2\u20ac\u201d', '\u2014'],
+                    ['\u00e2\u20ac\u00a2', '\u2022'],
+                    ['\u00e2\u201a\u00b9', '\u20b9'],
+                    ['\u00e2\u0153\u00a8', '\u2728'],
+                    ['\u00e2\u20a0\u0090', '\u2190'],
+                    ['\u00c2\u00a9', '\u00a9'],
+                    ['\u00e2\u02c6\u2019', '\u2212'],
+                    ['\u00f0\u0178\u017d\u2030', '\ud83c\udf89']
+                ];
+                let html = target.innerHTML;
+                replacements.forEach(([from, to]) => {
+                    html = html.split(from).join(to);
+                });
+                target.innerHTML = html;
+            },
+
             finalizeOrder(id, c) {
                 const sub = this.state.cart.reduce((s, i) => s + Number(i.price), 0);
                 const total = sub + (sub >= 999 ? 0 : 79);
@@ -1105,6 +1323,8 @@
                         <div style="margin-top: 30px; text-align: center; color: #ccc; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Handmade with love in Hyderabad.</div>
                     </div>`;
                 
+                this.renderSuccessNextSteps(c);
+                this.cleanRenderedMarkup(document.getElementById('receipt-mount'));
                 this.closeAllDrawers();
                 this.state.cart = []; this.sync(); this.updateCartUI();
                 this.navigate('success');
@@ -1128,11 +1348,19 @@
                         const safeStatus = this.escapeHtml(d.status);
                         const safeName = this.escapeHtml(d.name);
                         const safeTrackDate = this.escapeHtml(d.date || 'Processing');
+                        const safeOrderId = this.escapeHtml(id);
+                        const safePhone = this.escapeHtml(phone);
                         el.innerHTML = `
                             <h3 class="serif" style="font-size:2rem; margin-bottom: 15px;">Status: ${safeStatus}</h3>
                             <p style="font-size:1.1rem; color: #555;">Hi ${safeName}, your order is currently <strong>${safeStatus}</strong>.</p>
-                            <p style="font-size:0.8rem; color:#aaa; margin-top:20px; text-transform:uppercase;">Order Date: ${safeTrackDate}</p>`;
+                            ${this.renderTimeline(d.status)}
+                            <div class="tracking-meta">
+                                <div class="tracking-meta-row"><span>Order date</span><strong>${safeTrackDate}</strong></div>
+                                <div class="tracking-meta-row"><span>Order ID</span><strong>${safeOrderId}</strong></div>
+                                <div class="tracking-meta-row"><span>Mobile number</span><strong>${safePhone}</strong></div>
+                            </div>`;
                     }
+                    this.cleanRenderedMarkup(el);
                 } catch (e) { this.toast("Error tracking order."); }
                 finally { btn.disabled = false; btn.innerText = "Show Order Status"; }
             },
@@ -1243,6 +1471,7 @@
                 const safeType = policies[type] ? type : 'privacy';
                 this.state.currentPolicy = safeType;
                 document.getElementById('policy-mount').innerHTML = policies[safeType];
+                this.cleanRenderedMarkup(document.getElementById('policy-mount'));
                 if (opts.skipNavigation) this.navigate('policy', { params: { type: safeType }, replaceHistory: true });
                 else this.navigate('policy', { params: { type: safeType } });
             },
