@@ -171,7 +171,14 @@
         .thumb-nav { display: flex; gap: 15px; margin-top: 25px; overflow-x: auto; scrollbar-width: none; }
         .thumb { width: 85px; height: 85px; object-fit: cover; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: var(--transition); opacity: 0.5; }
         .thumb.active { border-color: var(--accent); opacity: 1; transform: translateY(-3px); }
-
+        .detail-panel { display: grid; gap: 22px; }
+        .detail-intro-card { padding: 28px; border-radius: 28px; border: 1px solid var(--border); background: linear-gradient(180deg, #fff 0%, #fcfbf9 100%); box-shadow: var(--shadow-soft); }
+        .detail-intro-card h2 { font-size: clamp(2.5rem, 5vw, 4rem); line-height: 0.9; margin-bottom: 18px; letter-spacing: -1.5px; }
+        .detail-intro-card p { color: var(--text-muted); font-size: 1.08rem; line-height: 1.75; }
+        .builder-section { padding: 24px; border-radius: 24px; border: 1px solid var(--border); background: #fff; box-shadow: var(--shadow-soft); }
+        .builder-section .step-tag { margin-bottom: 10px; }
+        .builder-section .config-label { margin-bottom: 18px; }
+        .detail-meta-row { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
         .step-tag { font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: var(--accent); letter-spacing: 3px; margin-bottom: 12px; display: block; }
         .config-label { font-size: 1.5rem; color: var(--primary); margin-bottom: 25px; display: block; font-family: 'Playfair Display', serif; font-style: italic; }
         .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 45px; }
@@ -252,6 +259,7 @@
             .catalog-head { grid-template-columns: 1fr; display: grid; align-items: start; }
             .catalog-meta { min-width: 0; }
             .grid, .detail-grid, .trust-grid { grid-template-columns: 1fr; gap: 36px; }
+            #detail-view { padding-bottom: 120px; }
             .nav-inner { justify-content: space-between; }
             .menu-toggle { display: block; order: 1; }
             .nav-brand { order: 2; flex: 1; text-align: center; }
@@ -269,11 +277,29 @@
             .stage { max-width: 400px; margin: 0 auto; }
             .desktop-only { display: none; }
             .mobile-only { display: block; }
-            .opt-grid { grid-template-columns: 1fr; }
+            .detail-panel { gap: 16px; }
+            .detail-intro-card { padding: 22px; border-radius: 24px; }
+            .detail-intro-card h2 { font-size: 2rem; margin-bottom: 14px; }
+            .detail-intro-card p { font-size: 0.98rem; line-height: 1.65; }
+            .builder-section { padding: 18px; border-radius: 20px; }
+            .builder-section .config-label { font-size: 1.2rem; margin-bottom: 14px; }
+            .detail-panel > .step-tag { margin: 10px 0 8px; padding-left: 4px; }
+            .detail-panel > .config-label { font-size: 1.15rem; margin-bottom: 12px; padding-left: 4px; }
+            .opt-grid { display: flex; gap: 12px; overflow-x: auto; margin-bottom: 0; padding-bottom: 4px; scroll-snap-type: x proximity; }
+            .opt-grid::-webkit-scrollbar { display: none; }
+            .opt-item { min-width: 170px; padding: 18px; border-radius: 18px; scroll-snap-align: start; }
+            .opt-item b { font-size: 1rem; }
+            .opt-item small { font-size: 0.82rem; }
+            .detail-panel > .qty-control { width: 100%; justify-content: space-between; margin-bottom: 18px; padding: 8px 10px; }
+            .detail-panel > .qty-control .qty-val { flex: 1; }
             .upload-area { padding: 38px 18px; margin-bottom: 28px; }
             .studio-preview-card { padding: 22px; margin-top: 22px; }
             .preview-render { min-height: 180px; }
-            .order-summary-panel { margin-top: 22px; padding: 22px; }
+            .order-summary-panel { position: fixed; left: 14px; right: 14px; bottom: 12px; z-index: 3200; margin-top: 0; padding: 16px; border-radius: 22px; background: rgba(17,17,17,0.96); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 20px 40px rgba(0,0,0,0.16); }
+            .order-summary-panel .summary-header { margin-bottom: 12px; align-items: center; }
+            .order-summary-panel .summary-label { color: rgba(255,255,255,0.62); }
+            .order-summary-panel .summary-price { font-size: 1.7rem; }
+            .order-summary-panel .btn { padding: 16px 18px; }
             .product-card { padding: 14px; border-radius: 24px; }
             .img-wrap { border-radius: 18px; }
             .card-info { flex-direction: column; align-items: flex-start; gap: 12px; }
@@ -807,13 +833,15 @@
                             <div class="thumb-nav">${imgs.map((s, i) => `<img src="${s}" class="thumb ${i === 0 ? 'active' : ''}" onclick="App.swapGallery('${s}', this)" alt="View ${i+1}">`).join('')}</div>
                             ${previewHTML('desktop-only')}
                         </div>
-                        <div>
-                            <div class="step-header" style="margin-bottom:40px;">
-                                <span class="step-tag">Customize Your Order</span>
-                                <div style="height:4px; background:#f0f0f0; margin-top:10px; border-radius:10px; position:relative;"><div id="step-progress" style="position:absolute; top:0; left:0; height:100%; background:var(--accent); width:25%; transition:0.5s; border-radius:10px;"></div></div>
+                        <div class="detail-panel">
+                            <div class="detail-intro-card">
+                                <div class="step-header" style="margin-bottom:24px;">
+                                    <span class="step-tag">Customize Your Order</span>
+                                    <div style="height:4px; background:#f0f0f0; margin-top:10px; border-radius:10px; position:relative;"><div id="step-progress" style="position:absolute; top:0; left:0; height:100%; background:var(--accent); width:25%; transition:0.5s; border-radius:10px;"></div></div>
+                                </div>
+                                <h2 class="serif italic">${p.name}</h2>
+                                <p>Upload your favorite memories, choose the finish you want, and we will handcraft the final keepsake in Hyderabad.</p>
                             </div>
-                            <h2 style="font-size:clamp(2.5rem, 5vw, 4rem); line-height:0.9; margin-bottom:20px; letter-spacing: -1.5px;" class="serif italic">${p.name}</h2>
-                            <p style="color:var(--text-muted); margin-bottom:50px; font-size:1.2rem; line-height:1.7;">Perfect for your fridge or workspace. Each piece is handcrafted using archival quality materials to ensure your photos never fade.</p>
                             
                             <span class="step-tag">Step 1 — Pack Size</span>
                             <span class="config-label">How many photos per set?</span>
