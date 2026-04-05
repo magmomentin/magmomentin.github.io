@@ -446,10 +446,6 @@
                 if (view === 'success') return '/?view=success';
                 if (view === 'detail') return params.product ? `/?view=product&id=${encodeURIComponent(params.product)}` : '/?view=product';
                 if (view === 'policy') return params.type ? `/?view=policy&type=${encodeURIComponent(params.type)}` : '/?view=policy';
-                if (view === 'tracking') return '/tracking';
-                if (view === 'success') return '/success';
-                if (view === 'detail') return params.product ? `/product?id=${encodeURIComponent(params.product)}` : '/product';
-                if (view === 'policy') return params.type ? `/policy?type=${encodeURIComponent(params.type)}` : '/policy';
                 return '/';
             },
 
@@ -463,8 +459,6 @@
 
                 // Backward-compatible path parsing (legacy links)
                 const path = window.location.pathname.replace(/\/+$/, '') || '/';
-                const path = window.location.pathname.replace(/\/+$/, '') || '/';
-                const q = new URLSearchParams(window.location.search);
                 if (path === '/tracking') return { view: 'tracking' };
                 if (path === '/success') return { view: 'success' };
                 if (path === '/product') return { view: 'detail', productId: q.get('id') };
@@ -1046,8 +1040,8 @@
                 if (!skipHistory) {
                     const url = this.getRouteForView(v, params);
                     const currentUrl = `${window.location.pathname}${window.location.search}`;
-                    if (replaceHistory || url === currentUrl) window.history.replaceState({ view: v, params }, '', url);
-                    if (replaceHistory) window.history.replaceState({ view: v, params }, '', url);
+                    const useReplace = replaceHistory || url === currentUrl;
+                    if (useReplace) window.history.replaceState({ view: v, params }, '', url);
                     else window.history.pushState({ view: v, params }, '', url);
                 }
                 window.scrollTo(0, 0);
@@ -1063,8 +1057,6 @@
             swapGallery(s, el) { const img = document.getElementById('stage-view'); if (img) { img.src = s; } document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active')); if(el) el.classList.add('active'); },
             scrollToCatalog() { this.navigate('home', { replaceHistory: true }); setTimeout(() => { const el = document.getElementById('catalog-anchor'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
             scrollToAbout() { this.navigate('home', { replaceHistory: true }); setTimeout(() => { const el = document.getElementById('about'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
-            scrollToCatalog() { this.navigate('home'); setTimeout(() => { const el = document.getElementById('catalog-anchor'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
-            scrollToAbout() { this.navigate('home'); setTimeout(() => { const el = document.getElementById('about'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
             showPolicy(type, opts = {}) {
                 const policies = {
                     privacy: `<h1>Privacy Policy</h1><p>We respect your privacy and handle your data responsibly.</p><h2>Information Collected</h2><ul><li>Name, email, phone number, address: For delivery purposes.</li><li>Order details and uploaded images: Strictly for fulfilling your order.</li></ul><h2>Usage</h2><p>Your information is used only to process orders, provide support, and improve experience. We never sell or share your memories with third parties.</p><h2>Security</h2><p>Your images are stored in secure servers and are only accessible by our staff during the production process.</p>`,
