@@ -1276,9 +1276,10 @@
                         this.state.isPaying = false;
                         btn.disabled = false;
                         this.refreshPayButton();
-                        this.setCheckoutFeedback('error', 'Payment window closed', 'Your order details are still saved. You can retry payment now or reach out for help if the amount was debited.', [
-                            `<button type="button" class="btn btn-primary" onclick="App.retryPayment()">Retry Payment</button>`,
-                            `<button type="button" class="btn btn-outline" onclick="window.open('https://wa.me/919014291445', '_blank')">WhatsApp Support</button>`
+                        this.setCheckoutFeedback('error', 'Payment not completed', 'Your order details are still saved. If money was deducted, please do not pay again. Check your order status or contact support.', [
+                            `<button type="button" class="btn btn-primary" onclick="App.navigate('tracking'); App.toggleCart(false)">Check Order Status</button>`,
+                            `<button type="button" class="btn btn-outline" onclick="window.open('https://wa.me/919014291445', '_blank')">WhatsApp Support</button>`,
+                            `<button type="button" class="btn btn-outline" onclick="App.retryPayment()">Try Payment Again</button>`
                         ]);
                     } }
                 }).open();
