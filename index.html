@@ -665,6 +665,16 @@
                     .replace(/\b\w/g, ch => ch.toUpperCase());
             },
 
+            getOptimizedImageUrl(url, { width = 900, height = 900, fit = 'cover', format = 'auto', quality = 'smart' } = {}) {
+                const src = String(url || '');
+                if (!src) return '';
+                if (src.includes('ucarecdn.com')) {
+                    const separator = src.includes('/-/') ? '' : '-/';
+                    return `${src}${separator}-/scale_crop/${width}x${height}/${fit}/-/format/${format}/-/quality/${quality}/`;
+                }
+                return src;
+            },
+
             getSafeDraft() {
                 try {
                     const draft = JSON.parse(localStorage.getItem('magmoment_draft') || 'null');
@@ -839,6 +849,7 @@
                 const p = this.state.current.p;
                 if (!p) return;
                 const imgs = p.images?.length ? p.images : [p.img];
+                const heroImg = this.getOptimizedImageUrl(imgs[0], { width: 1000, height: 1000 });
                 
                 const previewHTML = (id) => `
                     <div class="studio-preview-card ${id}">
@@ -849,8 +860,8 @@
                 document.getElementById('product-canvas').innerHTML = `
                     <div class="detail-grid">
                         <div class="stage-wrap">
-                            <div class="stage"><img id="stage-view" src="${imgs[0]}" class="stage-img" alt="${p.name}"></div>
-                            <div class="thumb-nav">${imgs.map((s, i) => `<img src="${s}" class="thumb ${i === 0 ? 'active' : ''}" onclick="App.swapGallery('${s}', this)" alt="View ${i+1}">`).join('')}</div>
+                            <div class="stage"><img id="stage-view" src="${heroImg}" class="stage-img" alt="${p.name}" loading="eager"></div>
+                            <div class="thumb-nav">${imgs.map((s, i) => `<img src="${this.getOptimizedImageUrl(s, { width: 180, height: 180 })}" class="thumb ${i === 0 ? 'active' : ''}" onclick="App.swapGallery('${this.getOptimizedImageUrl(s, { width: 1000, height: 1000 })}', this)" alt="View ${i+1}" loading="lazy">`).join('')}</div>
                             ${previewHTML('desktop-only')}
                         </div>
                         <div class="detail-panel">
@@ -944,6 +955,8 @@
                 }
                 const priceEl = document.getElementById('p-price-val');
                 if (priceEl) priceEl.innerText = `₹${price}`;
+                const mobilePriceEl = document.getElementById('mobile-p-price-val');
+                if (mobilePriceEl) mobilePriceEl.innerText = `₹${price}`;
                 const upLabel = document.getElementById('up-label');
                 if (upLabel) upLabel.innerText = `Upload ${required} Photos`;
             },
@@ -987,7 +1000,7 @@
 
             renderThumbnails() {
                 const slotEl = document.getElementById('slot-mount');
-                if (slotEl) slotEl.innerHTML = this.state.current.photos.map(u => `<img src="${u}" style="width:50px; height:50px; border-radius:8px; object-fit:cover; border:2px solid var(--border);" alt="Thumb">`).join('');
+                if (slotEl) slotEl.innerHTML = this.state.current.photos.map(u => `<img src="${this.getOptimizedImageUrl(u, { width: 100, height: 100 })}" style="width:50px; height:50px; border-radius:8px; object-fit:cover; border:2px solid var(--border);" alt="Thumb" loading="lazy">`).join('');
                 
                 const mounts = document.querySelectorAll('.preview-mount');
                 mounts.forEach(mount => {
@@ -995,7 +1008,7 @@
                         const finishClass = `finish-${this.state.current.finish.toLowerCase()}`;
                         mount.innerHTML = `
                             <div class="preview-render">
-                                <img src="${this.state.current.photos[0]}" class="preview-img ${this.getShapeClass()} ${finishClass}" alt="Preview">
+                                <img src="${this.getOptimizedImageUrl(this.state.current.photos[0], { width: 700, height: 700 })}" class="preview-img ${this.getShapeClass()} ${finishClass}" alt="Preview" loading="lazy">
                             </div>
                             <small style="color:#aaa; text-transform:uppercase; font-size:10px; letter-spacing:2px; font-weight:900;">${this.state.current.finish} Preview</small>`;
                         this.updateSteps(3);

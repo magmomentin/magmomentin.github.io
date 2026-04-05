@@ -117,6 +117,16 @@ const API="https://phxhhzwuamdoclklvccb.supabase.co/functions/v1";
 let ALL=[];
 let pendingStatusId=null;
 
+function optimizedPreviewUrl(url,width=220,height=220){
+  const src=String(url || "");
+  if(!src) return "";
+  if(src.includes("ucarecdn.com")){
+    const separator=src.includes("/-/") ? "" : "-/";
+    return `${src}${separator}-/scale_crop/${width}x${height}/center/-/format/auto/-/quality/smart/`;
+  }
+  return src;
+}
+
 function getKey(){return localStorage.getItem("ADMIN_KEY")}
 
 function setStatus(message,type=""){
@@ -366,7 +376,7 @@ function render(list){
           return `
             <div class="img-grid">
               ${imgs.slice(0,4).map(img=>`
-                <img src="${img}" alt="Order image preview" onclick="showImg(this.src)">
+                <img src="${optimizedPreviewUrl(img)}" alt="Order image preview" loading="lazy" onclick="showImg('${img}')">
               `).join("")}
             </div>
           `;
