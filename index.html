@@ -380,7 +380,7 @@
                 </div>
             </div>
             <div style="padding:40px; border-top:1px solid var(--border);">
-                <button class="btn btn-primary" id="pay-btn" onclick="App.state.pendingOrder ? App.retryPayment() : App.checkout()">Confirm & Pay Securely</button>
+                <button class="btn btn-primary" id="pay-btn" onclick="App.checkout()">Confirm & Pay Securely</button>
             </div>
         </div>
     </div>
@@ -833,6 +833,29 @@
                 });
 
                 if (hasError) return this.toast("Please fill in all delivery details.");
+
+                const cleanPhone = String(data.phone || "").replace(/\D/g, "");
+                if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+                    return this.toast("Please enter a valid 10-digit Indian mobile number.");
+                }
+                data.phone = cleanPhone;
+
+                data.pin = String(data.pin || "").replace(/\D/g, "").slice(0, 6);
+                if (data.pin && data.pin.length !== 6) {
+                    return this.toast("Please enter a valid 6-digit pincode.");
+                }
+
+                const invalidItem = this.state.cart.find(i => {
+                    const photoCount = Array.isArray(i.photos) ? i.photos.length : 0;
+                    const bundleCount = Number(i.count || 0);
+                    if (!bundleCount || photoCount === 0) return true;
+                    const countMismatch = (photoCount !== bundleCount) && (photoCount % bundleCount !== 0);
+                    const badUrl = (i.photos || []).some(url => typeof url !== "string" || (!url.includes("ucarecdn.com") && !url.includes("ucarecd.net")));
+                    return countMismatch || badUrl;
+                });
+                if (invalidItem) {
+                    return this.toast("One or more uploaded photos are invalid. Please re-upload and try again.");
+                }
 
                 const btn = document.getElementById('pay-btn');
                 btn.disabled = true; btn.innerText = "Setting up payment..."; 
