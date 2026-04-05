@@ -79,20 +79,42 @@
         .hero-visual img { width: 100%; border-radius: var(--radius-lg); box-shadow: var(--shadow-float); transform: rotate(-2deg); }
 
         /* Catalog Grid */
-        .category-bar { display: flex; justify-content: center; gap: 15px; margin: 80px 0 40px; overflow-x: auto; scrollbar-width: none; padding: 10px; }
-        .cat-item { padding: 14px 28px; background: #fff; border: 1.5px solid var(--border); border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: var(--transition); white-space: nowrap; color: var(--text-muted); }
+        .catalog-shell { padding: 90px 0 120px; }
+        .catalog-head { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 30px; }
+        .catalog-title { font-size: clamp(2.4rem, 5vw, 4rem); line-height: 0.95; letter-spacing: -1.5px; margin-bottom: 18px; }
+        .catalog-copy { max-width: 620px; color: var(--text-muted); font-size: 1.05rem; line-height: 1.8; }
+        .catalog-meta { min-width: 220px; padding: 24px 26px; border-radius: 24px; background: linear-gradient(135deg, #fff 0%, #f8f5ef 100%); border: 1px solid var(--border); box-shadow: var(--shadow-soft); }
+        .catalog-meta-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+        .catalog-meta-value { font-size: 1.9rem; font-weight: 800; color: var(--primary); line-height: 1; }
+        .catalog-meta-sub { margin-top: 8px; font-size: 0.88rem; color: var(--text-muted); }
+        .category-bar { display: flex; justify-content: flex-start; gap: 12px; margin: 0 0 34px; overflow-x: auto; scrollbar-width: none; padding: 6px 0 12px; }
+        .cat-item { padding: 14px 22px; background: #fff; border: 1.5px solid var(--border); border-radius: 50px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: var(--transition); white-space: nowrap; color: var(--text-muted); display: inline-flex; align-items: center; gap: 10px; }
+        .cat-item:hover { border-color: rgba(166, 132, 77, 0.45); transform: translateY(-2px); }
         .cat-item.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: var(--shadow-soft); }
+        .cat-count { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(17,17,17,0.06); color: inherit; font-size: 0.7rem; font-weight: 800; }
+        .cat-item.active .cat-count { background: rgba(255,255,255,0.14); }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 80px 40px; padding: 40px 0 120px; }
-        .product-card { cursor: pointer; transition: var(--transition); text-align: left; }
-        .img-wrap { aspect-ratio: 1; border-radius: var(--radius-md); overflow: hidden; background: #fdfdfd; margin-bottom: 25px; position: relative; border: 1px solid var(--border); box-shadow: var(--shadow-soft); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 28px; padding: 10px 0 0; }
+        .product-card { cursor: pointer; transition: var(--transition); text-align: left; background: #fff; border: 1px solid var(--border); border-radius: 28px; padding: 18px; box-shadow: var(--shadow-soft); }
+        .product-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-float); border-color: rgba(166, 132, 77, 0.28); }
+        .img-wrap { aspect-ratio: 1; border-radius: 22px; overflow: hidden; background: #fdfdfd; margin-bottom: 18px; position: relative; border: 1px solid var(--border); box-shadow: var(--shadow-soft); }
         .img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
         .product-card:hover .img-wrap img { transform: scale(1.08); }
-        .card-info { display: flex; justify-content: space-between; align-items: flex-start; }
-        .card-title { font-size: 1.6rem; color: var(--primary); margin-bottom: 6px; letter-spacing: -0.5px; }
-        .card-sub { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); font-weight: 800; }
-        .card-price { font-size: 1.2rem; font-weight: 700; color: var(--primary); opacity: 0.9; }
+        .card-pills { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; justify-content: space-between; gap: 10px; pointer-events: none; }
+        .card-pill { padding: 9px 12px; border-radius: 999px; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: var(--primary); font-size: 0.68rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        .card-body { display: grid; gap: 14px; }
+        .card-info { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+        .card-title { font-size: 1.45rem; color: var(--primary); margin-bottom: 8px; letter-spacing: -0.5px; }
+        .card-sub { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); font-weight: 800; margin-bottom: 8px; }
+        .card-copy { font-size: 0.95rem; color: var(--text-muted); line-height: 1.65; max-width: 26ch; }
+        .card-price { font-size: 1.3rem; font-weight: 800; color: var(--primary); opacity: 0.95; white-space: nowrap; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid var(--border); }
+        .card-meta { font-size: 0.78rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+        .card-cta { font-size: 0.78rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--primary); }
         .badge { position: absolute; top: 20px; left: 20px; background: var(--primary); color: #fff; padding: 8px 16px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; z-index: 10; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .catalog-empty { padding: 50px 36px; border: 1px solid var(--border); border-radius: 28px; background: linear-gradient(180deg, #fff 0%, #fcfbf9 100%); text-align: center; box-shadow: var(--shadow-soft); }
+        .catalog-empty h3 { font-size: 2rem; margin-bottom: 10px; color: var(--primary); }
+        .catalog-empty p { color: var(--text-muted); max-width: 420px; margin: 0 auto 24px; }
 
         /* Trust Strip */
         .trust-strip { padding: 100px 0; border-top: 1px solid var(--border); background: var(--white); }
@@ -181,7 +203,10 @@
             .container { padding: 0 25px; }
             .hero-split { grid-template-columns: 1fr; text-align: center; gap: 50px; }
             .hero-visual { display: none; }
-            .grid, .detail-grid, .trust-grid { grid-template-columns: 1fr; gap: 60px; }
+            .catalog-shell { padding: 70px 0 90px; }
+            .catalog-head { grid-template-columns: 1fr; display: grid; align-items: start; }
+            .catalog-meta { min-width: 0; }
+            .grid, .detail-grid, .trust-grid { grid-template-columns: 1fr; gap: 36px; }
             .nav-inner { justify-content: space-between; }
             .menu-toggle { display: block; order: 1; }
             .nav-brand { order: 2; flex: 1; text-align: center; }
@@ -197,6 +222,11 @@
             .stage-wrap { position: relative; top: 0; margin-bottom: 40px; }
             .stage { max-width: 400px; margin: 0 auto; }
             .opt-grid { grid-template-columns: 1fr; }
+            .product-card { padding: 14px; border-radius: 24px; }
+            .img-wrap { border-radius: 18px; }
+            .card-info, .card-footer { gap: 12px; }
+            .card-title { font-size: 1.3rem; }
+            .card-copy { max-width: none; }
         }
     </style>
 </head>
@@ -256,7 +286,19 @@
             </div>
         </section>
 
-        <div class="container" id="catalog-anchor">
+        <div class="container catalog-shell" id="catalog-anchor">
+            <div class="catalog-head">
+                <div>
+                    <span class="step-tag">The Collection</span>
+                    <h2 class="catalog-title serif">Made to keep close.</h2>
+                    <p class="catalog-copy">Choose a format that fits the memory you want to relive, from giftable magnet bundles to statement photo keepsakes handcrafted for everyday spaces.</p>
+                </div>
+                <div class="catalog-meta">
+                    <div class="catalog-meta-label">Now Browsing</div>
+                    <div class="catalog-meta-value" id="catalog-result-count">0 items</div>
+                    <div class="catalog-meta-sub" id="catalog-result-label">Loading the collection...</div>
+                </div>
+            </div>
             <div id="category-mount" class="category-bar"></div>
             <div id="catalog-mount" class="grid"></div>
         </div>
@@ -491,27 +533,83 @@
 
             renderSkeleton() {
                 const grid = document.getElementById('catalog-mount');
-                if (grid) grid.innerHTML = Array(4).fill(0).map(() => `<div class="product-card"><div class="img-wrap skeleton"></div></div>`).join('');
+                if (grid) grid.innerHTML = Array(4).fill(0).map(() => `<div class="product-card"><div class="img-wrap skeleton"></div><div class="skeleton" style="height:22px; width:65%; border-radius:999px; margin-bottom:14px;"></div><div class="skeleton" style="height:14px; width:100%; border-radius:999px; margin-bottom:10px;"></div><div class="skeleton" style="height:14px; width:78%; border-radius:999px;"></div></div>`).join('');
+            },
+
+            formatCategoryLabel(value) {
+                return String(value || '')
+                    .replace(/[-_]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .replace(/\b\w/g, ch => ch.toUpperCase());
+            },
+
+            getProductTeaser(product) {
+                const name = (product?.name || '').toLowerCase();
+                if (name.includes('magnet')) return 'Photo magnets with a polished handcrafted finish.';
+                if (name.includes('polaroid')) return 'Classic instant-photo styling made for shelves and gifting.';
+                if (name.includes('strip')) return 'A cinematic vertical layout for travel shots and memories.';
+                if (name.includes('heart')) return 'A sentimental keepsake shape for gifting meaningful moments.';
+                return 'Premium custom photo keepsake made to brighten your space.';
             },
 
             renderCatalog() {
                 const grid = document.getElementById('catalog-mount');
                 const catMount = document.getElementById('category-mount');
+                const countMount = document.getElementById('catalog-result-count');
+                const labelMount = document.getElementById('catalog-result-label');
                 const categories = ['all', ...new Set(this.state.products.map(p => p.category))];
-                if (catMount) catMount.innerHTML = categories.map(cat => `<div class="cat-item ${this.state.activeCategory === cat ? 'active' : ''}" onclick="App.setCategory('${cat}')">${cat === 'all' ? 'Show All' : cat}</div>`).join('');
+                if (catMount) catMount.innerHTML = categories.map(cat => {
+                    const count = cat === 'all' ? this.state.products.length : this.state.products.filter(p => p.category === cat).length;
+                    const label = cat === 'all' ? 'Show All' : this.formatCategoryLabel(cat);
+                    return `<button type="button" class="cat-item ${this.state.activeCategory === cat ? 'active' : ''}" onclick="App.setCategory('${cat}')"><span>${label}</span><span class="cat-count">${count}</span></button>`;
+                }).join('');
 
-                const filtered = this.state.activeCategory === 'all' ? this.state.products : this.state.products.filter(p => p.category === this.state.activeCategory);
-                if (grid) grid.innerHTML = filtered.map(p => `
-                    <div class="product-card" onclick="App.openDetail('${p.id}')">
+                const filtered = this.state.activeCategory === 'all'
+                    ? this.state.products
+                    : this.state.products.filter(p => p.category === this.state.activeCategory);
+
+                if (countMount) countMount.textContent = `${filtered.length} ${filtered.length === 1 ? 'item' : 'items'}`;
+                if (labelMount) labelMount.textContent = this.state.activeCategory === 'all'
+                    ? 'Browse every handcrafted format in the collection.'
+                    : `${this.formatCategoryLabel(this.state.activeCategory)} only. Switch filters to compare styles faster.`;
+
+                if (!grid) return;
+                if (!filtered.length) {
+                    grid.innerHTML = `
+                        <div class="catalog-empty">
+                            <h3 class="serif">Nothing here yet.</h3>
+                            <p>That filter doesn't have any products at the moment. Try another category to continue browsing.</p>
+                            <button type="button" class="btn btn-primary" style="width:auto; padding:18px 34px; margin:0 auto;" onclick="App.setCategory('all')">View Full Collection</button>
+                        </div>`;
+                    return;
+                }
+
+                grid.innerHTML = filtered.map(p => `
+                    <article class="product-card" onclick="App.openDetail('${p.id}')">
                         <div class="img-wrap">
                             ${p.id.includes('best') ? '<div class="badge">Best Seller</div>' : ''}
                             <img src="${p.img}" loading="lazy" alt="${p.name}">
+                            <div class="card-pills">
+                                <span class="card-pill">${this.formatCategoryLabel(p.category)}</span>
+                                <span class="card-pill">${(p.bundles || []).length} options</span>
+                            </div>
                         </div>
-                        <div class="card-info">
-                            <div><h3 class="card-title serif">${p.name}</h3><p class="card-sub">Premium Quality</p></div>
-                            <span class="card-price">₹${p.price}</span>
+                        <div class="card-body">
+                            <div class="card-info">
+                                <div>
+                                    <p class="card-sub">Premium Quality</p>
+                                    <h3 class="card-title serif">${p.name}</h3>
+                                    <p class="card-copy">${this.getProductTeaser(p)}</p>
+                                </div>
+                                <span class="card-price">From &#8377;${p.price}</span>
+                            </div>
+                            <div class="card-footer">
+                                <span class="card-meta">${(p.bundles || []).length} bundle choices</span>
+                                <span class="card-cta">Customize Now</span>
+                            </div>
                         </div>
-                    </div>`).join('');
+                    </article>`).join('');
             },
 
             setCategory(cat) { this.state.activeCategory = cat; this.renderCatalog(); },
@@ -910,27 +1008,54 @@
                     theme: { color: "#111111" },
                     prefill: { name: this.state.lastCustomer?.name, email: this.state.lastCustomer?.email, contact: this.state.lastCustomer?.phone },
                     handler: async (r) => {
+                        let verified = false;
                         btn.disabled = true; btn.innerText = "Verifying...";
-                        const verifyRes = await fetch(`${API_BASE}/verify-payment`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ ...r, customer: this.state.lastCustomer, amount: order.amount })
-                        });
-                        const vData = await verifyRes.json();
-                        if (vData.success) {
-                            this.finalizeOrder(r.razorpay_order_id, this.state.lastCustomer);
-                        } else {
-                            this.toast("Payment verification failed.");
+                        try {
+                            const verifyRes = await fetch(`${API_BASE}/verify-payment`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ ...r, customer: this.state.lastCustomer, amount: order.amount })
+                            });
+                            const vData = await verifyRes.json();
+                            if (!verifyRes.ok) throw new Error(vData?.error || "Payment verification failed.");
+                            if (vData.success) {
+                                verified = true;
+                                this.finalizeOrder(r.razorpay_order_id, this.state.lastCustomer);
+                            } else {
+                                this.toast("Payment verification failed.");
+                            }
+                        } catch (e) {
+                            this.toast(e?.message || "Payment verification failed. Please try again.");
+                        } finally {
+                            this.state.isPaying = false;
+                            if (!verified) {
+                                btn.disabled = false;
+                                this.refreshPayButton();
+                            }
                         }
-                        this.state.isPaying = false;
                     },
                     modal: { ondismiss: () => { this.state.isPaying = false; btn.disabled = false; this.refreshPayButton(); } }
                 }).open();
             },
 
+            escapeHtml(value) {
+                return String(value ?? "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+            },
+
             finalizeOrder(id, c) {
                 const sub = this.state.cart.reduce((s, i) => s + Number(i.price), 0);
                 const total = sub + (sub >= 999 ? 0 : 79);
+                const safeId = this.escapeHtml(id);
+                const safeDate = this.escapeHtml(new Date().toLocaleDateString());
+                const safeName = this.escapeHtml(c.name);
+                const safeAddress = this.escapeHtml(c.address);
+                const safeCity = this.escapeHtml(c.city);
+                const safePin = this.escapeHtml(c.pin);
                 
                 // Define the receipt with explicit background and font styling for clean PDF export
                 document.getElementById('receipt-mount').innerHTML = `
@@ -939,10 +1064,10 @@
                         <p style="font-size: 11px; color: #a6844d; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; font-weight: 800;">Order Receipt</p>
                         
                         <div style="margin-bottom: 30px; font-size: 14px;">
-                            <p><strong>Order ID:</strong> ${id}</p>
-                            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                            <p><strong>Order ID:</strong> ${safeId}</p>
+                            <p><strong>Date:</strong> ${safeDate}</p>
                             <p style="margin-top: 15px;"><strong>Delivering To:</strong></p>
-                            <p>${c.name}<br>${c.address}, ${c.city} - ${c.pin}</p>
+                            <p>${safeName}<br>${safeAddress}, ${safeCity} - ${safePin}</p>
                         </div>
 
                         ${this.state.cart.map(item => `
@@ -974,15 +1099,18 @@
                 btn.disabled = true; btn.innerText = "Finding Order...";
                 
                 try {
-                    const res = await fetch(`${API_BASE}/track-order?phone=${phone}&order_id=${id}`);
+                    const res = await fetch(`${API_BASE}/track-order?phone=${encodeURIComponent(phone)}&order_id=${encodeURIComponent(id)}`);
                     const d = await res.json(); el.classList.remove('hidden');
                     if (d.error) {
                         el.innerHTML = `<p style="color:red; font-weight:800;">Order not found. Please check your phone number and order ID.</p>`;
                     } else {
+                        const safeStatus = this.escapeHtml(d.status);
+                        const safeName = this.escapeHtml(d.name);
+                        const safeTrackDate = this.escapeHtml(d.date || 'Processing');
                         el.innerHTML = `
-                            <h3 class="serif" style="font-size:2rem; margin-bottom: 15px;">Status: ${d.status}</h3>
-                            <p style="font-size:1.1rem; color: #555;">Hi ${d.name}, your order is currently <strong>${d.status}</strong>.</p>
-                            <p style="font-size:0.8rem; color:#aaa; margin-top:20px; text-transform:uppercase;">Order Date: ${d.date || 'Processing'}</p>`;
+                            <h3 class="serif" style="font-size:2rem; margin-bottom: 15px;">Status: ${safeStatus}</h3>
+                            <p style="font-size:1.1rem; color: #555;">Hi ${safeName}, your order is currently <strong>${safeStatus}</strong>.</p>
+                            <p style="font-size:0.8rem; color:#aaa; margin-top:20px; text-transform:uppercase;">Order Date: ${safeTrackDate}</p>`;
                     }
                 } catch (e) { this.toast("Error tracking order."); }
                 finally { btn.disabled = false; btn.innerText = "Show Order Status"; }

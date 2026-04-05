@@ -135,11 +135,17 @@ search.oninput=applyFilters;
 filter.onchange=applyFilters;
 
 async function updateStatus(id,status){
-  await fetch(`${API}/update-order-status`,{
+  const res = await fetch(`${API}/update-order-status`,{
     method:"POST",
     headers:{"Content-Type":"application/json","x-admin-key":getKey()},
     body:JSON.stringify({id,status})
   });
+  if(!res.ok){
+    alert("Failed to update order status. Please try again.");
+    return;
+  }
+  ALL = ALL.map(order => order.id === id ? { ...order, status } : order);
+  applyFilters();
 }
 
 /* WhatsApp */
