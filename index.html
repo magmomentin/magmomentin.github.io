@@ -97,6 +97,7 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 28px; padding: 10px 0 0; }
         .product-card { cursor: pointer; transition: var(--transition); text-align: left; background: #fff; border: 1px solid var(--border); border-radius: 28px; padding: 18px; box-shadow: var(--shadow-soft); }
         .product-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-float); border-color: rgba(166, 132, 77, 0.28); }
+        .product-card:focus-visible { outline: 3px solid rgba(166, 132, 77, 0.55); outline-offset: 4px; transform: translateY(-4px); }
         .img-wrap { aspect-ratio: 1; border-radius: 22px; overflow: hidden; background: #fdfdfd; margin-bottom: 18px; position: relative; border: 1px solid var(--border); box-shadow: var(--shadow-soft); }
         .img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
         .product-card:hover .img-wrap img { transform: scale(1.08); }
@@ -224,7 +225,9 @@
             .opt-grid { grid-template-columns: 1fr; }
             .product-card { padding: 14px; border-radius: 24px; }
             .img-wrap { border-radius: 18px; }
-            .card-info, .card-footer { gap: 12px; }
+            .card-info { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .card-footer { gap: 12px; }
+            .card-price { white-space: normal; }
             .card-title { font-size: 1.3rem; }
             .card-copy { max-width: none; }
         }
@@ -586,7 +589,7 @@
                 }
 
                 grid.innerHTML = filtered.map(p => `
-                    <article class="product-card" onclick="App.openDetail('${p.id}')">
+                    <article class="product-card" tabindex="0" role="button" aria-label="Open ${p.name}" onclick="App.openDetail('${p.id}')" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); App.openDetail('${p.id}'); }">
                         <div class="img-wrap">
                             ${p.id.includes('best') ? '<div class="badge">Best Seller</div>' : ''}
                             <img src="${p.img}" loading="lazy" alt="${p.name}">
