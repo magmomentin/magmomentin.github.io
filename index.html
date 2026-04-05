@@ -96,10 +96,25 @@
         .success-grid { display:grid; gap:26px; margin-top:36px; text-align:left; }
         .success-card { padding:30px 32px; border:1px solid var(--border); border-radius:28px; background:#fff; box-shadow:var(--shadow-soft); }
         .success-card h3 { font-size:1.4rem; margin-bottom:14px; }
+        .success-hero-card { max-width: 760px; margin: 0 auto 28px; padding: 34px; border-radius: 30px; background: linear-gradient(145deg, #ffffff 0%, #f8f5ef 100%); border: 1px solid var(--border); box-shadow: var(--shadow-soft); }
+        .success-meta-grid { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:14px; margin-top:26px; text-align:left; }
+        .success-meta { padding:16px 18px; border-radius:18px; background:rgba(255,255,255,0.82); border:1px solid var(--border); }
+        .success-meta span { display:block; font-size:0.72rem; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+        .success-meta strong { font-size:1rem; color:var(--primary); line-height:1.5; }
         .next-steps { display:grid; gap:16px; }
         .next-step { display:flex; gap:16px; align-items:flex-start; }
         .next-step-index { width:34px; height:34px; border-radius:50%; background:var(--bg-linen); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:900; flex-shrink:0; }
         .next-step p { color:var(--text-muted); }
+        .checkout-feedback { margin-bottom:16px; padding:16px 18px; border-radius:18px; border:1px solid var(--border); background:#fff; display:grid; gap:10px; }
+        .checkout-feedback.hidden { display:none !important; }
+        .checkout-feedback-title { font-size:0.78rem; font-weight:900; letter-spacing:2px; text-transform:uppercase; }
+        .checkout-feedback-message { color:var(--text-muted); line-height:1.65; font-size:0.95rem; }
+        .checkout-feedback-actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .checkout-feedback-actions .btn { width:auto; padding:14px 18px; font-size:0.75rem; }
+        .checkout-feedback.is-error { background:#fff7f7; border-color:#f1cdcd; }
+        .checkout-feedback.is-error .checkout-feedback-title { color:#a33636; }
+        .checkout-feedback.is-success { background:#f7fbf7; border-color:#d8e8d8; }
+        .checkout-feedback.is-success .checkout-feedback-title { color:#2f6c42; }
         .timeline { display:grid; gap:18px; margin-top:24px; }
         .timeline-step { display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:flex-start; }
         .timeline-marker { width:18px; height:18px; border-radius:50%; border:2px solid var(--border); background:#fff; margin-top:4px; box-shadow:0 0 0 6px #fff; }
@@ -308,7 +323,10 @@
             .card-title { font-size: 1.3rem; }
             .card-copy { max-width: none; }
             .success-card { padding:24px; }
+            .success-hero-card { padding:24px; }
+            .success-meta-grid { grid-template-columns: 1fr; }
             .tracking-meta-row { flex-direction:column; gap:4px; }
+            .checkout-feedback-actions .btn { width:100%; }
         }
     </style>
 </head>
@@ -446,6 +464,7 @@
         <div style="font-size: 6rem; margin-bottom: 20px;">✨</div>
         <h2 class="serif" style="font-size: 3.5rem; line-height: 1.1; margin-bottom: 20px;">Order Received!</h2>
         <p style="color:var(--text-muted); margin-bottom:50px; font-size:1.2rem; max-width:600px; margin-left:auto; margin-right:auto;">C & S and our team in Hyderabad have received your order. We are starting to prepare your memories now.</p>
+        <div id="success-meta" class="success-meta-grid" style="max-width:760px; margin:0 auto 28px;"></div>
         <div id="receipt-mount"></div>
         <div class="success-grid">
             <div class="success-card">
@@ -520,6 +539,7 @@
                 </div>
             </div>
             <div style="padding:28px; border-top:1px solid var(--border);">
+                <div id="checkout-feedback" class="checkout-feedback hidden" aria-live="polite"></div>
                 <button class="btn btn-primary" id="pay-btn" onclick="App.checkout()">Confirm & Pay Securely</button>
             </div>
         </div>
@@ -1116,6 +1136,7 @@
 
             async checkout() {
                 if (this.state.isPaying) return;
+                this.setCheckoutFeedback();
                 const sub = this.state.cart.reduce((s, i) => s + Number(i.price), 0);
                 if (sub === 0) return;
                 
@@ -1175,8 +1196,12 @@
                     }
                     this.state.pendingOrder = order; 
                     this.state.lastCustomer = { ...data, address: data.addr };
+                    this.setCheckoutFeedback('success', 'Payment session ready', 'Your secure payment window is opening. Complete the payment to confirm your order.');
                     this.openRazorpay(order, this.state.config, btn);
                 } catch (e) { 
+                    this.setCheckoutFeedback('error', 'Unable to start payment', e?.message || 'Connection error. Please try again.', [
+                        `<button type="button" class="btn btn-outline" onclick="App.checkout()">Try Again</button>`
+                    ]);
                     this.toast(e?.message || "Connection error. Please try again."); 
                     btn.disabled = false; 
                     this.refreshPayButton(); 
@@ -1192,6 +1217,7 @@
                 if (!btn) return;
                 btn.disabled = true;
                 btn.innerText = "Reopening payment...";
+                this.setCheckoutFeedback('success', 'Retrying payment', 'We are reopening your secure payment session with the same order details.');
                 this.openRazorpay(this.state.pendingOrder, this.state.config, btn);
             },
 
@@ -1217,11 +1243,20 @@
                             if (!verifyRes.ok) throw new Error(vData?.error || "Payment verification failed.");
                             if (vData.success) {
                                 verified = true;
+                                this.setCheckoutFeedback('success', 'Payment verified', 'Your payment is confirmed. We are preparing your order summary now.');
                                 this.finalizeOrder(r.razorpay_order_id, this.state.lastCustomer);
                             } else {
+                                this.setCheckoutFeedback('error', 'Verification pending', 'We received your payment response, but verification did not complete. Please retry once before contacting support.', [
+                                    `<button type="button" class="btn btn-primary" onclick="App.retryPayment()">Retry Payment</button>`,
+                                    `<button type="button" class="btn btn-outline" onclick="window.open('https://wa.me/919014291445', '_blank')">WhatsApp Support</button>`
+                                ]);
                                 this.toast("Payment verification failed.");
                             }
                         } catch (e) {
+                            this.setCheckoutFeedback('error', 'Payment could not be confirmed', e?.message || 'Payment verification failed. Please try again.', [
+                                `<button type="button" class="btn btn-primary" onclick="App.retryPayment()">Retry Payment</button>`,
+                                `<button type="button" class="btn btn-outline" onclick="window.open('https://wa.me/919014291445', '_blank')">WhatsApp Support</button>`
+                            ]);
                             this.toast(e?.message || "Payment verification failed. Please try again.");
                         } finally {
                             this.state.isPaying = false;
@@ -1231,7 +1266,15 @@
                             }
                         }
                     },
-                    modal: { ondismiss: () => { this.state.isPaying = false; btn.disabled = false; this.refreshPayButton(); } }
+                    modal: { ondismiss: () => {
+                        this.state.isPaying = false;
+                        btn.disabled = false;
+                        this.refreshPayButton();
+                        this.setCheckoutFeedback('error', 'Payment window closed', 'Your order details are still saved. You can retry payment now or reach out for help if the amount was debited.', [
+                            `<button type="button" class="btn btn-primary" onclick="App.retryPayment()">Retry Payment</button>`,
+                            `<button type="button" class="btn btn-outline" onclick="window.open('https://wa.me/919014291445', '_blank')">WhatsApp Support</button>`
+                        ]);
+                    } }
                 }).open();
             },
 
@@ -1304,6 +1347,45 @@
                     </div>`;
             },
 
+            renderSuccessMeta(orderId, customer) {
+                const mount = document.getElementById('success-meta');
+                if (!mount) return;
+                const sub = this.state.cart.reduce((s, i) => s + Number(i.price), 0);
+                const total = sub + (sub >= 999 ? 0 : 79);
+                const safeId = this.escapeHtml(orderId);
+                const safeName = this.escapeHtml(customer?.name || 'Customer');
+                const safePhone = this.escapeHtml(customer?.phone || '');
+                mount.innerHTML = `
+                    <div class="success-meta">
+                        <span>Order ID</span>
+                        <strong>${safeId}</strong>
+                    </div>
+                    <div class="success-meta">
+                        <span>Paid By</span>
+                        <strong>${safeName}${safePhone ? `<br>${safePhone}` : ''}</strong>
+                    </div>
+                    <div class="success-meta">
+                        <span>Total Paid</span>
+                        <strong>₹${total}</strong>
+                    </div>`;
+            },
+
+            setCheckoutFeedback(type = '', title = '', message = '', actions = []) {
+                const mount = document.getElementById('checkout-feedback');
+                if (!mount) return;
+                if (!type || !message) {
+                    mount.className = 'checkout-feedback hidden';
+                    mount.innerHTML = '';
+                    return;
+                }
+                mount.className = `checkout-feedback is-${type}`;
+                mount.innerHTML = `
+                    <div class="checkout-feedback-title">${this.escapeHtml(title)}</div>
+                    <div class="checkout-feedback-message">${this.escapeHtml(message)}</div>
+                    ${actions.length ? `<div class="checkout-feedback-actions">${actions.join('')}</div>` : ''}`;
+                this.cleanRenderedMarkup(mount);
+            },
+
             cleanRenderedMarkup(target) {
                 if (!target || typeof target.innerHTML !== 'string') return;
                 const replacements = [
@@ -1361,9 +1443,11 @@
                     </div>`;
                 
                 this.renderSuccessNextSteps(c);
+                this.renderSuccessMeta(id, c);
                 this.cleanRenderedMarkup(document.getElementById('receipt-mount'));
                 this.closeAllDrawers();
                 this.state.cart = []; this.sync(); this.updateCartUI();
+                this.setCheckoutFeedback();
                 this.navigate('success');
             },
 
