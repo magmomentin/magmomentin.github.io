@@ -282,7 +282,7 @@
 
             <button type="button" class="cart-trigger" onclick="App.toggleCart()" aria-label="Open Bag" aria-expanded="false" aria-controls="cart-drawer">
                 <span>Bag</span>
-                <div class="cart-count" id="cart-count">0</div>
+                <span class="cart-count" id="cart-count">0</span>
             </button>
         </div>
     </nav>
@@ -859,9 +859,11 @@
                 localStorage.removeItem('magmoment_draft');
                 this.state.current.photos = [];
                 this.state.current.qty = 1;
-                this.sync(); this.updateCartUI(); this.toggleCart();
+                this.sync(); this.updateCartUI();
                 this.toast(isUpdate ? "Changes saved ✨" : "Added to bag ✨");
                 this.navigate('home');
+                this.setCartStage('bag');
+                this.setCartOpen(true);
             },
 
             editCartItem(cartId) {
@@ -873,8 +875,8 @@
                 this.state.editCartId = cartId;
                 this.navigate('detail');
                 this.renderDetail();
-                this.toggleCart();
-                this.goToBag(); 
+                this.setCartOpen(false);
+                this.setCartStage('bag'); 
             },
 
             updateCartUI() {
@@ -900,15 +902,15 @@
                     const nextBtn = document.getElementById('next-to-ship');
                     if (nextBtn) nextBtn.style.display = 'flex';
                     if (box) box.innerHTML = this.state.cart.map(i => `
-                        <div style="display:flex; gap:20px; margin-bottom:30px; align-items:center;">
+                        <div class="cart-card">
                             <img src="${i.photos[0]}" style="width:80px; height:100px; border-radius:12px; object-fit:cover; border:1px solid #eee;" alt="Item">
                             <div style="flex:1;">
                                 <h4 style="font-weight:800; font-size:1.2rem; margin-bottom: 4px;">${i.name}</h4>
                                 <p style="font-size:0.75rem; color:var(--accent); font-weight:900; text-transform:uppercase; letter-spacing:1px; margin-bottom: 5px;">Pack of ${i.count} ${i.qty > 1 ? ' x ' + i.qty : ''} • ${i.finish}</p>
                                 <b style="font-size:1.2rem; color: var(--primary);">₹${i.price}</b>
-                                <div style="display:flex; gap:20px; margin-top:12px;">
-                                    <span style="color:var(--primary); font-size:0.7rem; font-weight:800; cursor:pointer; text-decoration: underline;" onclick="App.editCartItem(${i.cartId})">Edit</span>
-                                    <span style="color:#ff4444; font-size:0.7rem; font-weight:800; cursor:pointer; text-decoration: underline;" onclick="App.removeItem(${i.cartId})">Remove</span>
+                                <div class="cart-item-actions">
+                                    <button type="button" class="text-link-btn cart-item-link" onclick="App.editCartItem(${i.cartId})">Edit</button>
+                                    <button type="button" class="text-link-btn cart-item-link danger" onclick="App.removeItem(${i.cartId})">Remove</button>
                                 </div>
                             </div>
                         </div>`).join('');
@@ -921,7 +923,7 @@
                                 <div style="font-size:11px; font-weight:800; color:#555; margin-bottom:8px;">${sub >= 999 ? '🎉 FREE SHIPPING SECURED' : 'Add ₹' + (999-sub) + ' more for Free Shipping'}</div>
                                 <div style="height:6px; background:#f0f0f0; border-radius:10px; overflow:hidden;"><div style="width:${prg}%; height:100%; background:var(--accent); transition:0.5s;"></div></div>
                             </div>
-                            <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid #f5f5f5; padding-top:25px;">
+                            <div class="drawer-actions">
                                 <div style="display:flex; justify-content:space-between; color:#666;"><span>Subtotal</span><span>₹${sub}</span></div>
                                 <div style="display:flex; justify-content:space-between; color:#666;"><span>Delivery Charge</span><span>${ship === 0 ? 'FREE' : '₹' + ship}</span></div>
                                 <div style="display:flex; justify-content:space-between; font-weight:900; font-size:1.8rem; margin-top:15px; margin-bottom:25px; color:var(--primary);"><span>Total Amount</span><span>₹${total}</span></div>
@@ -1179,6 +1181,22 @@
 
             refreshPayButton() { const btn = document.getElementById('pay-btn'); if (btn) btn.innerText = "Confirm & Pay Securely"; },
             getShapeClass() { const n = (this.state.current.p?.name || "").toLowerCase(); if (n.includes('strip')) return 'shape-strip'; if (n.includes('heart')) return 'shape-heart'; if (n.includes('polaroid')) return 'shape-polaroid'; return 'shape-square'; },
+            setCartStage(stage = 'bag') {
+                const bagStage = document.getElementById('cart-stage-1');
+                const shippingStage = document.getElementById('cart-stage-2');
+                const isShipping = stage === 'shipping';
+                if (bagStage) bagStage.classList.toggle('hidden', isShipping);
+                if (shippingStage) shippingStage.classList.toggle('hidden', !isShipping);
+            },
+            setCartOpen(open) {
+                const drawer = document.getElementById('cart-drawer');
+                const overlay = document.getElementById('overlay');
+                const trigger = document.querySelector('.cart-trigger');
+                if (drawer) drawer.classList.toggle('active', open);
+                if (overlay) overlay.classList.toggle('active', open || this.state.isMenuOpen);
+                if (trigger) trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+                document.body.style.overflow = (open || this.state.isMenuOpen) ? 'hidden' : '';
+            },
             navigate(v, opts = {}) {
                 const { params = {}, replaceHistory = false, skipHistory = false } = opts;
                 document.querySelectorAll('.view').forEach(x => x.classList.add('hidden'));
@@ -1191,13 +1209,23 @@
                     if (useReplace) window.history.replaceState({ view: v, params }, '', url);
                     else window.history.pushState({ view: v, params }, '', url);
                 }
+                this.closeAllDrawers();
                 window.scrollTo(0, 0);
             },
-            toggleCart() { const drawer = document.getElementById('cart-drawer'); const overlay = document.getElementById('overlay'); const isOpen = drawer.classList.toggle('active'); if(overlay) overlay.classList.toggle('active'); document.body.style.overflow = isOpen ? 'hidden' : ''; },
-            goToShipping() { document.getElementById('cart-stage-1').classList.add('hidden'); document.getElementById('cart-stage-2').classList.remove('hidden'); },
-            goToBag() { document.getElementById('cart-stage-1').classList.remove('hidden'); document.getElementById('cart-stage-2').classList.add('hidden'); },
-            removeItem(id) { this.state.cart = this.state.cart.filter(i => i.cartId !== id); this.sync(); this.updateCartUI(); if (this.state.cart.length === 0) { this.toggleCart(); this.navigate('home'); } },
-            clearCart() { this.state.cart = []; this.sync(); this.updateCartUI(); this.toggleCart(); this.navigate('home'); },
+            toggleCart(open) {
+                const drawer = document.getElementById('cart-drawer');
+                const isOpen = open !== undefined ? open : !drawer.classList.contains('active');
+                this.setCartOpen(isOpen);
+            },
+            goToShipping() { this.setCartStage('shipping'); },
+            goToBag() { this.setCartStage('bag'); },
+            removeItem(id) {
+                this.state.cart = this.state.cart.filter(i => i.cartId !== id);
+                this.sync();
+                this.updateCartUI();
+                if (this.state.cart.length === 0) this.setCartStage('bag');
+            },
+            clearCart() { this.state.cart = []; this.sync(); this.updateCartUI(); this.setCartStage('bag'); },
             sync() { localStorage.setItem('magmoment_v5', JSON.stringify(this.state.cart)); },
             syncDraft() { localStorage.setItem('magmoment_draft', JSON.stringify(this.state.current)); },
             toast(m) { const t = document.getElementById('toast'); if(!t) return; t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3500); },
@@ -1221,13 +1249,11 @@
             toggleMenu(open) {
                 this.state.isMenuOpen = (open !== undefined) ? open : !this.state.isMenuOpen;
                 document.getElementById('nav-links').classList.toggle('active', this.state.isMenuOpen);
-                document.getElementById('overlay').classList.toggle('active', this.state.isMenuOpen);
+                this.setCartOpen(document.getElementById('cart-drawer').classList.contains('active'));
             },
             closeAllDrawers() {
                 this.toggleMenu(false);
-                document.getElementById('cart-drawer').classList.remove('active');
-                document.getElementById('overlay').classList.remove('active');
-                document.body.style.overflow = '';
+                this.setCartOpen(false);
             }
         };
 
