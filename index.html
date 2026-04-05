@@ -810,6 +810,18 @@
                 }
             },
 
+            retryPayment() {
+                if (this.state.isPaying) return;
+                const btn = document.getElementById('pay-btn');
+                if (!this.state.pendingOrder || !this.state.config?.razorpayKey) {
+                    return this.checkout();
+                }
+                if (!btn) return;
+                btn.disabled = true;
+                btn.innerText = "Reopening payment...";
+                this.openRazorpay(this.state.pendingOrder, this.state.config, btn);
+            },
+
             openRazorpay(order, cfg, btn) {
                 this.state.isPaying = true;
                 new Razorpay({
