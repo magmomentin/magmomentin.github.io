@@ -124,6 +124,9 @@ function optimizedPreviewUrl(url,width=220,height=220){
     const separator=src.includes("/-/") ? "" : "-/";
     return `${src}${separator}-/scale_crop/${width}x${height}/center/-/format/auto/-/quality/smart/`;
   }
+  if(src.includes("res.cloudinary.com") && src.includes("/upload/")){
+    return src.replace("/upload/", `/upload/c_fill,w_${width},h_${height},g_auto,f_auto,q_auto/`);
+  }
   return src;
 }
 

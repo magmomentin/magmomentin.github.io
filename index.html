@@ -22,8 +22,7 @@
 
     <!-- SDKs -->
     <script src="https://checkout.razorpay.com/v1/checkout.js" crossorigin="anonymous"></script>
-    <script>window.UPLOADCARE_PUBLIC_KEY = "fe7504537b995265c0ee";</script>
-    <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js" crossorigin="anonymous"></script>
+    <script src="https://upload-widget.cloudinary.com/latest/global/all.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -565,6 +564,9 @@
 
     <script>
         const API_BASE = "https://phxhhzwuamdoclklvccb.supabase.co/functions/v1";
+        // Optional local fallback values if /get-config does not provide Cloudinary settings yet.
+        const CLOUDINARY_CLOUD_NAME = "";
+        const CLOUDINARY_UPLOAD_PRESET = "";
 
         const App = {
             state: {
@@ -672,7 +674,27 @@
                     const separator = src.includes('/-/') ? '' : '-/';
                     return `${src}${separator}-/scale_crop/${width}x${height}/${fit}/-/format/${format}/-/quality/${quality}/`;
                 }
+                if (src.includes('res.cloudinary.com') && src.includes('/upload/')) {
+                    const mode = fit === 'contain' ? 'c_pad' : (fit === 'fit' ? 'c_fit' : 'c_fill');
+                    const transforms = [mode, `w_${width}`, `h_${height}`, 'g_auto'];
+                    if (format === 'auto') transforms.push('f_auto');
+                    if (quality === 'smart' || quality === 'auto') transforms.push('q_auto');
+                    return src.replace('/upload/', `/upload/${transforms.join(',')}/`);
+                }
                 return src;
+            },
+
+            isManagedUploadUrl(url) {
+                const src = String(url || '');
+                return src.includes('res.cloudinary.com') || src.includes('ucarecdn.com') || src.includes('ucarecd.net');
+            },
+
+            getCloudinaryConfig() {
+                const fromConfig = this.state.config || {};
+                return {
+                    cloudName: String(fromConfig.cloudinaryCloudName || CLOUDINARY_CLOUD_NAME || '').trim(),
+                    uploadPreset: String(fromConfig.cloudinaryUploadPreset || CLOUDINARY_UPLOAD_PRESET || '').trim()
+                };
             },
 
             getSafeDraft() {
@@ -971,31 +993,58 @@
             },
 
             upload() {
-                if (typeof uploadcare === 'undefined') return this.toast("Upload system busy.");
+                if (typeof cloudinary === 'undefined' || typeof cloudinary.createUploadWidget !== 'function') {
+                    return this.toast("Upload system busy. Please refresh and try again.");
+                }
+                const { cloudName, uploadPreset } = this.getCloudinaryConfig();
+                if (!cloudName || !uploadPreset) {
+                    return this.toast("Cloudinary is not configured yet. Check that /get-config returns cloudinaryCloudName and cloudinaryUploadPreset.");
+                }
                 const requiredCount = this.state.current.b.count * this.state.current.qty;
                 const upArea = document.getElementById('up-area');
-                const existingFiles = this.state.current.photos.map(url => uploadcare.fileFrom('url', url));
-                const dialogTarget = requiredCount > 1 ? (existingFiles.length > 0 ? existingFiles : null) : (existingFiles[0] || null);
+                const cropShape = this.getShapeClass() === 'shape-polaroid' ? '4:5' : (this.getShapeClass() === 'shape-strip' ? null : '1:1');
+                const uploadedUrls = [];
+                let completed = false;
+                if (upArea) upArea.classList.add('loading');
 
-                uploadcare.openDialog(dialogTarget, { 
-                    imagesOnly: true, multiple: requiredCount > 1, multipleMax: requiredCount,
-                    crop: this.getShapeClass() === 'shape-polaroid' ? "4:5" : (this.getShapeClass() === 'shape-strip' ? null : "1:1"),
-                    imageEditorEffects: 'crop, rotate, mirror'
-                }).done(group => {
-                    if (!group) return; 
-                    if (upArea) upArea.classList.add('loading');
-                    const files = requiredCount > 1 ? group.files() : [group];
-                    Promise.all(files.map(f => new Promise(r => f.done(r)))).then(res => {
-                        this.state.current.photos = res.map(r => r.cdnUrl);
-                        this.syncDraft();
-                        this.renderDraftBanner();
-                        this.renderThumbnails(); this.validateAdd();
+                const widget = cloudinary.createUploadWidget({
+                    cloudName,
+                    uploadPreset,
+                    sources: ['local', 'camera'],
+                    multiple: requiredCount > 1,
+                    maxFiles: requiredCount,
+                    resourceType: 'image',
+                    clientAllowedFormats: ['jpg', 'jpeg', 'png', 'webp', 'heic'],
+                    showAdvancedOptions: false,
+                    showSkipCropButton: true,
+                    cropping: Boolean(cropShape),
+                    croppingAspectRatio: cropShape === '4:5' ? 0.8 : 1,
+                    singleUploadAutoClose: true
+                }, (error, result) => {
+                    if (error) {
                         if (upArea) upArea.classList.remove('loading');
-                    }).catch(() => {
                         this.toast("Upload failed. Try again.");
+                        return;
+                    }
+                    if (!result) return;
+                    if (result.event === 'success' && result.info?.secure_url) {
+                        uploadedUrls.push(result.info.secure_url);
+                    }
+                    if ((result.event === 'queues-end' || result.event === 'close') && !completed) {
+                        completed = true;
                         if (upArea) upArea.classList.remove('loading');
-                    });
+                        if (uploadedUrls.length) {
+                            this.state.current.photos = uploadedUrls.slice(0, requiredCount);
+                            this.syncDraft();
+                            this.renderDraftBanner();
+                            this.renderThumbnails();
+                            this.validateAdd();
+                            this.toast(`Uploaded ${uploadedUrls.length} photo${uploadedUrls.length > 1 ? 's' : ''}.`);
+                        }
+                    }
                 });
+
+                widget.open();
             },
 
             renderThumbnails() {
@@ -1192,7 +1241,7 @@
                     const bundleCount = Number(i.count || 0);
                     if (!bundleCount || photoCount === 0) return true;
                     const countMismatch = (photoCount !== bundleCount) && (photoCount % bundleCount !== 0);
-                    const badUrl = (i.photos || []).some(url => typeof url !== "string" || (!url.includes("ucarecdn.com") && !url.includes("ucarecd.net")));
+                    const badUrl = (i.photos || []).some(url => typeof url !== "string" || !this.isManagedUploadUrl(url));
                     return countMismatch || badUrl;
                 });
                 if (invalidItem) {
