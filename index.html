@@ -442,6 +442,10 @@
             },
 
             getRouteForView(view, params = {}) {
+                if (view === 'tracking') return '/?view=tracking';
+                if (view === 'success') return '/?view=success';
+                if (view === 'detail') return params.product ? `/?view=product&id=${encodeURIComponent(params.product)}` : '/?view=product';
+                if (view === 'policy') return params.type ? `/?view=policy&type=${encodeURIComponent(params.type)}` : '/?view=policy';
                 if (view === 'tracking') return '/tracking';
                 if (view === 'success') return '/success';
                 if (view === 'detail') return params.product ? `/product?id=${encodeURIComponent(params.product)}` : '/product';
@@ -450,6 +454,15 @@
             },
 
             parseRoute() {
+                const q = new URLSearchParams(window.location.search);
+                const queryView = q.get('view');
+                if (queryView === 'tracking') return { view: 'tracking' };
+                if (queryView === 'success') return { view: 'success' };
+                if (queryView === 'product') return { view: 'detail', productId: q.get('id') };
+                if (queryView === 'policy') return { view: 'policy', policyType: q.get('type') || 'privacy' };
+
+                // Backward-compatible path parsing (legacy links)
+                const path = window.location.pathname.replace(/\/+$/, '') || '/';
                 const path = window.location.pathname.replace(/\/+$/, '') || '/';
                 const q = new URLSearchParams(window.location.search);
                 if (path === '/tracking') return { view: 'tracking' };
@@ -858,6 +871,7 @@
                 }
 
                 const btn = document.getElementById('pay-btn');
+                if (!btn) return this.toast("Payment button unavailable. Please refresh and try again.");
                 btn.disabled = true; btn.innerText = "Setting up payment..."; 
 
                 try {
@@ -867,11 +881,14 @@
                         body: JSON.stringify({ items: this.state.cart, customer: { ...data, address: data.addr, phone: data.phone } }) 
                     });
                     const order = await res.json();
+                    if (!res.ok || !order?.id || !order?.amount) {
+                        throw new Error(order?.error || "Unable to create order.");
+                    }
                     this.state.pendingOrder = order; 
                     this.state.lastCustomer = { ...data, address: data.addr };
                     this.openRazorpay(order, this.state.config, btn);
                 } catch (e) { 
-                    this.toast("Connection error. Please try again."); 
+                    this.toast(e?.message || "Connection error. Please try again."); 
                     btn.disabled = false; 
                     this.refreshPayButton(); 
                 }
@@ -1028,6 +1045,8 @@
                 if (target) target.classList.remove('hidden');
                 if (!skipHistory) {
                     const url = this.getRouteForView(v, params);
+                    const currentUrl = `${window.location.pathname}${window.location.search}`;
+                    if (replaceHistory || url === currentUrl) window.history.replaceState({ view: v, params }, '', url);
                     if (replaceHistory) window.history.replaceState({ view: v, params }, '', url);
                     else window.history.pushState({ view: v, params }, '', url);
                 }
@@ -1042,6 +1061,8 @@
             syncDraft() { localStorage.setItem('magmoment_draft', JSON.stringify(this.state.current)); },
             toast(m) { const t = document.getElementById('toast'); if(!t) return; t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3500); },
             swapGallery(s, el) { const img = document.getElementById('stage-view'); if (img) { img.src = s; } document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active')); if(el) el.classList.add('active'); },
+            scrollToCatalog() { this.navigate('home', { replaceHistory: true }); setTimeout(() => { const el = document.getElementById('catalog-anchor'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
+            scrollToAbout() { this.navigate('home', { replaceHistory: true }); setTimeout(() => { const el = document.getElementById('about'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
             scrollToCatalog() { this.navigate('home'); setTimeout(() => { const el = document.getElementById('catalog-anchor'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
             scrollToAbout() { this.navigate('home'); setTimeout(() => { const el = document.getElementById('about'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
             showPolicy(type, opts = {}) {
