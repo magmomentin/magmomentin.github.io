@@ -1067,6 +1067,7 @@
                 const b = p.bundles.find(b => b.id === item.bundleId);
                 this.state.current = { p, b, qty: item.qty || 1, finish: item.finish, photos: [...item.photos] };
                 this.state.editCartId = cartId;
+                this.resetCheckoutState();
                 this.navigate('detail');
                 this.renderDetail();
                 this.setCartOpen(false);
@@ -1392,6 +1393,13 @@
                 this.cleanRenderedMarkup(mount);
             },
 
+            resetCheckoutState() {
+                this.state.pendingOrder = null;
+                this.state.isPaying = false;
+                this.setCheckoutFeedback();
+                this.refreshPayButton();
+            },
+
             cleanRenderedMarkup(target) {
                 if (!target || typeof target.innerHTML !== 'string') return;
                 const replacements = [
@@ -1573,14 +1581,24 @@
                 this.setCartOpen(isOpen);
             },
             goToShipping() { this.setCartStage('shipping'); },
-            goToBag() { this.setCartStage('bag'); },
+            goToBag() {
+                this.resetCheckoutState();
+                this.setCartStage('bag');
+            },
             removeItem(id) {
                 this.state.cart = this.state.cart.filter(i => i.cartId !== id);
+                this.resetCheckoutState();
                 this.sync();
                 this.updateCartUI();
                 if (this.state.cart.length === 0) this.setCartStage('bag');
             },
-            clearCart() { this.state.cart = []; this.sync(); this.updateCartUI(); this.setCartStage('bag'); },
+            clearCart() {
+                this.state.cart = [];
+                this.resetCheckoutState();
+                this.sync();
+                this.updateCartUI();
+                this.setCartStage('bag');
+            },
             sync() { localStorage.setItem('magmoment_v5', JSON.stringify(this.state.cart)); },
             syncDraft() { localStorage.setItem('magmoment_draft', JSON.stringify(this.state.current)); },
             toast(m) { const t = document.getElementById('toast'); if(!t) return; t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3500); },
