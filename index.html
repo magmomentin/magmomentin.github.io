@@ -714,7 +714,8 @@
                 const ship = (sub >= 999 || sub === 0) ? 0 : 79;
                 const total = sub + ship;
                 const box = document.getElementById('cart-items-box');
-                document.getElementById('cart-count').innerText = this.state.cart.length;
+                const cartCountEl = document.getElementById('cart-count');
+                if (cartCountEl) cartCountEl.innerText = this.state.cart.length;
 
                 if (!this.state.cart.length) {
                     this.goToBag();
@@ -723,10 +724,13 @@
                             <p style="color:#aaa; font-size:1.1rem; margin-bottom: 30px;">Your bag is currently empty.</p>
                             <button class="btn btn-primary" style="width:auto; padding:18px 40px;" onclick="App.toggleCart(); App.scrollToCatalog();">Browse Products</button>
                         </div>`;
-                    document.getElementById('cart-price-inject').innerHTML = '';
-                    document.getElementById('next-to-ship').style.display = 'none';
+                    const priceInject = document.getElementById('cart-price-inject');
+                    if (priceInject) priceInject.innerHTML = '';
+                    const nextBtn = document.getElementById('next-to-ship');
+                    if (nextBtn) nextBtn.style.display = 'none';
                 } else {
-                    document.getElementById('next-to-ship').style.display = 'flex';
+                    const nextBtn = document.getElementById('next-to-ship');
+                    if (nextBtn) nextBtn.style.display = 'flex';
                     if (box) box.innerHTML = this.state.cart.map(i => `
                         <div style="display:flex; gap:20px; margin-bottom:30px; align-items:center;">
                             <img src="${i.photos[0]}" style="width:80px; height:100px; border-radius:12px; object-fit:cover; border:1px solid #eee;" alt="Item">
@@ -742,16 +746,19 @@
                         </div>`).join('');
 
                     const prg = Math.min((sub / 999) * 100, 100);
-                    document.getElementById('cart-price-inject').innerHTML = `
-                        <div style="margin-bottom:30px;">
-                            <div style="font-size:11px; font-weight:800; color:#555; margin-bottom:8px;">${sub >= 999 ? '🎉 FREE SHIPPING SECURED' : 'Add ₹' + (999-sub) + ' more for Free Shipping'}</div>
-                            <div style="height:6px; background:#f0f0f0; border-radius:10px; overflow:hidden;"><div style="width:${prg}%; height:100%; background:var(--accent); transition:0.5s;"></div></div>
-                        </div>
-                        <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid #f5f5f5; padding-top:25px;">
-                            <div style="display:flex; justify-content:space-between; color:#666;"><span>Subtotal</span><span>₹${sub}</span></div>
-                            <div style="display:flex; justify-content:space-between; color:#666;"><span>Delivery Charge</span><span>${ship === 0 ? 'FREE' : '₹' + ship}</span></div>
-                            <div style="display:flex; justify-content:space-between; font-weight:900; font-size:1.8rem; margin-top:15px; margin-bottom:25px; color:var(--primary);"><span>Total Amount</span><span>₹${total}</span></div>
-                        </div>`;
+                    const priceInject = document.getElementById('cart-price-inject');
+                    if (priceInject) {
+                        priceInject.innerHTML = `
+                            <div style="margin-bottom:30px;">
+                                <div style="font-size:11px; font-weight:800; color:#555; margin-bottom:8px;">${sub >= 999 ? '🎉 FREE SHIPPING SECURED' : 'Add ₹' + (999-sub) + ' more for Free Shipping'}</div>
+                                <div style="height:6px; background:#f0f0f0; border-radius:10px; overflow:hidden;"><div style="width:${prg}%; height:100%; background:var(--accent); transition:0.5s;"></div></div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid #f5f5f5; padding-top:25px;">
+                                <div style="display:flex; justify-content:space-between; color:#666;"><span>Subtotal</span><span>₹${sub}</span></div>
+                                <div style="display:flex; justify-content:space-between; color:#666;"><span>Delivery Charge</span><span>${ship === 0 ? 'FREE' : '₹' + ship}</span></div>
+                                <div style="display:flex; justify-content:space-between; font-weight:900; font-size:1.8rem; margin-top:15px; margin-bottom:25px; color:var(--primary);"><span>Total Amount</span><span>₹${total}</span></div>
+                            </div>`;
+                    }
                 }
                 this.refreshPayButton();
             },
@@ -835,9 +842,10 @@
                 const sub = this.state.cart.reduce((s, i) => s + Number(i.price), 0);
                 const total = sub + (sub >= 999 ? 0 : 79);
                 
+                // Define the receipt with explicit background and font styling for clean PDF export
                 document.getElementById('receipt-mount').innerHTML = `
-                    <div id="printable-receipt" style="background:#ffffff; color:#111; padding:40px; border:2px solid #eee; border-radius: 20px; text-align: left; max-width: 500px; margin: 0 auto;">
-                        <h3 style="font-family: serif; font-style: italic; font-size: 2.5rem; margin-bottom: 5px;">MagMoment</h3>
+                    <div id="printable-receipt" style="background:#ffffff; color:#111; padding:50px; border:1px solid #eee; border-radius: 4px; text-align: left; max-width: 600px; margin: 0 auto; font-family: 'Inter', sans-serif; display: block; visibility: visible;">
+                        <h3 style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 2.5rem; margin-bottom: 5px;">MagMoment</h3>
                         <p style="font-size: 11px; color: #a6844d; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; font-weight: 800;">Order Receipt</p>
                         
                         <div style="margin-bottom: 30px; font-size: 14px;">
@@ -858,11 +866,10 @@
                             <div style="display: flex; justify-content: space-between; padding: 5px 0;"><span>Delivery</span><span>${sub >= 999 ? 'FREE' : '₹79'}</span></div>
                             <div style="display: flex; justify-content: space-between; margin-top: 20px; padding-top: 20px; border-top: 2px solid #111; font-weight: 900; font-size: 22px;"><span>Total Paid</span><span>₹${total}</span></div>
                         </div>
+                        <div style="margin-top: 30px; text-align: center; color: #ccc; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Handmade with love in Hyderabad.</div>
                     </div>`;
                 
-                // Close Bag and Overlay immediately
                 this.closeAllDrawers();
-                
                 this.state.cart = []; this.sync(); this.updateCartUI();
                 this.navigate('success');
             },
@@ -893,13 +900,50 @@
 
             downloadPDF() {
                 const element = document.getElementById('printable-receipt');
-                html2pdf().from(element).save('MagMoment-Receipt.pdf');
+                if (!element) return;
+
+                const btn = document.getElementById('pdf-btn');
+                const originalText = btn.innerText;
+                btn.innerText = "Generating PDF...";
+                btn.disabled = true;
+
+                // Scroll to top to ensure capture isn't offset by viewport position
+                window.scrollTo(0, 0);
+
+                const opt = {
+                    margin:       [0.5, 0.5],
+                    filename:     'MagMoment-Receipt.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { 
+                        scale: 2, 
+                        useCORS: true, 
+                        letterRendering: true,
+                        scrollX: 0,
+                        scrollY: 0,
+                        windowWidth: document.documentElement.offsetWidth,
+                        logging: false
+                    },
+                    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+
+                // Adding a tiny delay to ensure the DOM is stable
+                setTimeout(() => {
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    }).catch(err => {
+                        console.error("PDF generation failed", err);
+                        this.toast("PDF generation failed. Please try again.");
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    });
+                }, 100);
             },
 
             refreshPayButton() { const btn = document.getElementById('pay-btn'); if (btn) btn.innerText = "Confirm & Pay Securely"; },
             getShapeClass() { const n = (this.state.current.p?.name || "").toLowerCase(); if (n.includes('strip')) return 'shape-strip'; if (n.includes('heart')) return 'shape-heart'; if (n.includes('polaroid')) return 'shape-polaroid'; return 'shape-square'; },
             navigate(v) { document.querySelectorAll('.view').forEach(x => x.classList.add('hidden')); document.getElementById(v + '-view').classList.remove('hidden'); window.scrollTo(0, 0); },
-            toggleCart() { const drawer = document.getElementById('cart-drawer'); const overlay = document.getElementById('overlay'); const isOpen = drawer.classList.toggle('active'); overlay.classList.toggle('active'); document.body.style.overflow = isOpen ? 'hidden' : ''; },
+            toggleCart() { const drawer = document.getElementById('cart-drawer'); const overlay = document.getElementById('overlay'); const isOpen = drawer.classList.toggle('active'); if(overlay) overlay.classList.toggle('active'); document.body.style.overflow = isOpen ? 'hidden' : ''; },
             goToShipping() { document.getElementById('cart-stage-1').classList.add('hidden'); document.getElementById('cart-stage-2').classList.remove('hidden'); },
             goToBag() { document.getElementById('cart-stage-1').classList.remove('hidden'); document.getElementById('cart-stage-2').classList.add('hidden'); },
             removeItem(id) { this.state.cart = this.state.cart.filter(i => i.cartId !== id); this.sync(); this.updateCartUI(); if (this.state.cart.length === 0) { this.toggleCart(); this.navigate('home'); } },
@@ -908,8 +952,8 @@
             syncDraft() { localStorage.setItem('magmoment_draft', JSON.stringify(this.state.current)); },
             toast(m) { const t = document.getElementById('toast'); if(!t) return; t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3500); },
             swapGallery(s, el) { const img = document.getElementById('stage-view'); if (img) { img.src = s; } document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active')); if(el) el.classList.add('active'); },
-            scrollToCatalog() { this.navigate('home'); setTimeout(() => { document.getElementById('catalog-anchor').scrollIntoView({ behavior: 'smooth' }); }, 100); },
-            scrollToAbout() { this.navigate('home'); setTimeout(() => { document.getElementById('about').scrollIntoView({ behavior: 'smooth' }); }, 100); },
+            scrollToCatalog() { this.navigate('home'); setTimeout(() => { const el = document.getElementById('catalog-anchor'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
+            scrollToAbout() { this.navigate('home'); setTimeout(() => { const el = document.getElementById('about'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
             showPolicy(type) {
                 const policies = {
                     privacy: `<h1>Privacy Policy</h1><p>We respect your privacy and handle your data responsibly.</p><h2>Information Collected</h2><ul><li>Name, email, phone number, address: For delivery purposes.</li><li>Order details and uploaded images: Strictly for fulfilling your order.</li></ul><h2>Usage</h2><p>Your information is used only to process orders, provide support, and improve experience. We never sell or share your memories with third parties.</p><h2>Security</h2><p>Your images are stored in secure servers and are only accessible by our staff during the production process.</p>`,
