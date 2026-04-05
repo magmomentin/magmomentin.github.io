@@ -380,7 +380,7 @@
                 </div>
             </div>
             <div style="padding:40px; border-top:1px solid var(--border);">
-                <button class="btn btn-primary" id="pay-btn" onclick="App.state.pendingOrder ? App.retryPayment() : App.checkout()">Confirm & Pay Securely</button>
+                <button class="btn btn-primary" id="pay-btn" onclick="App.checkout()">Confirm & Pay Securely</button>
             </div>
         </div>
     </div>
@@ -419,7 +419,8 @@
                 lastCustomer: null,
                 isLoading: false,
                 isMenuOpen: false,
-                isPaying: false
+                isPaying: false,
+                currentPolicy: null
             },
 
             async init() {
@@ -435,8 +436,44 @@
                     products.forEach(p => this.state.productMap[p.id] = p);
                     this.renderCatalog();
                     this.updateCartUI();
+                    this.applyRouteFromLocation({ replace: true });
                 } catch (e) { this.toast("Error connecting to shop."); }
                 finally { this.setLoading(false); }
+            },
+
+            getRouteForView(view, params = {}) {
+                if (view === 'tracking') return '/tracking';
+                if (view === 'success') return '/success';
+                if (view === 'detail') return params.product ? `/product?id=${encodeURIComponent(params.product)}` : '/product';
+                if (view === 'policy') return params.type ? `/policy?type=${encodeURIComponent(params.type)}` : '/policy';
+                return '/';
+            },
+
+            parseRoute() {
+                const path = window.location.pathname.replace(/\/+$/, '') || '/';
+                const q = new URLSearchParams(window.location.search);
+                if (path === '/tracking') return { view: 'tracking' };
+                if (path === '/success') return { view: 'success' };
+                if (path === '/product') return { view: 'detail', productId: q.get('id') };
+                if (path === '/policy') return { view: 'policy', policyType: q.get('type') || 'privacy' };
+                return { view: 'home' };
+            },
+
+            applyRouteFromLocation({ replace = false } = {}) {
+                const route = this.parseRoute();
+                if (route.view === 'detail') {
+                    if (route.productId && this.state.productMap[route.productId]) {
+                        this.openDetail(route.productId, { skipNavigation: true });
+                        return;
+                    }
+                    this.navigate('home', { replaceHistory: replace });
+                    return;
+                }
+                if (route.view === 'policy') {
+                    this.showPolicy(route.policyType, { skipNavigation: true });
+                    return;
+                }
+                this.navigate(route.view, { replaceHistory: replace });
             },
 
             setLoading(loading) {
@@ -472,8 +509,13 @@
 
             setCategory(cat) { this.state.activeCategory = cat; this.renderCatalog(); },
 
-            openDetail(id) {
+            openDetail(id, opts = {}) {
                 const p = this.state.productMap[id];
+                if (!p) {
+                    this.toast("Product not found.");
+                    this.navigate('home');
+                    return;
+                }
                 const existingDraft = JSON.parse(localStorage.getItem('magmoment_draft'));
                 if (existingDraft && existingDraft.p && existingDraft.p.id === id) {
                     this.state.current = existingDraft;
@@ -482,7 +524,9 @@
                     this.state.editCartId = null; 
                     this.state.current = { p, b: { ...p.bundles[0] }, qty: 1, finish: 'Glossy', photos: [] };
                 }
-                this.syncDraft(); this.renderDetail(); this.navigate('detail');
+                this.syncDraft(); this.renderDetail();
+                if (opts.skipNavigation) this.navigate('detail', { params: { product: id }, replaceHistory: true });
+                else this.navigate('detail', { params: { product: id } });
             },
 
             renderDetail() {
@@ -790,6 +834,29 @@
 
                 if (hasError) return this.toast("Please fill in all delivery details.");
 
+                const cleanPhone = String(data.phone || "").replace(/\D/g, "");
+                if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+                    return this.toast("Please enter a valid 10-digit Indian mobile number.");
+                }
+                data.phone = cleanPhone;
+
+                data.pin = String(data.pin || "").replace(/\D/g, "").slice(0, 6);
+                if (data.pin && data.pin.length !== 6) {
+                    return this.toast("Please enter a valid 6-digit pincode.");
+                }
+
+                const invalidItem = this.state.cart.find(i => {
+                    const photoCount = Array.isArray(i.photos) ? i.photos.length : 0;
+                    const bundleCount = Number(i.count || 0);
+                    if (!bundleCount || photoCount === 0) return true;
+                    const countMismatch = (photoCount !== bundleCount) && (photoCount % bundleCount !== 0);
+                    const badUrl = (i.photos || []).some(url => typeof url !== "string" || (!url.includes("ucarecdn.com") && !url.includes("ucarecd.net")));
+                    return countMismatch || badUrl;
+                });
+                if (invalidItem) {
+                    return this.toast("One or more uploaded photos are invalid. Please re-upload and try again.");
+                }
+
                 const btn = document.getElementById('pay-btn');
                 btn.disabled = true; btn.innerText = "Setting up payment..."; 
 
@@ -808,6 +875,18 @@
                     btn.disabled = false; 
                     this.refreshPayButton(); 
                 }
+            },
+
+            retryPayment() {
+                if (this.state.isPaying) return;
+                const btn = document.getElementById('pay-btn');
+                if (!this.state.pendingOrder || !this.state.config?.razorpayKey) {
+                    return this.checkout();
+                }
+                if (!btn) return;
+                btn.disabled = true;
+                btn.innerText = "Reopening payment...";
+                this.openRazorpay(this.state.pendingOrder, this.state.config, btn);
             },
 
             openRazorpay(order, cfg, btn) {
@@ -942,7 +1021,18 @@
 
             refreshPayButton() { const btn = document.getElementById('pay-btn'); if (btn) btn.innerText = "Confirm & Pay Securely"; },
             getShapeClass() { const n = (this.state.current.p?.name || "").toLowerCase(); if (n.includes('strip')) return 'shape-strip'; if (n.includes('heart')) return 'shape-heart'; if (n.includes('polaroid')) return 'shape-polaroid'; return 'shape-square'; },
-            navigate(v) { document.querySelectorAll('.view').forEach(x => x.classList.add('hidden')); document.getElementById(v + '-view').classList.remove('hidden'); window.scrollTo(0, 0); },
+            navigate(v, opts = {}) {
+                const { params = {}, replaceHistory = false, skipHistory = false } = opts;
+                document.querySelectorAll('.view').forEach(x => x.classList.add('hidden'));
+                const target = document.getElementById(v + '-view');
+                if (target) target.classList.remove('hidden');
+                if (!skipHistory) {
+                    const url = this.getRouteForView(v, params);
+                    if (replaceHistory) window.history.replaceState({ view: v, params }, '', url);
+                    else window.history.pushState({ view: v, params }, '', url);
+                }
+                window.scrollTo(0, 0);
+            },
             toggleCart() { const drawer = document.getElementById('cart-drawer'); const overlay = document.getElementById('overlay'); const isOpen = drawer.classList.toggle('active'); if(overlay) overlay.classList.toggle('active'); document.body.style.overflow = isOpen ? 'hidden' : ''; },
             goToShipping() { document.getElementById('cart-stage-1').classList.add('hidden'); document.getElementById('cart-stage-2').classList.remove('hidden'); },
             goToBag() { document.getElementById('cart-stage-1').classList.remove('hidden'); document.getElementById('cart-stage-2').classList.add('hidden'); },
@@ -954,7 +1044,7 @@
             swapGallery(s, el) { const img = document.getElementById('stage-view'); if (img) { img.src = s; } document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active')); if(el) el.classList.add('active'); },
             scrollToCatalog() { this.navigate('home'); setTimeout(() => { const el = document.getElementById('catalog-anchor'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
             scrollToAbout() { this.navigate('home'); setTimeout(() => { const el = document.getElementById('about'); if(el) el.scrollIntoView({ behavior: 'smooth' }); }, 100); },
-            showPolicy(type) {
+            showPolicy(type, opts = {}) {
                 const policies = {
                     privacy: `<h1>Privacy Policy</h1><p>We respect your privacy and handle your data responsibly.</p><h2>Information Collected</h2><ul><li>Name, email, phone number, address: For delivery purposes.</li><li>Order details and uploaded images: Strictly for fulfilling your order.</li></ul><h2>Usage</h2><p>Your information is used only to process orders, provide support, and improve experience. We never sell or share your memories with third parties.</p><h2>Security</h2><p>Your images are stored in secure servers and are only accessible by our staff during the production process.</p>`,
                     terms: `<h1>Terms of Service</h1><p>By using MagMoment, you agree to the following terms and conditions.</p><h2>Custom Products</h2><p>All items are made-to-order using customer-uploaded images. Once artisan production begins, orders cannot be cancelled, modified, or returned.</p><h2>User Responsibility</h2><ul><li>You must own the rights to the images you upload.</li><li>You agree not to upload offensive, illegal, or copyrighted content you do not own.</li></ul><h2>Liability</h2><p>We are not responsible for delays caused by external shipping partners or incorrect address details provided by the customer.</p>`,
@@ -962,8 +1052,11 @@
                     refunds: `<h1>Refund Policy</h1><h2>Personalized Orders</h2><p>Personalized products are non-refundable and non-returnable due to their bespoke nature.</p><h2>Transit Damage</h2><p>If your order arrives damaged, contact us within 48 hours of delivery with photo proof of the packaging and the item. We will provide a free replacement.</p><h2>Exclusions</h2><p>Refunds are not provided for minor color variations from your screen or for low-quality original images uploaded by the customer.</p>`,
                     contact: `<h1>Contact MagMoment</h1><div style="background:var(--bg-linen); padding:45px; border-radius:24px; border:1px solid var(--border); margin-top:40px;"><strong>WhatsApp:</strong> +91 9014291445<br><strong>Email:</strong> magmoment.in@gmail.com<br><strong>Studio Location:</strong> Hyderabad, Telangana</div>`
                 };
-                document.getElementById('policy-mount').innerHTML = policies[type];
-                this.navigate('policy');
+                const safeType = policies[type] ? type : 'privacy';
+                this.state.currentPolicy = safeType;
+                document.getElementById('policy-mount').innerHTML = policies[safeType];
+                if (opts.skipNavigation) this.navigate('policy', { params: { type: safeType }, replaceHistory: true });
+                else this.navigate('policy', { params: { type: safeType } });
             },
             toggleMenu(open) {
                 this.state.isMenuOpen = (open !== undefined) ? open : !this.state.isMenuOpen;
@@ -979,6 +1072,7 @@
         };
 
         window.onload = () => App.init();
+        window.addEventListener('popstate', () => App.applyRouteFromLocation({ replace: true }));
     </script>
 </body>
 
