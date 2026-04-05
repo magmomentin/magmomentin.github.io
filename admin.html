@@ -8,49 +8,70 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
-:root{--bg:#f6f5f2;--card:#fff;--text:#111;--muted:#777;--border:#eee;}
-body{margin:0;font-family:system-ui;background:var(--bg);}
+:root{--bg:#f6f5f2;--card:#fff;--text:#111;--muted:#777;--border:#eee;--accent:#111;--success:#1f7a3d;--danger:#b42318;}
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text);}
 .hidden{display:none}
+.btn{padding:10px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
+.btn.primary{background:#111;color:#fff}
+.btn:disabled{opacity:.6;cursor:wait}
 
 /* HEADER */
 .header{
   position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);
-  padding:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  padding:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;z-index:10;
 }
-.header input,.header select{padding:8px;border-radius:10px;border:1px solid #ddd}
-.btn{padding:8px 10px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
-.btn.primary{background:#111;color:#fff}
+.header input,.header select{padding:10px 12px;border-radius:10px;border:1px solid #ddd;background:#fff}
+
+/* STATUS + SUMMARY */
+.toolbar{padding:16px 16px 0}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.summary-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+.summary-card span{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.summary-card strong{display:block;font-size:24px;margin-top:6px}
+.statusbar{margin-top:12px;padding:12px 14px;border-radius:12px;background:#fff;border:1px solid var(--border);font-size:14px;color:var(--muted)}
+.statusbar.success{border-color:#cfe7d7;color:var(--success);background:#f6fff8}
+.statusbar.error{border-color:#f3c7c7;color:var(--danger);background:#fff7f7}
 
 /* GRID */
-.container{padding:16px;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));}
+.container{padding:16px;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));}
 
 /* CARD */
-.card{background:#fff;border-radius:14px;padding:14px;border:1px solid #eee;}
-.row{display:flex;justify-content:space-between}
-.meta{font-size:12px;color:#777}
-.price{font-weight:700;margin-top:5px}
+.card{background:#fff;border-radius:16px;padding:16px;border:1px solid #eee;box-shadow:0 6px 24px rgba(0,0,0,.03)}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.meta{font-size:12px;color:#777;margin-top:4px}
+.price{font-weight:800;margin-top:10px;font-size:18px}
+.status-select{margin-top:14px;width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;background:#fff}
+.card-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.muted{color:var(--muted)}
+.empty{padding:56px 20px;text-align:center;background:#fff;border:1px dashed #ddd;border-radius:16px;color:var(--muted);grid-column:1 / -1}
 
 /* STATUS */
-.badge{padding:4px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge{padding:5px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
 .PAID{background:#e8f5e9}
 .PROCESSING{background:#fff8e1}
 .SHIPPED{background:#e3f2fd}
 .DELIVERED{background:#ede7f6}
 
 /* ITEMS */
-.items{margin-top:10px}
-.img-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}
-.img-grid img{width:100%;border-radius:6px;cursor:pointer}
+.items{margin-top:12px}
+.img-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.img-grid img{width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;object-fit:cover}
 
 /* LOGIN */
-.login{height:100vh;display:flex;align-items:center;justify-content:center}
-.login-box{background:#fff;padding:25px;border-radius:16px;width:300px}
-.login input{width:100%;padding:12px;margin-bottom:10px;border-radius:10px;border:1px solid #ddd}
-.login button{width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:10px}
+.login{height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.login-box{background:#fff;padding:25px;border-radius:16px;width:min(340px,100%);border:1px solid var(--border)}
+.login-box h3{margin-top:0}
+.login input{width:100%;padding:12px;margin-bottom:10px;border-radius:10px;border:1px solid #ddd;box-sizing:border-box}
+.login button{width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:10px;cursor:pointer}
 
 /* MODAL */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center}
-.modal img{max-width:90%;max-height:90%}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal img{max-width:90%;max-height:90%;border-radius:12px}
+
+@media (max-width:700px){
+  .container{grid-template-columns:1fr}
+  .row{flex-direction:column}
+}
 </style>
 </head>
 
@@ -65,9 +86,8 @@ body{margin:0;font-family:system-ui;background:var(--bg);}
 </div>
 
 <div id="appView" class="hidden">
-
   <div class="header">
-    <input id="search" placeholder="Search">
+    <input id="search" placeholder="Search by name or phone">
     <select id="filter">
       <option value="">All</option>
       <option>PAID</option>
@@ -75,137 +95,224 @@ body{margin:0;font-family:system-ui;background:var(--bg);}
       <option>SHIPPED</option>
       <option>DELIVERED</option>
     </select>
-
-    <button class="btn" onclick="load()">↻</button>
+    <button class="btn" id="refreshBtn" onclick="load()">Refresh</button>
     <button class="btn" onclick="exportCSV()">Export CSV</button>
     <button class="btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="summary" id="summary"></div>
+    <div id="statusbar" class="statusbar">Loading orders...</div>
   </div>
 
   <div class="container" id="orders"></div>
 </div>
 
 <div id="modal" class="modal" onclick="this.style.display='none'">
-  <img id="modalImg">
+  <img id="modalImg" alt="Order image preview">
 </div>
 
 <script>
 const API="https://phxhhzwuamdoclklvccb.supabase.co/functions/v1";
 let ALL=[];
+let pendingStatusId=null;
 
 function getKey(){return localStorage.getItem("ADMIN_KEY")}
 
+function setStatus(message,type=""){
+  const el=document.getElementById("statusbar");
+  if(!el) return;
+  el.className=`statusbar${type?` ${type}`:""}`;
+  el.textContent=message;
+}
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
+
+function csvValue(value){
+  return `"${String(value ?? "").replace(/"/g,'""')}"`;
+}
+
+function getFilteredOrders(){
+  const s=(search.value || "").toLowerCase().trim();
+  const f=filter.value;
+  return ALL.filter(o=>{
+    const matchesStatus=!f || o.status===f;
+    const matchesSearch=!s || o.customer_name?.toLowerCase().includes(s) || o.phone?.includes(s);
+    return matchesStatus && matchesSearch;
+  });
+}
+
+function renderSummary(list=ALL){
+  const el=document.getElementById("summary");
+  if(!el) return;
+  const counts={
+    total:list.length,
+    paid:list.filter(o=>o.status==="PAID").length,
+    processing:list.filter(o=>o.status==="PROCESSING").length,
+    shipped:list.filter(o=>o.status==="SHIPPED").length,
+    delivered:list.filter(o=>o.status==="DELIVERED").length
+  };
+  el.innerHTML=`
+    <div class="summary-card"><span>Total Orders</span><strong>${counts.total}</strong></div>
+    <div class="summary-card"><span>Paid</span><strong>${counts.paid}</strong></div>
+    <div class="summary-card"><span>Processing</span><strong>${counts.processing}</strong></div>
+    <div class="summary-card"><span>Shipped</span><strong>${counts.shipped}</strong></div>
+    <div class="summary-card"><span>Delivered</span><strong>${counts.delivered}</strong></div>`;
+}
+
 function login(){
   const k=document.getElementById("key").value.trim();
-  if(!k)return;
+  if(!k) return;
   localStorage.setItem("ADMIN_KEY",k);
   init();
 }
 
-function logout(){localStorage.removeItem("ADMIN_KEY");location.reload()}
+function logout(){
+  localStorage.removeItem("ADMIN_KEY");
+  location.reload();
+}
 
 function formatIST(d){
-  const x=new Date(d.endsWith('Z')?d:d+'Z');
-  return x.toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'});
+  const text=String(d || "");
+  const x=new Date(text.endsWith("Z") ? text : `${text}Z`);
+  return x.toLocaleString("en-IN",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit",day:"2-digit",month:"short"});
 }
 
 function init(){
-  if(!getKey()){loginView.classList.remove("hidden");return;}
-  loginView.classList.add("hidden");appView.classList.remove("hidden");
+  if(!getKey()){
+    loginView.classList.remove("hidden");
+    return;
+  }
+  loginView.classList.add("hidden");
+  appView.classList.remove("hidden");
   load();
 }
 
 async function load(){
-  const res=await fetch(`${API}/admin-orders`,{headers:{"x-admin-key":getKey()}});
-  if(res.status===401){logout();return;}
-  ALL=await res.json();
-  ALL.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-  applyFilters();
+  const refreshBtn=document.getElementById("refreshBtn");
+  if(refreshBtn) refreshBtn.disabled=true;
+  setStatus("Loading orders...");
+  try{
+    const res=await fetch(`${API}/admin-orders`,{headers:{"x-admin-key":getKey()}});
+    if(res.status===401){logout();return;}
+    if(!res.ok) throw new Error("Unable to load orders.");
+    const data=await res.json();
+    ALL=Array.isArray(data) ? data : [];
+    ALL.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    applyFilters();
+    setStatus(`${ALL.length} orders loaded.`, "success");
+  }catch(err){
+    ALL=[];
+    render([]);
+    renderSummary([]);
+    setStatus(err.message || "Unable to load orders.", "error");
+  }finally{
+    if(refreshBtn) refreshBtn.disabled=false;
+  }
 }
 
 function applyFilters(){
-  const s=search.value.toLowerCase();
-  const f=filter.value;
-  let list=ALL;
-  if(f) list=list.filter(o=>o.status===f);
-  if(s) list=list.filter(o=>o.customer_name?.toLowerCase().includes(s)||o.phone?.includes(s));
+  const list=getFilteredOrders();
+  renderSummary(list);
   render(list);
+  setStatus(`${list.length} ${list.length===1?"order":"orders"} shown.`);
 }
 
 search.oninput=applyFilters;
 filter.onchange=applyFilters;
+key.addEventListener("keydown",e=>{ if(e.key==="Enter") login(); });
 
 async function updateStatus(id,status){
-  const res = await fetch(`${API}/update-order-status`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json","x-admin-key":getKey()},
-    body:JSON.stringify({id,status})
-  });
-  if(!res.ok){
-    alert("Failed to update order status. Please try again.");
-    return;
+  pendingStatusId=id;
+  render(getFilteredOrders());
+  setStatus("Saving order status...");
+  try{
+    const res=await fetch(`${API}/update-order-status`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-admin-key":getKey()},
+      body:JSON.stringify({id,status})
+    });
+    if(!res.ok) throw new Error("Failed to update order status. Please try again.");
+    ALL=ALL.map(order => order.id===id ? { ...order, status } : order);
+    applyFilters();
+    setStatus(`Order marked ${status}.`, "success");
+  }catch(err){
+    setStatus(err.message || "Failed to update order status.", "error");
+  }finally{
+    pendingStatusId=null;
+    render(getFilteredOrders());
   }
-  ALL = ALL.map(order => order.id === id ? { ...order, status } : order);
-  applyFilters();
 }
 
-/* WhatsApp */
-function openWhatsApp(order){
-  const phone = order.phone.replace(/\D/g,'');
-  const msg = encodeURIComponent(
+function openWhatsAppById(orderId){
+  const order=ALL.find(o=>o.id===orderId);
+  if(!order) return;
+  const phone=String(order.phone || "").replace(/\D/g,"");
+  if(!phone){
+    setStatus("Customer phone number is missing.", "error");
+    return;
+  }
+  const msg=encodeURIComponent(
 `Hi ${order.customer_name},
 Your MagMoment order is now ${order.status}.
 Order ID: ${order.razorpay_order_id}
-Thank you ✨`
+Thank you.`
   );
-  window.open(`https://wa.me/91${phone}?text=${msg}`,'_blank');
+  window.open(`https://wa.me/91${phone}?text=${msg}`,"_blank");
 }
 
-/* CSV EXPORT */
 function exportCSV(){
   if(!ALL.length) return;
-
-  const rows = [["Name","Phone","OrderID","Status","Total","Date"]];
-
+  const rows=[["Name","Phone","OrderID","Status","Total","Date"]];
   ALL.forEach(o=>{
     rows.push([
-      o.customer_name,
-      o.phone,
-      o.razorpay_order_id,
-      o.status,
-      o.grand_total,
-      formatIST(o.created_at)
+      csvValue(o.customer_name),
+      csvValue(o.phone),
+      csvValue(o.razorpay_order_id),
+      csvValue(o.status),
+      csvValue(o.grand_total),
+      csvValue(formatIST(o.created_at))
     ]);
   });
-
-  const csv = rows.map(r=>r.join(",")).join("\n");
-  const blob = new Blob([csv],{type:"text/csv"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "orders.csv";
+  const csv=rows.map(r=>r.join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="orders.csv";
   a.click();
 }
 
-/* DOWNLOAD ZIP */
 async function downloadOrderImages(orderId){
   const order=ALL.find(o=>o.id===orderId);
-  if(!order)return;
-
+  if(!order) return;
+  setStatus("Preparing image download...");
   const zip=new JSZip();
   let c=0;
-
-  await Promise.all(order.order_items.flatMap(i =>
-    (i.photos||[]).map(url =>
-      fetch(url).then(r=>r.blob()).then(b=>{
-        zip.file(`img_${++c}.jpg`,b);
-      })
-    )
-  ));
-
-  const content=await zip.generateAsync({type:"blob"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(content);
-  a.download=`order_${orderId}.zip`;
-  a.click();
+  try{
+    await Promise.all(order.order_items.flatMap(i =>
+      (i.photos || []).map(url =>
+        fetch(url).then(r=>{
+          if(!r.ok) throw new Error("Unable to fetch one or more images.");
+          return r.blob();
+        }).then(b=>{ zip.file(`img_${++c}.jpg`,b); })
+      )
+    ));
+    const content=await zip.generateAsync({type:"blob"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(content);
+    a.download=`order_${orderId}.zip`;
+    a.click();
+    setStatus("Image ZIP ready.", "success");
+  }catch(err){
+    setStatus(err.message || "Unable to prepare image ZIP.", "error");
+  }
 }
 
 function showImg(src){
@@ -215,49 +322,51 @@ function showImg(src){
 
 function render(list){
   const box=document.getElementById("orders");
+  if(!box) return;
+  if(!list.length){
+    box.innerHTML=`<div class="empty">No orders match the current filter.</div>`;
+    return;
+  }
 
   box.innerHTML=list.map(o=>`
     <div class="card">
-
       <div class="row">
-        <b>${o.customer_name}</b>
+        <div>
+          <b>${escapeHtml(o.customer_name)}</b>
+          <div class="meta">${escapeHtml(o.razorpay_order_id)}</div>
+          <div class="meta">${formatIST(o.created_at)}</div>
+          <div class="meta">Phone: ${escapeHtml(o.phone)}</div>
+        </div>
         <span class="badge ${o.status}">${o.status}</span>
       </div>
 
-      <div class="meta">${o.razorpay_order_id}</div>
-      <div class="meta">${formatIST(o.created_at)}</div>
+      <div class="price">₹${escapeHtml(o.grand_total)}</div>
 
-      <div class="price">₹${o.grand_total}</div>
-
-      <select onchange="updateStatus('${o.id}',this.value)">
+      <select class="status-select" onchange="updateStatus('${o.id}',this.value)" ${pendingStatusId===o.id?"disabled":""}>
         ${["PAID","PROCESSING","SHIPPED","DELIVERED"].map(s=>`
-          <option ${s===o.status?'selected':''}>${s}</option>
-        `).join('')}
+          <option ${s===o.status ? "selected" : ""}>${s}</option>
+        `).join("")}
       </select>
 
-      <button class="btn primary" onclick='openWhatsApp(${JSON.stringify(o)})'>
-        WhatsApp Customer
-      </button>
-
-      <button class="btn" onclick="downloadOrderImages('${o.id}')">
-        Download Images
-      </button>
+      <div class="card-actions">
+        <button class="btn primary" onclick="openWhatsAppById('${o.id}')">WhatsApp Customer</button>
+        <button class="btn" onclick="downloadOrderImages('${o.id}')">Download Images</button>
+      </div>
 
       <div class="items">
-        ${o.order_items.map(i=>{
-          const imgs=i.photos||[];
+        ${(o.order_items || []).map(i=>{
+          const imgs=i.photos || [];
           return `
             <div class="img-grid">
               ${imgs.slice(0,4).map(img=>`
-                <img src="${img}" onclick="showImg('${img}')">
-              `).join('')}
+                <img src="${img}" alt="Order image preview" onclick="showImg(this.src)">
+              `).join("")}
             </div>
           `;
-        }).join('')}
+        }).join("")}
       </div>
-
     </div>
-  `).join('');
+  `).join("");
 }
 
 init();
