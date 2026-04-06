@@ -22,7 +22,8 @@
 
     <!-- SDKs -->
     <script src="https://checkout.razorpay.com/v1/checkout.js" crossorigin="anonymous"></script>
-    <script src="https://upload-widget.cloudinary.com/latest/global/all.js" crossorigin="anonymous"></script>
+    <script>window.UPLOADCARE_PUBLIC_KEY = "fe7504537b995265c0ee";</script>
+    <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -564,9 +565,6 @@
 
     <script>
         const API_BASE = "https://phxhhzwuamdoclklvccb.supabase.co/functions/v1";
-        // Optional local fallback values if /get-config does not provide Cloudinary settings yet.
-        const CLOUDINARY_CLOUD_NAME = "";
-        const CLOUDINARY_UPLOAD_PRESET = "";
 
         const App = {
             state: {
@@ -665,36 +663,6 @@
                     .replace(/\s+/g, ' ')
                     .trim()
                     .replace(/\b\w/g, ch => ch.toUpperCase());
-            },
-
-            getOptimizedImageUrl(url, { width = 900, height = 900, fit = 'cover', format = 'auto', quality = 'smart' } = {}) {
-                const src = String(url || '');
-                if (!src) return '';
-                if (src.includes('ucarecdn.com')) {
-                    const separator = src.includes('/-/') ? '' : '-/';
-                    return `${src}${separator}-/scale_crop/${width}x${height}/${fit}/-/format/${format}/-/quality/${quality}/`;
-                }
-                if (src.includes('res.cloudinary.com') && src.includes('/upload/')) {
-                    const mode = fit === 'contain' ? 'c_pad' : (fit === 'fit' ? 'c_fit' : 'c_fill');
-                    const transforms = [mode, `w_${width}`, `h_${height}`, 'g_auto'];
-                    if (format === 'auto') transforms.push('f_auto');
-                    if (quality === 'smart' || quality === 'auto') transforms.push('q_auto');
-                    return src.replace('/upload/', `/upload/${transforms.join(',')}/`);
-                }
-                return src;
-            },
-
-            isManagedUploadUrl(url) {
-                const src = String(url || '');
-                return src.includes('res.cloudinary.com') || src.includes('ucarecdn.com') || src.includes('ucarecd.net');
-            },
-
-            getCloudinaryConfig() {
-                const fromConfig = this.state.config || {};
-                return {
-                    cloudName: String(fromConfig.cloudinaryCloudName || CLOUDINARY_CLOUD_NAME || '').trim(),
-                    uploadPreset: String(fromConfig.cloudinaryUploadPreset || CLOUDINARY_UPLOAD_PRESET || '').trim()
-                };
             },
 
             getSafeDraft() {
@@ -871,7 +839,6 @@
                 const p = this.state.current.p;
                 if (!p) return;
                 const imgs = p.images?.length ? p.images : [p.img];
-                const heroImg = this.getOptimizedImageUrl(imgs[0], { width: 1000, height: 1000 });
                 
                 const previewHTML = (id) => `
                     <div class="studio-preview-card ${id}">
@@ -882,8 +849,8 @@
                 document.getElementById('product-canvas').innerHTML = `
                     <div class="detail-grid">
                         <div class="stage-wrap">
-                            <div class="stage"><img id="stage-view" src="${heroImg}" class="stage-img" alt="${p.name}" loading="eager"></div>
-                            <div class="thumb-nav">${imgs.map((s, i) => `<img src="${this.getOptimizedImageUrl(s, { width: 180, height: 180 })}" class="thumb ${i === 0 ? 'active' : ''}" onclick="App.swapGallery('${this.getOptimizedImageUrl(s, { width: 1000, height: 1000 })}', this)" alt="View ${i+1}" loading="lazy">`).join('')}</div>
+                            <div class="stage"><img id="stage-view" src="${imgs[0]}" class="stage-img" alt="${p.name}"></div>
+                            <div class="thumb-nav">${imgs.map((s, i) => `<img src="${s}" class="thumb ${i === 0 ? 'active' : ''}" onclick="App.swapGallery('${s}', this)" alt="View ${i+1}">`).join('')}</div>
                             ${previewHTML('desktop-only')}
                         </div>
                         <div class="detail-panel">
@@ -977,8 +944,6 @@
                 }
                 const priceEl = document.getElementById('p-price-val');
                 if (priceEl) priceEl.innerText = `₹${price}`;
-                const mobilePriceEl = document.getElementById('mobile-p-price-val');
-                if (mobilePriceEl) mobilePriceEl.innerText = `₹${price}`;
                 const upLabel = document.getElementById('up-label');
                 if (upLabel) upLabel.innerText = `Upload ${required} Photos`;
             },
@@ -993,63 +958,36 @@
             },
 
             upload() {
-                if (typeof cloudinary === 'undefined' || typeof cloudinary.createUploadWidget !== 'function') {
-                    return this.toast("Upload system busy. Please refresh and try again.");
-                }
-                const { cloudName, uploadPreset } = this.getCloudinaryConfig();
-                if (!cloudName || !uploadPreset) {
-                    return this.toast("Cloudinary is not configured yet. Check that /get-config returns cloudinaryCloudName and cloudinaryUploadPreset.");
-                }
+                if (typeof uploadcare === 'undefined') return this.toast("Upload system busy.");
                 const requiredCount = this.state.current.b.count * this.state.current.qty;
                 const upArea = document.getElementById('up-area');
-                const cropShape = this.getShapeClass() === 'shape-polaroid' ? '4:5' : (this.getShapeClass() === 'shape-strip' ? null : '1:1');
-                const uploadedUrls = [];
-                let completed = false;
-                if (upArea) upArea.classList.add('loading');
+                const existingFiles = this.state.current.photos.map(url => uploadcare.fileFrom('url', url));
+                const dialogTarget = requiredCount > 1 ? (existingFiles.length > 0 ? existingFiles : null) : (existingFiles[0] || null);
 
-                const widget = cloudinary.createUploadWidget({
-                    cloudName,
-                    uploadPreset,
-                    sources: ['local', 'camera'],
-                    multiple: requiredCount > 1,
-                    maxFiles: requiredCount,
-                    resourceType: 'image',
-                    clientAllowedFormats: ['jpg', 'jpeg', 'png', 'webp', 'heic'],
-                    showAdvancedOptions: false,
-                    showSkipCropButton: true,
-                    cropping: Boolean(cropShape),
-                    croppingAspectRatio: cropShape === '4:5' ? 0.8 : 1,
-                    singleUploadAutoClose: true
-                }, (error, result) => {
-                    if (error) {
+                uploadcare.openDialog(dialogTarget, { 
+                    imagesOnly: true, multiple: requiredCount > 1, multipleMax: requiredCount,
+                    crop: this.getShapeClass() === 'shape-polaroid' ? "4:5" : (this.getShapeClass() === 'shape-strip' ? null : "1:1"),
+                    imageEditorEffects: 'crop, rotate, mirror'
+                }).done(group => {
+                    if (!group) return; 
+                    if (upArea) upArea.classList.add('loading');
+                    const files = requiredCount > 1 ? group.files() : [group];
+                    Promise.all(files.map(f => new Promise(r => f.done(r)))).then(res => {
+                        this.state.current.photos = res.map(r => r.cdnUrl);
+                        this.syncDraft();
+                        this.renderDraftBanner();
+                        this.renderThumbnails(); this.validateAdd();
                         if (upArea) upArea.classList.remove('loading');
+                    }).catch(() => {
                         this.toast("Upload failed. Try again.");
-                        return;
-                    }
-                    if (!result) return;
-                    if (result.event === 'success' && result.info?.secure_url) {
-                        uploadedUrls.push(result.info.secure_url);
-                    }
-                    if ((result.event === 'queues-end' || result.event === 'close') && !completed) {
-                        completed = true;
                         if (upArea) upArea.classList.remove('loading');
-                        if (uploadedUrls.length) {
-                            this.state.current.photos = uploadedUrls.slice(0, requiredCount);
-                            this.syncDraft();
-                            this.renderDraftBanner();
-                            this.renderThumbnails();
-                            this.validateAdd();
-                            this.toast(`Uploaded ${uploadedUrls.length} photo${uploadedUrls.length > 1 ? 's' : ''}.`);
-                        }
-                    }
+                    });
                 });
-
-                widget.open();
             },
 
             renderThumbnails() {
                 const slotEl = document.getElementById('slot-mount');
-                if (slotEl) slotEl.innerHTML = this.state.current.photos.map(u => `<img src="${this.getOptimizedImageUrl(u, { width: 100, height: 100 })}" style="width:50px; height:50px; border-radius:8px; object-fit:cover; border:2px solid var(--border);" alt="Thumb" loading="lazy">`).join('');
+                if (slotEl) slotEl.innerHTML = this.state.current.photos.map(u => `<img src="${u}" style="width:50px; height:50px; border-radius:8px; object-fit:cover; border:2px solid var(--border);" alt="Thumb">`).join('');
                 
                 const mounts = document.querySelectorAll('.preview-mount');
                 mounts.forEach(mount => {
@@ -1057,7 +995,7 @@
                         const finishClass = `finish-${this.state.current.finish.toLowerCase()}`;
                         mount.innerHTML = `
                             <div class="preview-render">
-                                <img src="${this.getOptimizedImageUrl(this.state.current.photos[0], { width: 700, height: 700 })}" class="preview-img ${this.getShapeClass()} ${finishClass}" alt="Preview" loading="lazy">
+                                <img src="${this.state.current.photos[0]}" class="preview-img ${this.getShapeClass()} ${finishClass}" alt="Preview">
                             </div>
                             <small style="color:#aaa; text-transform:uppercase; font-size:10px; letter-spacing:2px; font-weight:900;">${this.state.current.finish} Preview</small>`;
                         this.updateSteps(3);
@@ -1241,7 +1179,7 @@
                     const bundleCount = Number(i.count || 0);
                     if (!bundleCount || photoCount === 0) return true;
                     const countMismatch = (photoCount !== bundleCount) && (photoCount % bundleCount !== 0);
-                    const badUrl = (i.photos || []).some(url => typeof url !== "string" || !this.isManagedUploadUrl(url));
+                    const badUrl = (i.photos || []).some(url => typeof url !== "string" || (!url.includes("ucarecdn.com") && !url.includes("ucarecd.net")));
                     return countMismatch || badUrl;
                 });
                 if (invalidItem) {
@@ -1329,8 +1267,10 @@
                             this.toast(e?.message || "Payment verification failed. Please try again.");
                         } finally {
                             this.state.isPaying = false;
+                          //  if (!verified) {
                                 btn.disabled = false;
                                 this.refreshPayButton();
+                          //  }
                         }
                     },
                     modal: { ondismiss: () => {
